@@ -955,7 +955,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {formValues.items.slice(0, 6).map((item, idx) => (
+                    {formValues.items.slice(0, 5).map((item, idx) => (
                       <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
                         <td className="p-1.5 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 1}</td>
                         <td className="p-1.5 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
@@ -973,7 +973,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       </tr>
                     ))}
                     
-                    {formValues.items.slice(0, 6).length < 4 && Array.from({ length: 4 - formValues.items.slice(0, 6).length }).map((_, emptyIdx) => (
+                    {formValues.items.slice(0, 5).length < 3 && Array.from({ length: 3 - formValues.items.slice(0, 5).length }).map((_, emptyIdx) => (
                       <tr key={`empty-${emptyIdx}`} className="border-b border-zinc-100 min-h-[25px] opacity-10">
                         <td className="p-1.5 text-center border-r border-zinc-100" style={{ width: "5%" }}>&nbsp;</td>
                         <td className="p-1.5 border-r border-zinc-100" style={{ width: "55%" }}>&nbsp;</td>
@@ -1116,8 +1116,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 </div>
               </div>
 
-              {/* Quotation Table Continuation if items exceed 6 */}
-              {formValues.items.length > 6 && (
+              {/* Quotation Table Continuation if items exceed 5 */}
+              {formValues.items.length > 5 && (
                 <div className="mt-4">
                   <div className="bg-zinc-100 text-[#0F4C81] font-bold px-3 py-1.5 text-[8.5px] mb-2 rounded border border-zinc-200">
                     ITEMS LIST CONTINUATION
@@ -1133,9 +1133,9 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {formValues.items.slice(6).map((item, idx) => (
+                      {formValues.items.slice(5).map((item, idx) => (
                         <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
-                          <td className="p-1.5 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 7}</td>
+                          <td className="p-1.5 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 6}</td>
                           <td className="p-1.5 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
                             {item.description || "No description"}
                           </td>
