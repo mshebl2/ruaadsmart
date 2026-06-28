@@ -157,6 +157,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
   const generatePDF = async (): Promise<jsPDF | null> => {
     if (!previewRef.current) return null;
     setExporting(true);
+    document.body.classList.add("pdf-generating");
     try {
       const options = {
         scale: 2,
@@ -175,6 +176,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
       console.error("PDF generation failed:", error);
       return null;
     } finally {
+      document.body.classList.remove("pdf-generating");
       setExporting(false);
     }
   };
@@ -533,7 +535,8 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
           <div 
             ref={previewRef}
             id="certificate-preview-page"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[20mm] flex flex-col justify-between relative text-xs select-none"
+            dir="ltr"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[20mm] flex flex-col justify-between relative text-xs select-none text-left"
             style={{ boxSizing: "border-box" }}
           >
             <div>

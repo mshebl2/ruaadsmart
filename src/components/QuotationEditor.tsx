@@ -203,6 +203,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
     if (!page1Ref.current || !page2Ref.current) return null;
     
     setExporting(true);
+    document.body.classList.add("pdf-generating");
     try {
       const options = {
         scale: 2,
@@ -231,6 +232,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       console.error("PDF generation failed:", error);
       return null;
     } finally {
+      document.body.classList.remove("pdf-generating");
       setExporting(false);
     }
   };
@@ -238,6 +240,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   const generateCompanyPDF = async (): Promise<jsPDF | null> => {
     if (!companyPageRef.current) return null;
     setExporting(true);
+    document.body.classList.add("pdf-generating");
     try {
       const options = {
         scale: 2,
@@ -254,6 +257,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       console.error("Company PDF generation failed:", error);
       return null;
     } finally {
+      document.body.classList.remove("pdf-generating");
       setExporting(false);
     }
   };
@@ -781,7 +785,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
           <div 
             ref={page1Ref}
             id="quotation-page-1"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none"
+            dir="ltr"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
             style={{ boxSizing: "border-box" }}
           >
             <div>
@@ -982,7 +987,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
           <div 
             ref={page2Ref}
             id="quotation-page-2"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none"
+            dir="ltr"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
             style={{ boxSizing: "border-box" }}
           >
             <div>
@@ -1091,7 +1097,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
           <div 
             ref={companyPageRef}
             id="company-costing-page"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none"
+            dir="ltr"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
             style={{ boxSizing: "border-box" }}
           >
             <div>

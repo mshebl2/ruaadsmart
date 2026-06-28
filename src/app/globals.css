@@ -148,3 +148,92 @@ body {
   --color-rose-950: #4c0519 !important;
 }
 
+/* ==========================================================================
+   Responsive Zoom & Scaling for A4 Previews on Small Screens / Mobile
+   ========================================================================== */
+#quotation-page-1, 
+#quotation-page-2, 
+#company-costing-page,
+#receipt-preview-page,
+#certificate-preview-page {
+  transform-origin: top center;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Adjust zoom inside editor preview columns on small desktop screens */
+@media (max-width: 1450px) {
+  .print-area #quotation-page-1, 
+  .print-area #quotation-page-2, 
+  .print-area #company-costing-page {
+    zoom: 0.8 !important;
+  }
+}
+
+@media (max-width: 1250px) {
+  .print-area #quotation-page-1, 
+  .print-area #quotation-page-2, 
+  .print-area #company-costing-page {
+    zoom: 0.65 !important;
+  }
+}
+
+/* Tablet & Mobile Full-Width preview zoom adjust */
+@media (max-width: 1023px) {
+  .print-area #quotation-page-1, 
+  .print-area #quotation-page-2, 
+  .print-area #company-costing-page,
+  #receipt-preview-page,
+  #certificate-preview-page {
+    zoom: 0.8 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .print-area #quotation-page-1, 
+  .print-area #quotation-page-2, 
+  .print-area #company-costing-page,
+  #receipt-preview-page,
+  #certificate-preview-page {
+    zoom: 0.6 !important;
+  }
+}
+
+@media (max-width: 500px) {
+  .print-area #quotation-page-1, 
+  .print-area #quotation-page-2, 
+  .print-area #company-costing-page,
+  #receipt-preview-page,
+  #certificate-preview-page {
+    zoom: 0.42 !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .print-area #quotation-page-1, 
+  .print-area #quotation-page-2, 
+  .print-area #company-costing-page,
+  #receipt-preview-page,
+  #certificate-preview-page {
+    zoom: 0.35 !important;
+  }
+}
+
+/* Ensure no zoom is active when generating PDF or printing */
+@media print {
+  #quotation-page-1, 
+  #quotation-page-2, 
+  #company-costing-page,
+  #receipt-preview-page,
+  #certificate-preview-page {
+    zoom: 1 !important;
+  }
+}
+
+.pdf-generating #quotation-page-1,
+.pdf-generating #quotation-page-2,
+.pdf-generating #company-costing-page,
+.pdf-generating #receipt-preview-page,
+.pdf-generating #certificate-preview-page {
+  zoom: 1 !important;
+}
+
