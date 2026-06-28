@@ -234,74 +234,105 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
       {/* Editor Header */}
-      <header className="bg-zinc-900 border-b border-zinc-800 py-4 px-6 flex items-center justify-between no-print sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div>
-            <h1 className="text-lg font-bold text-white flex items-center gap-2">
-              <Award className="w-5 h-5 text-purple-500" />
-              {id ? t("editTitle") : t("newCertificate")}
-            </h1>
-            <p className="text-xs text-zinc-500 font-mono">Project: {formValues.project || "Unnamed"}</p>
+      <header className="bg-zinc-900 border-b border-zinc-800 py-3 px-4 sm:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 no-print sticky top-0 z-40">
+        {/* Left side: Back & Title */}
+        <div className="flex items-center justify-between w-full md:w-auto">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div>
+              <h1 className="text-base font-bold text-white flex items-center gap-2">
+                <Award className="w-5 h-5 text-purple-500" />
+                {id ? t("editTitle") : t("newCertificate")}
+              </h1>
+              <p className="text-xs text-zinc-500 font-mono">Project: {formValues.project || "Unnamed"}</p>
+            </div>
+          </div>
+          
+          {/* Action buttons on very small mobile screens (hidden on md) */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <button 
+              type="submit" 
+              form="certificate-form"
+              disabled={saving}
+              className="p-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white font-medium transition-all"
+              title={t("saveBtn")}
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            </button>
+            <button 
+              onClick={handleDownloadPDF}
+              disabled={exporting}
+              className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 disabled:bg-zinc-900 text-zinc-200 font-medium transition-all"
+              title="Download PDF"
+            >
+              {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            </button>
+            <button 
+              onClick={handleShare}
+              className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium transition-all"
+              title={t("share")}
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        {/* Mobile View Toggle */}
-        <div className="flex sm:hidden bg-zinc-950 p-1 rounded-lg border border-zinc-800">
-          <button 
-            type="button"
-            onClick={() => setPreviewTab("edit")}
-            className={`px-3 py-1 text-xs font-semibold rounded ${previewTab === "edit" ? "bg-zinc-800 text-white" : "text-zinc-400"}`}
-          >
-            {t("formTab")}
-          </button>
-          <button 
-            type="button"
-            onClick={() => setPreviewTab("preview")}
-            className={`px-3 py-1 text-xs font-semibold rounded ${previewTab === "preview" ? "bg-zinc-800 text-white" : "text-zinc-400"}`}
-          >
-            {t("previewTab")}
-          </button>
-        </div>
+        {/* Center/Right: Tabs & Desktop Actions */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+          {/* View Toggle Tabs */}
+          <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800 w-full md:w-auto justify-around md:justify-start">
+            <button 
+              type="button"
+              onClick={() => setPreviewTab("edit")}
+              className={`flex-1 md:flex-initial px-4.5 py-1.5 text-xs font-semibold rounded text-center transition-all ${previewTab === "edit" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+            >
+              {t("formTab")}
+            </button>
+            <button 
+              type="button"
+              onClick={() => setPreviewTab("preview")}
+              className={`flex-1 md:flex-initial px-4.5 py-1.5 text-xs font-semibold rounded text-center transition-all ${previewTab === "preview" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+            >
+              {t("previewTab")}
+            </button>
+          </div>
 
-        {/* Toolbar Actions */}
-        <div className="flex items-center gap-2">
-          <button 
-            type="submit" 
-            form="certificate-form"
-            disabled={saving}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white font-medium text-xs transition-all hover:scale-[1.02]"
-          >
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {t("saveBtn")}
-          </button>
-          <button 
-            onClick={handleDownloadPDF}
-            disabled={exporting}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 disabled:bg-zinc-900 text-zinc-200 font-medium text-xs transition-all"
-            title="Download PDF"
-          >
-            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            {t("downloadPdf")}
-          </button>
-          <button 
-            onClick={handlePrint}
-            className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium text-xs transition-all"
-            title="Print"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            {t("print")}
-          </button>
-          <button 
-            onClick={handleShare}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium text-xs transition-all"
-            title="Share document"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            {t("share")}
-          </button>
+          {/* Desktop/Tablet Action Buttons (hidden on mobile) */}
+          <div className="hidden md:flex items-center gap-2">
+            <button 
+              type="submit" 
+              form="certificate-form"
+              disabled={saving}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white font-medium text-xs transition-all hover:scale-[1.02]"
+            >
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              {t("saveBtn")}
+            </button>
+            <button 
+              onClick={handleDownloadPDF}
+              disabled={exporting}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 disabled:bg-zinc-900 text-zinc-200 font-medium text-xs transition-all"
+            >
+              {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              {t("downloadPdf")}
+            </button>
+            <button 
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium text-xs transition-all"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              {t("print")}
+            </button>
+            <button 
+              onClick={handleShare}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium text-xs transition-all"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              {t("share")}
+            </button>
+          </div>
         </div>
       </header>
 

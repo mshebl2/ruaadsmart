@@ -174,34 +174,61 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
       {/* Editor Header */}
-      <header className="bg-zinc-900 border-b border-zinc-800 py-4 px-6 flex items-center justify-between no-print sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div>
-            <h1 className="text-lg font-bold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-500" />
-              {id ? (language === "ar" ? "تعديل سند القبض" : "Edit Receipt") : t("newReceipt")}
-            </h1>
-            <p className="text-xs text-zinc-500 font-mono">No: {formValues.receiptNo}</p>
+      <header className="bg-zinc-900 border-b border-zinc-800 py-3 px-4 sm:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 no-print sticky top-0 z-40">
+        {/* Left side: Back & Title */}
+        <div className="flex items-center justify-between w-full md:w-auto">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div>
+              <h1 className="text-base font-bold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-500" />
+                {id ? (language === "ar" ? "تعديل سند القبض" : "Edit Receipt") : t("newReceipt")}
+              </h1>
+              <p className="text-xs text-zinc-500 font-mono">No: {formValues.receiptNo}</p>
+            </div>
+          </div>
+          
+          {/* Action buttons on very small mobile screens (hidden on md) */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <button 
+              type="button" 
+              onClick={handleSubmit(onSubmit)}
+              disabled={saving}
+              className="p-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white font-medium transition-all"
+              title={t("saveBtn")}
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            </button>
+            <button 
+              onClick={handleDownloadPDF}
+              disabled={exporting}
+              className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 disabled:bg-zinc-900 text-zinc-200 font-medium transition-all"
+              title="Download PDF"
+            >
+              {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 
-        {/* Tab Selector & Actions */}
-        <div className="flex items-center gap-4">
-          <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800">
+        {/* Center/Right: Tabs & Desktop Actions */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+          {/* View Toggle Tabs */}
+          <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800 w-full md:w-auto justify-around md:justify-start">
             <button
+              type="button"
               onClick={() => setPreviewTab("edit")}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              className={`flex-1 md:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all text-center ${
                 previewTab === "edit" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               {language === "ar" ? "البيانات" : "Form"}
             </button>
             <button
+              type="button"
               onClick={() => setPreviewTab("preview")}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              className={`flex-1 md:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all text-center ${
                 previewTab === "preview" ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
@@ -209,37 +236,34 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Desktop/Tablet Action Buttons (hidden on mobile) */}
+          <div className="hidden md:flex items-center gap-2">
             <button
-              onClick={handlePrint}
-              className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 transition-all"
-              title="Print / طباعة"
+              onClick={handleSubmit(onSubmit)}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white font-medium text-xs transition-all hover:scale-[1.02]"
             >
-              <Printer className="w-4.5 h-4.5" />
+              {saving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              {t("saveBtn")}
             </button>
             <button
               onClick={handleDownloadPDF}
               disabled={exporting}
-              className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 disabled:opacity-50 transition-all"
-              title="Download PDF / تنزيل PDF"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 disabled:bg-zinc-900 text-zinc-200 font-medium text-xs transition-all"
             >
-              {exporting ? (
-                <Loader2 className="w-4.5 h-4.5 animate-spin" />
-              ) : (
-                <Download className="w-4.5 h-4.5" />
-              )}
+              {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              {t("downloadPdf")}
             </button>
             <button
-              onClick={handleSubmit(onSubmit)}
-              disabled={saving}
-              className="flex items-center gap-1.5 px-4.5 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold text-xs shadow-lg disabled:opacity-50 transition-all"
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium text-xs transition-all"
             >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t("saveBtn")}
+              <Printer className="w-3.5 h-3.5" />
+              {t("print")}
             </button>
           </div>
         </div>
