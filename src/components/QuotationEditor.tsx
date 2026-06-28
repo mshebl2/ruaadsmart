@@ -898,7 +898,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </div>
 
               {/* Metadata Grid Table */}
-              <table className="w-full border border-zinc-200 mt-4 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
+              <table className="w-full border border-zinc-200 mt-2.5 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
                 <tbody>
                   <tr className="border-b border-zinc-200">
                     <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Quotation No.</td>
@@ -916,7 +916,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </table>
 
               {/* Client Info Grid Table */}
-              <div className="mt-4">
+              <div className="mt-2.5">
                 <div className="text-[#0F4C81] font-bold px-3 py-1 text-[10px] tracking-wider rounded-t border-t border-l border-r border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
                   CLIENT INFORMATION
                 </div>
@@ -943,66 +943,66 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </div>
 
               {/* Items Table */}
-              <div className="mt-4">
-                <table className="w-full border border-zinc-200 text-[9px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
+              <div className="mt-2.5">
+                <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
                   <thead>
-                    <tr className="bg-[#0F4C81] text-white font-bold text-[9px]">
-                      <th className="p-2 text-center border-r border-[#0e4372]" style={{ width: "5%" }}>#</th>
-                      <th className="p-2 border-r border-[#0e4372]" style={{ width: "55%" }}>Description / Scope of Work</th>
-                      <th className="p-2 text-center border-r border-[#0e4372]" style={{ width: "10%" }}>Qty</th>
-                      <th className="p-2 text-right border-r border-[#0e4372]" style={{ width: "15%" }}>Unit Price (AED)</th>
-                      <th className="p-2 text-right" style={{ width: "15%" }}>Total (AED)</th>
+                    <tr className="bg-[#0F4C81] text-white font-bold text-[8.5px]">
+                      <th className="p-1.5 text-center border-r border-[#0e4372]" style={{ width: "5%" }}>#</th>
+                      <th className="p-1.5 border-r border-[#0e4372]" style={{ width: "55%" }}>Description / Scope of Work</th>
+                      <th className="p-1.5 text-center border-r border-[#0e4372]" style={{ width: "10%" }}>Qty</th>
+                      <th className="p-1.5 text-right border-r border-[#0e4372]" style={{ width: "15%" }}>Unit Price (AED)</th>
+                      <th className="p-1.5 text-right" style={{ width: "15%" }}>Total (AED)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {formValues.items.slice(0, 8).map((item, idx) => (
+                    {formValues.items.slice(0, 6).map((item, idx) => (
                       <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
-                        <td className="p-2 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 1}</td>
-                        <td className="p-2 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
+                        <td className="p-1.5 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 1}</td>
+                        <td className="p-1.5 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
                           {item.description || "No description"}
                         </td>
-                        <td className="p-2 text-center border-r border-zinc-200 text-zinc-700" style={{ width: "10%" }}>
+                        <td className="p-1.5 text-center border-r border-zinc-200 text-zinc-700" style={{ width: "10%" }}>
                           {item.qty ? Number(item.qty).toFixed(2) : "0.00"} {item.unit || "Units"}
                         </td>
-                        <td className="p-2 text-right border-r border-zinc-200 text-zinc-700 font-mono" style={{ width: "15%" }}>
+                        <td className="p-1.5 text-right border-r border-zinc-200 text-zinc-700 font-mono" style={{ width: "15%" }}>
                           {item.unitPrice ? Number(item.unitPrice).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"}
                         </td>
-                        <td className="p-2 text-right text-zinc-900 font-bold font-mono" style={{ width: "15%" }}>
+                        <td className="p-1.5 text-right text-zinc-900 font-bold font-mono" style={{ width: "15%" }}>
                           {((item.qty || 0) * (item.unitPrice || 0)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                         </td>
                       </tr>
                     ))}
                     
-                    {formValues.items.slice(0, 8).length < 5 && Array.from({ length: 5 - formValues.items.slice(0, 8).length }).map((_, emptyIdx) => (
-                      <tr key={`empty-${emptyIdx}`} className="border-b border-zinc-100 min-h-[30px] opacity-10">
-                        <td className="p-2 text-center border-r border-zinc-100" style={{ width: "5%" }}>&nbsp;</td>
-                        <td className="p-2 border-r border-zinc-100" style={{ width: "55%" }}>&nbsp;</td>
-                        <td className="p-2 text-center border-r border-zinc-100" style={{ width: "10%" }}>&nbsp;</td>
-                        <td className="p-2 text-right border-r border-zinc-100" style={{ width: "15%" }}>&nbsp;</td>
-                        <td className="p-2 text-right" style={{ width: "15%" }}>&nbsp;</td>
+                    {formValues.items.slice(0, 6).length < 4 && Array.from({ length: 4 - formValues.items.slice(0, 6).length }).map((_, emptyIdx) => (
+                      <tr key={`empty-${emptyIdx}`} className="border-b border-zinc-100 min-h-[25px] opacity-10">
+                        <td className="p-1.5 text-center border-r border-zinc-100" style={{ width: "5%" }}>&nbsp;</td>
+                        <td className="p-1.5 border-r border-zinc-100" style={{ width: "55%" }}>&nbsp;</td>
+                        <td className="p-1.5 text-center border-r border-zinc-100" style={{ width: "10%" }}>&nbsp;</td>
+                        <td className="p-1.5 text-right border-r border-zinc-100" style={{ width: "15%" }}>&nbsp;</td>
+                        <td className="p-1.5 text-right" style={{ width: "15%" }}>&nbsp;</td>
                       </tr>
                     ))}
 
                     <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
-                      <td colSpan={3} className="p-2 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
-                      <td className="p-2 text-right border-r border-zinc-200 text-[#0F4C81]" style={{ width: "15%" }}>Subtotal:</td>
-                      <td className="p-2 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
+                      <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
+                      <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81]" style={{ width: "15%" }}>Subtotal:</td>
+                      <td className="p-1 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
                         {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                       </td>
                     </tr>
                     {watchedDiscount > 0 && (
                       <tr className="font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
-                        <td colSpan={3} className="p-2 border-r border-zinc-200">&nbsp;</td>
-                        <td className="p-2 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
-                        <td className="p-2 text-right font-mono font-bold text-red-650">
+                        <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                        <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
+                        <td className="p-1 text-right font-mono font-bold text-red-650">
                           -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                         </td>
                       </tr>
                     )}
                     <tr className="font-bold text-zinc-900" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
-                      <td colSpan={3} className="p-2 border-r border-zinc-200">&nbsp;</td>
-                      <td className="p-2 text-right border-r border-zinc-200 text-[#0F4C81] text-[10px]">TOTAL:</td>
-                      <td className="p-2 text-right font-mono text-[10px] text-[#0F4C81] font-bold">
+                      <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                      <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81] text-[10px]">TOTAL:</td>
+                      <td className="p-1 text-right font-mono text-[10px] text-[#0F4C81] font-bold">
                         {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                       </td>
                     </tr>
@@ -1011,11 +1011,11 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </div>
 
               {/* Terms and Conditions Section */}
-              <div className="mt-4 border border-zinc-200 rounded">
-                <div className="px-3 py-1 font-bold text-[9px] text-[#0F4C81] border-b border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
+              <div className="mt-2 border border-zinc-200 rounded">
+                <div className="px-2 py-0.5 font-bold text-[9px] text-[#0F4C81] border-b border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
                   TERMS & CONDITIONS
                 </div>
-                <div className="flex justify-between p-2.5 text-[9px] gap-4">
+                <div className="flex justify-between p-2 text-[9px] gap-4">
                   <div className="w-[48%]">
                     <span className="font-bold text-zinc-500">Payment terms: </span>
                     <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
@@ -1030,7 +1030,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </div>
 
               {/* Signature Blocks */}
-              <div className="flex w-full mt-4 border border-zinc-200 text-[9px] relative">
+              <div className="flex w-full mt-2.5 border border-zinc-200 text-[9px] relative">
                 <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
                   <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
                     Prepared & Approved By (Ruaad Smart)
@@ -1068,7 +1068,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
             </div>
 
             {/* Bottom Company Info Block 1 (Page 1) */}
-            <div className="border border-zinc-200 mt-4 text-[9px]">
+            <div className="border border-zinc-200 mt-2.5 text-[9px]">
               <div className="text-[#0F4C81] font-bold px-3 py-1 border-b border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
                 COMPANY & BANK DETAILS
               </div>
@@ -1116,36 +1116,36 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 </div>
               </div>
 
-              {/* Quotation Table Continuation if items exceed 8 */}
-              {formValues.items.length > 8 && (
+              {/* Quotation Table Continuation if items exceed 6 */}
+              {formValues.items.length > 6 && (
                 <div className="mt-4">
-                  <div className="bg-zinc-100 text-[#0F4C81] font-bold px-3 py-1 text-[9px] mb-2 rounded border border-zinc-200">
+                  <div className="bg-zinc-100 text-[#0F4C81] font-bold px-3 py-1.5 text-[8.5px] mb-2 rounded border border-zinc-200">
                     ITEMS LIST CONTINUATION
                   </div>
-                  <table className="w-full border border-zinc-200 text-[9px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
+                  <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
                     <thead>
-                      <tr className="bg-[#0F4C81] text-white font-bold text-[9px]">
-                        <th className="p-2 text-center border-r border-[#0e4372]" style={{ width: "5%" }}>#</th>
-                        <th className="p-2 border-r border-[#0e4372]" style={{ width: "55%" }}>Description / Scope of Work</th>
-                        <th className="p-2 text-center border-r border-[#0e4372]" style={{ width: "10%" }}>Qty</th>
-                        <th className="p-2 text-right border-r border-[#0e4372]" style={{ width: "15%" }}>Unit Price (AED)</th>
-                        <th className="p-2 text-right" style={{ width: "15%" }}>Total (AED)</th>
+                      <tr className="bg-[#0F4C81] text-white font-bold text-[8.5px]">
+                        <th className="p-1.5 text-center border-r border-[#0e4372]" style={{ width: "5%" }}>#</th>
+                        <th className="p-1.5 border-r border-[#0e4372]" style={{ width: "55%" }}>Description / Scope of Work</th>
+                        <th className="p-1.5 text-center border-r border-[#0e4372]" style={{ width: "10%" }}>Qty</th>
+                        <th className="p-1.5 text-right border-r border-[#0e4372]" style={{ width: "15%" }}>Unit Price (AED)</th>
+                        <th className="p-1.5 text-right" style={{ width: "15%" }}>Total (AED)</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {formValues.items.slice(8).map((item, idx) => (
+                      {formValues.items.slice(6).map((item, idx) => (
                         <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
-                          <td className="p-2 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 9}</td>
-                          <td className="p-2 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
+                          <td className="p-1.5 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 7}</td>
+                          <td className="p-1.5 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
                             {item.description || "No description"}
                           </td>
-                          <td className="p-2 text-center border-r border-zinc-200 text-zinc-700" style={{ width: "10%" }}>
+                          <td className="p-1.5 text-center border-r border-zinc-200 text-zinc-700" style={{ width: "10%" }}>
                             {item.qty ? Number(item.qty).toFixed(2) : "0.00"} {item.unit || "Units"}
                           </td>
-                          <td className="p-2 text-right border-r border-zinc-200 text-zinc-700 font-mono" style={{ width: "15%" }}>
+                          <td className="p-1.5 text-right border-r border-zinc-200 text-zinc-700 font-mono" style={{ width: "15%" }}>
                             {item.unitPrice ? Number(item.unitPrice).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"}
                           </td>
-                          <td className="p-2 text-right text-zinc-900 font-bold font-mono" style={{ width: "15%" }}>
+                          <td className="p-1.5 text-right text-zinc-900 font-bold font-mono" style={{ width: "15%" }}>
                             {((item.qty || 0) * (item.unitPrice || 0)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                           </td>
                         </tr>
