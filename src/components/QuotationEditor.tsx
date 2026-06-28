@@ -247,8 +247,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       // Page 1
       pdf.addImage(imgData1, "JPEG", 0, 0, 210, 297);
       
-      // Page 2 only if items > 5
-      if (formValues.items.length > 5 && page2Ref.current) {
+      // Page 2 only if items > 7
+      if (formValues.items.length > 7 && page2Ref.current) {
         const canvas2 = await captureElementAsCanvas(page2Ref.current);
         const imgData2 = canvas2.toDataURL("image/jpeg", 0.98);
         pdf.addPage();
@@ -956,7 +956,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {formValues.items.slice(0, 5).map((item, idx) => (
+                    {formValues.items.slice(0, formValues.items.length > 7 ? 8 : 7).map((item, idx) => (
                       <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
                         <td className="p-1.5 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 1}</td>
                         <td className="p-1.5 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
@@ -974,7 +974,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       </tr>
                     ))}
                     
-                    {formValues.items.slice(0, 5).length < 3 && Array.from({ length: 3 - formValues.items.slice(0, 5).length }).map((_, emptyIdx) => (
+                    {formValues.items.slice(0, formValues.items.length > 7 ? 8 : 7).length < 4 && Array.from({ length: 4 - formValues.items.slice(0, formValues.items.length > 7 ? 8 : 7).length }).map((_, emptyIdx) => (
                       <tr key={`empty-${emptyIdx}`} className="border-b border-zinc-100 min-h-[25px] opacity-10">
                         <td className="p-1.5 text-center border-r border-zinc-100" style={{ width: "5%" }}>&nbsp;</td>
                         <td className="p-1.5 border-r border-zinc-100" style={{ width: "55%" }}>&nbsp;</td>
@@ -984,7 +984,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       </tr>
                     ))}
 
-                    {formValues.items.length <= 5 && (
+                    {formValues.items.length <= 7 && (
                       <>
                         <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
                           <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
@@ -1015,7 +1015,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 </table>
               </div>
 
-              {formValues.items.length <= 5 && (
+              {formValues.items.length <= 7 && (
                 <>
                   {/* Terms and Conditions Section */}
                   <div className="mt-2 border border-zinc-200 rounded">
@@ -1076,7 +1076,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               )}
             </div>
 
-            {formValues.items.length <= 5 && (
+            {formValues.items.length <= 7 && (
               <div className="border border-zinc-200 mt-2 text-[9px] rounded overflow-hidden">
                 <div className="text-[#0F4C81] font-bold px-3 py-1 border-b border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
                   COMPANY & BANK DETAILS
@@ -1116,7 +1116,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
 
           {/* PAGE 2 SHOWN AS A4 PAPER */}
           {/* PAGE 2 SHOWN AS A4 PAPER */}
-          {formValues.items.length > 5 && (
+          {formValues.items.length > 7 && (
             <div 
               ref={page2Ref}
               id="quotation-page-2"
@@ -1160,9 +1160,9 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {formValues.items.slice(5).map((item, idx) => (
+                      {formValues.items.slice(8).map((item, idx) => (
                         <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
-                          <td className="p-1.5 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 6}</td>
+                          <td className="p-1.5 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 9}</td>
                           <td className="p-1.5 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
                             {item.description || "No description"}
                           </td>
