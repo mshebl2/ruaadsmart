@@ -105,8 +105,17 @@ const translations: TranslationDictionary = {
   footerContact: { en: "Footer Contact Details", ar: "تفاصيل الاتصال في التذييل" },
   address: { en: "Address", ar: "العنوان" },
   website: { en: "Website", ar: "الموقع الإلكتروني" },
-  phone: { en: "Phone", ar: "الهاتف" },
   clearSig: { en: "Clear", ar: "مسح" },
+  
+  // Login Page & Logout
+  loginTitle: { en: "Sign In", ar: "تسجيل الدخول" },
+  loginSubtitle: { en: "Ruaad Smart Systems Admin Dashboard", ar: "لوحة تحكم أنظمة رواد سمارت للأجهزة الذكية" },
+  username: { en: "Username", ar: "اسم المستخدم" },
+  password: { en: "Password", ar: "كلمة المرور" },
+  signInBtn: { en: "Sign In", ar: "دخول" },
+  invalidCredentials: { en: "Invalid username or password", ar: "اسم المستخدم أو كلمة المرور غير صحيحة" },
+  logoutBtn: { en: "Logout", ar: "تسجيل الخروج" },
+  authenticating: { en: "Authenticating...", ar: "جاري التحقق من البيانات..." },
 };
 
 interface LanguageContextProps {

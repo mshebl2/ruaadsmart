@@ -18,7 +18,8 @@ import {
   Loader2,
   Paperclip,
   Languages,
-  Globe
+  Globe,
+  LogOut
 } from "lucide-react";
 import { 
   getAllQuotations, 
@@ -32,6 +33,17 @@ import { useLanguage } from "@/lib/i18n";
 
 export default function Dashboard() {
   const { t, language, setLanguage, isRtl } = useLanguage();
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) {
+        window.location.href = "/login";
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +145,15 @@ export default function Dashboard() {
             >
               <Globe className="w-4 h-4 text-blue-400" />
               <span>{language === "ar" ? "English" : "العربية"}</span>
+            </button>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-950/15 border border-red-900/30 hover:bg-red-950/35 hover:border-red-900/60 text-red-400 font-semibold text-xs transition-all duration-300"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>{t("logoutBtn")}</span>
             </button>
 
             <Link 
