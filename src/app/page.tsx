@@ -27,7 +27,10 @@ import {
   deleteQuotation, 
   deleteCertificate,
   Quotation,
-  Certificate 
+  Certificate,
+  getAllReceipts,
+  deleteReceipt,
+  Receipt 
 } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 
@@ -46,21 +49,24 @@ export default function Dashboard() {
   };
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"quotations" | "certificates">("quotations");
+  const [activeTab, setActiveTab] = useState<"quotations" | "certificates" | "receipts">("quotations");
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [quotes, certs] = await Promise.all([
+        const [quotes, certs, recs] = await Promise.all([
           getAllQuotations(),
-          getAllCertificates()
+          getAllCertificates(),
+          getAllReceipts()
         ]);
         setQuotations(quotes);
         setCertificates(certs);
+        setReceipts(recs);
       } catch (error) {
-        console.error("Failed to load documents from IndexedDB:", error);
+        console.error("Failed to load documents:", error);
       } finally {
         setLoading(false);
       }
@@ -84,6 +90,14 @@ export default function Dashboard() {
     }
   };
 
+  const handleDeleteReceipt = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (confirm(language === "ar" ? "هل أنت متأكد من حذف سند القبض هذا؟" : "Are you sure you want to delete this receipt voucher?")) {
+      await deleteReceipt(id);
+      setReceipts(receipts.filter((r) => r.id !== id));
+    }
+  };
+
   // Calculate statistics
   const totalQuotationsVal = quotations.reduce((acc, q) => acc + q.total, 0);
   const totalCostVal = quotations.reduce((acc, q) => {
@@ -98,6 +112,13 @@ export default function Dashboard() {
     maximumFractionDigits: 2
   }).format(totalQuotationsVal);
 
+  const totalReceiptsVal = receipts.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
+  const formattedTotalReceipts = new Intl.NumberFormat(language === "ar" ? "ar-AE" : "en-AE", {
+    style: "currency",
+    currency: "AED",
+    maximumFractionDigits: 2
+  }).format(totalReceiptsVal);
+
   const filteredQuotations = quotations.filter((q) => 
     q.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     q.quotationNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -108,6 +129,12 @@ export default function Dashboard() {
     c.project.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.systemType.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.clientName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredReceipts = receipts.filter((r) => 
+    r.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.receiptNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.receivedFor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -158,17 +185,24 @@ export default function Dashboard() {
 
             <Link 
               href="/quotation/new"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-medium text-sm transition-all duration-300 hover:scale-[1.02] shadow-[0_0_20px_rgba(59,130,246,0.2)]"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-medium text-xs transition-all duration-300 hover:scale-[1.02] shadow-[0_0_20px_rgba(59,130,246,0.2)]"
             >
               <Plus className="w-4.5 h-4.5" />
               {t("newQuotation")}
             </Link>
             <Link 
               href="/certificate/new"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 hover:border-zinc-700 text-white font-medium text-sm transition-all duration-300 hover:scale-[1.02]"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 hover:border-zinc-700 text-white font-medium text-xs transition-all duration-300 hover:scale-[1.02]"
             >
               <Plus className="w-4.5 h-4.5" />
               {t("newCertificate")}
+            </Link>
+            <Link 
+              href="/receipt/new"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 hover:border-zinc-700 text-white font-medium text-xs transition-all duration-300 hover:scale-[1.02]"
+            >
+              <Plus className="w-4.5 h-4.5" />
+              {t("newReceipt")}
             </Link>
           </div>
         </div>
@@ -178,7 +212,7 @@ export default function Dashboard() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/80 rounded-2xl p-6 relative overflow-hidden group hover:border-zinc-700 transition-all duration-300">
             <div className="absolute top-4 right-4 w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
               <FileText className="w-6 h-6" />
@@ -198,13 +232,13 @@ export default function Dashboard() {
             <p className="text-sm font-medium text-zinc-400">{t("pipelineValue")}</p>
             <p className="text-3xl font-bold mt-2 text-white">{formattedTotalVal}</p>
             <div className="flex items-center gap-3 text-xs text-emerald-400 mt-2 font-medium">
-              <span>{t("margin")}: {totalMarginVal.toLocaleString("en-AE", { maximumFractionDigits: 1 })} AED</span>
+              <span>{t("margin")}: {totalMarginVal.toLocaleString("en-AE", { maximumFractionDigits: 0 })} AED</span>
               <span className="opacity-40">|</span>
-              <span>{t("cost")}: {totalCostVal.toLocaleString("en-AE", { maximumFractionDigits: 1 })} AED</span>
+              <span>{t("cost")}: {totalCostVal.toLocaleString("en-AE", { maximumFractionDigits: 0 })} AED</span>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/80 rounded-2xl p-6 relative overflow-hidden group hover:border-zinc-700 transition-all duration-300 sm:col-span-2 lg:col-span-1">
+          <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/80 rounded-2xl p-6 relative overflow-hidden group hover:border-zinc-700 transition-all duration-300">
             <div className="absolute top-4 right-4 w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
               <Award className="w-6 h-6" />
             </div>
@@ -213,6 +247,17 @@ export default function Dashboard() {
             <div className="flex items-center gap-1.5 text-xs text-purple-400 mt-2 font-medium">
               <Award className="w-3.5 h-3.5" />
               <span>{t("signedHandover")}</span>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/80 rounded-2xl p-6 relative overflow-hidden group hover:border-zinc-700 transition-all duration-300">
+            <div className="absolute top-4 right-4 w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+              <DollarSign className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-medium text-zinc-400">{t("totalReceiptsVal")}</p>
+            <p className="text-3xl font-bold mt-2 text-white">{formattedTotalReceipts}</p>
+            <div className="flex items-center gap-1.5 text-xs text-cyan-400 mt-2 font-medium">
+              <span>{receipts.length} {t("receiptsTab")}</span>
             </div>
           </div>
         </div>
@@ -251,6 +296,16 @@ export default function Dashboard() {
               }`}
             >
               {t("certificatesTab")} ({filteredCertificates.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("receipts")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                activeTab === "receipts" 
+                  ? "bg-zinc-800 text-white shadow-sm" 
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              {t("receiptsTab")} ({filteredReceipts.length})
             </button>
           </div>
         </div>
@@ -362,7 +417,7 @@ export default function Dashboard() {
                   </table>
                 </div>
               )
-            ) : (
+            ) : activeTab === "certificates" ? (
               filteredCertificates.length === 0 ? (
                 <div className="text-center py-16 px-4">
                   <Award className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
@@ -423,6 +478,80 @@ export default function Dashboard() {
                               </Link>
                               <button 
                                 onClick={(e) => handleDeleteCertificate(cert.id, e)}
+                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-red-400/80 hover:text-red-400 hover:border-red-900/50 hover:bg-red-950/10 transition-all"
+                                title={t("deleteTitle")}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            ) : (
+              filteredReceipts.length === 0 ? (
+                <div className="text-center py-16 px-4">
+                  <FileText className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-zinc-300">{t("noReceiptsFound")}</h3>
+                  <p className="text-zinc-500 text-sm mt-1 max-w-md mx-auto">
+                    {searchQuery ? "No receipt vouchers match your search query." : "Generate a payment receipt to hand over to clients."}
+                  </p>
+                  {!searchQuery && (
+                    <Link 
+                      href="/receipt/new" 
+                      className="inline-flex items-center gap-2 mt-4 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-white transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> {t("newReceipt")}
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse" dir={isRtl ? "rtl" : "ltr"}>
+                    <thead>
+                      <tr className="border-b border-zinc-900 bg-zinc-900/40 text-xs text-zinc-400 font-semibold tracking-wider">
+                        <th className="py-4 px-6">{t("receiptNo")}</th>
+                        <th className="py-4 px-6">{t("clientName")}</th>
+                        <th className="py-4 px-6">{t("date")}</th>
+                        <th className="py-4 px-6 text-right">{t("amount")}</th>
+                        <th className="py-4 px-6 text-center">{t("paymentMethod")}</th>
+                        <th className="py-4 px-6 text-center">{t("actions")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-900 text-sm">
+                      {filteredReceipts.map((rec) => (
+                        <tr key={rec.id} className="hover:bg-zinc-900/30 transition-colors group">
+                          <td className="py-4 px-6 font-mono font-medium text-white group-hover:text-blue-400 transition-colors">
+                            {rec.receiptNo}
+                          </td>
+                          <td className="py-4 px-6 font-medium text-zinc-200">
+                            {rec.clientName}
+                          </td>
+                          <td className="py-4 px-6 text-zinc-400">
+                            {rec.date}
+                          </td>
+                          <td className="py-4 px-6 text-right font-semibold text-zinc-200">
+                            {rec.amount.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                          </td>
+                          <td className="py-4 px-6 text-center capitalize font-semibold text-zinc-300">
+                            {rec.paymentMethod === "cash" && (language === "ar" ? "نقداً" : "Cash")}
+                            {rec.paymentMethod === "bank" && (language === "ar" ? "تحويل بنكي" : "Bank Transfer")}
+                            {rec.paymentMethod === "cheque" && (language === "ar" ? "شيك" : "Cheque")}
+                          </td>
+                          <td className="py-4 px-6 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Link 
+                                href={`/receipt/${rec.id}`}
+                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+                                title={t("editTitle")}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Link>
+                              <button 
+                                onClick={(e) => handleDeleteReceipt(rec.id, e)}
                                 className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-red-400/80 hover:text-red-400 hover:border-red-900/50 hover:bg-red-950/10 transition-all"
                                 title={t("deleteTitle")}
                               >

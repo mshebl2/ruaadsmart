@@ -77,3 +77,74 @@ body {
   }
 }
 
+/* Override Tailwind v4 custom properties that default to oklch inside PDF preview sheets */
+/* html2canvas does not support oklch() color syntax, causing PDF download crash */
+#certificate-preview-page, 
+#quotation-page-1, 
+#quotation-page-2,
+#company-costing-page,
+#receipt-preview-page,
+.pdf-preview-container {
+  --color-zinc-50: #fafafa !important;
+  --color-zinc-100: #f4f4f5 !important;
+  --color-zinc-200: #e4e4e7 !important;
+  --color-zinc-300: #d4d4d8 !important;
+  --color-zinc-400: #a1a1aa !important;
+  --color-zinc-500: #71717a !important;
+  --color-zinc-600: #52525b !important;
+  --color-zinc-700: #3f3f46 !important;
+  --color-zinc-800: #27272a !important;
+  --color-zinc-900: #18181b !important;
+  --color-zinc-950: #09090b !important;
+
+  --color-blue-50: #eff6ff !important;
+  --color-blue-100: #dbeafe !important;
+  --color-blue-200: #bfdbfe !important;
+  --color-blue-300: #93c5fd !important;
+  --color-blue-400: #60a5fa !important;
+  --color-blue-500: #3b82f6 !important;
+  --color-blue-600: #2563eb !important;
+  --color-blue-700: #1d4ed8 !important;
+  --color-blue-800: #1e40af !important;
+  --color-blue-900: #1e3a8a !important;
+  --color-blue-950: #172554 !important;
+
+  --color-green-50: #f0fdf4 !important;
+  --color-green-100: #dcfce7 !important;
+  --color-green-200: #bbf7d0 !important;
+  --color-green-300: #86efac !important;
+  --color-green-400: #4ade80 !important;
+  --color-green-500: #22c55e !important;
+  --color-green-600: #16a34a !important;
+  --color-green-700: #15803d !important;
+  
+  --color-emerald-50: #ecfdf5 !important;
+  --color-emerald-100: #d1fae5 !important;
+  --color-emerald-200: #a7f3d0 !important;
+  --color-emerald-300: #6ee7b7 !important;
+  --color-emerald-400: #34d399 !important;
+  --color-emerald-500: #10b981 !important;
+  --color-emerald-600: #059669 !important;
+  --color-emerald-700: #047857 !important;
+
+  --color-red-50: #fef2f2 !important;
+  --color-red-100: #fee2e2 !important;
+  --color-red-200: #fca5a5 !important;
+  --color-red-300: #fca5a5 !important;
+  --color-red-400: #f87171 !important;
+  --color-red-500: #ef4444 !important;
+  --color-red-600: #dc2626 !important;
+  --color-red-700: #b91c1c !important;
+  --color-red-950: #450a0a !important;
+
+  --color-rose-50: #fff1f2 !important;
+  --color-rose-100: #ffe4e6 !important;
+  --color-rose-200: #fecdd3 !important;
+  --color-rose-300: #fda4af !important;
+  --color-rose-400: #fb7185 !important;
+  --color-rose-500: #f43f5e !important;
+  --color-rose-600: #e11d48 !important;
+  --color-rose-700: #be123c !important;
+  --color-rose-950: #4c0519 !important;
+}
+

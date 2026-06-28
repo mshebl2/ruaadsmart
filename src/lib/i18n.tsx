@@ -116,6 +116,29 @@ const translations: TranslationDictionary = {
   invalidCredentials: { en: "Invalid username or password", ar: "اسم المستخدم أو كلمة المرور غير صحيحة" },
   logoutBtn: { en: "Logout", ar: "تسجيل الخروج" },
   authenticating: { en: "Authenticating...", ar: "جاري التحقق من البيانات..." },
+  
+  // Receipts & Costing Tabs
+  receiptsTab: { en: "Receipts", ar: "سندات القبض" },
+  newReceipt: { en: "New Receipt", ar: "سند قبض جديد" },
+  receiptNo: { en: "Receipt No.", ar: "رقم السند" },
+  amount: { en: "Amount (AED)", ar: "المبلغ (درهم)" },
+  amountInWords: { en: "Amount in Words", ar: "المبلغ كتابةً" },
+  paymentMethod: { en: "Payment Method", ar: "طريقة الدفع" },
+  cash: { en: "Cash", ar: "نقداً" },
+  bankTransfer: { en: "Bank Transfer", ar: "تحويل بنكي" },
+  cheque: { en: "Cheque", ar: "شيك" },
+  chequeNo: { en: "Cheque No.", ar: "رقم الشيك" },
+  chequeDate: { en: "Cheque Date", ar: "تاريخ الشيك" },
+  receivedFor: { en: "Being payment for", ar: "وذلك عن قيمة" },
+  receivedBy: { en: "Received By", ar: "المستلم" },
+  noReceiptsFound: { en: "No Receipt Vouchers Found", ar: "لم يتم العثور على سندات قبض" },
+  receiptTitle: { en: "Receipt Voucher", ar: "سند قبض" },
+  receiptDetails: { en: "Receipt Details", ar: "تفاصيل السند" },
+  clientSignatureSeal: { en: "Client Signature / Seal", ar: "توقيع / ختم العميل" },
+  integratorSignatureSeal: { en: "Integrator Signature / Seal", ar: "توقيع / ختم المستلم" },
+  totalReceiptsVal: { en: "Total Receipts Value", ar: "إجمالي المبالغ المستلمة" },
+  clientTab: { en: "Client View", ar: "عرض العميل" },
+  companyTab: { en: "Company Costs", ar: "كشف التكلفة للشركة" },
 };
 
 interface LanguageContextProps {

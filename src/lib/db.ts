@@ -141,3 +141,54 @@ export async function deleteCertificate(id: string): Promise<void> {
   });
   if (!res.ok) throw new Error('Failed to delete certificate');
 }
+
+export interface Receipt {
+  id: string;
+  receiptNo: string;
+  date: string;
+  clientName: string;
+  amount: number;
+  amountInWords: string;
+  paymentMethod: "cash" | "bank" | "cheque";
+  chequeNo?: string;
+  chequeDate?: string;
+  bankName?: string;
+  receivedFor: string;
+  receivedBy: string;
+  integratorSignature?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Receipt Operations
+export async function saveReceipt(receipt: Receipt): Promise<void> {
+  const res = await fetch('/api/receipts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(receipt),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to save receipt');
+  }
+}
+
+export async function getReceipt(id: string): Promise<Receipt | null> {
+  const res = await fetch(`/api/receipts/${id}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('Failed to fetch receipt');
+  return res.json();
+}
+
+export async function getAllReceipts(): Promise<Receipt[]> {
+  const res = await fetch('/api/receipts');
+  if (!res.ok) throw new Error('Failed to fetch receipts');
+  return res.json();
+}
+
+export async function deleteReceipt(id: string): Promise<void> {
+  const res = await fetch(`/api/receipts/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete receipt');
+}
