@@ -234,7 +234,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
 
   // Generate PDF from DOM
   const generatePDF = async (): Promise<jsPDF | null> => {
-    if (!page1Ref.current || !page2Ref.current) return null;
+    if (!page1Ref.current) return null;
     
     setExporting(true);
     document.body.classList.add("pdf-generating");
@@ -242,17 +242,18 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       const canvas1 = await captureElementAsCanvas(page1Ref.current);
       const imgData1 = canvas1.toDataURL("image/jpeg", 0.98);
 
-      const canvas2 = await captureElementAsCanvas(page2Ref.current);
-      const imgData2 = canvas2.toDataURL("image/jpeg", 0.98);
-
       const pdf = new jsPDF("p", "mm", "a4");
       
       // Page 1
       pdf.addImage(imgData1, "JPEG", 0, 0, 210, 297);
       
-      // Page 2
-      pdf.addPage();
-      pdf.addImage(imgData2, "JPEG", 0, 0, 210, 297);
+      // Page 2 only if items > 5
+      if (formValues.items.length > 5 && page2Ref.current) {
+        const canvas2 = await captureElementAsCanvas(page2Ref.current);
+        const imgData2 = canvas2.toDataURL("image/jpeg", 0.98);
+        pdf.addPage();
+        pdf.addImage(imgData2, "JPEG", 0, 0, 210, 297);
+      }
       
       return pdf;
     } catch (error) {
@@ -983,145 +984,171 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       </tr>
                     ))}
 
-                    <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
-                      <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
-                      <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81]" style={{ width: "15%" }}>Subtotal:</td>
-                      <td className="p-1 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
-                        {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
-                      </td>
-                    </tr>
-                    {watchedDiscount > 0 && (
-                      <tr className="font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
-                        <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                        <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
-                        <td className="p-1 text-right font-mono font-bold text-red-650">
-                          -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
-                        </td>
-                      </tr>
+                    {formValues.items.length <= 5 && (
+                      <>
+                        <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                          <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
+                          <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81]" style={{ width: "15%" }}>Subtotal:</td>
+                          <td className="p-1 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
+                            {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                          </td>
+                        </tr>
+                        {watchedDiscount > 0 && (
+                          <tr className="font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
+                            <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                            <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
+                            <td className="p-1 text-right font-mono font-bold text-red-650">
+                              -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                            </td>
+                          </tr>
+                        )}
+                        <tr className="font-bold text-zinc-900" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
+                          <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                          <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81] text-[10px]">TOTAL:</td>
+                          <td className="p-1 text-right font-mono text-[10px] text-[#0F4C81] font-bold">
+                            {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                          </td>
+                        </tr>
+                      </>
                     )}
-                    <tr className="font-bold text-zinc-900" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
-                      <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                      <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81] text-[10px]">TOTAL:</td>
-                      <td className="p-1 text-right font-mono text-[10px] text-[#0F4C81] font-bold">
-                        {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
-                      </td>
-                    </tr>
                   </tbody>
                 </table>
               </div>
 
-              {/* Terms and Conditions Section */}
-              <div className="mt-2 border border-zinc-200 rounded">
-                <div className="px-2 py-0.5 font-bold text-[9px] text-[#0F4C81] border-b border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
-                  TERMS & CONDITIONS
-                </div>
-                <div className="flex justify-between p-2 text-[9px] gap-4">
-                  <div className="w-[48%]">
-                    <span className="font-bold text-zinc-500">Payment terms: </span>
-                    <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
+              {formValues.items.length <= 5 && (
+                <>
+                  {/* Terms and Conditions Section */}
+                  <div className="mt-2 border border-zinc-200 rounded">
+                    <div className="px-2 py-0.5 font-bold text-[9px] text-[#0F4C81] border-b border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
+                      TERMS & CONDITIONS
+                    </div>
+                    <div className="flex justify-between p-2 text-[9px] gap-4">
+                      <div className="w-[48%]">
+                        <span className="font-bold text-zinc-500">Payment terms: </span>
+                        <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
+                      </div>
+                      <div className="w-[48%]">
+                        <span className="font-bold text-zinc-500">Terms & Conditions: </span>
+                        <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline text-[9px]">
+                          {formValues.termsConditions}
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-[48%]">
-                    <span className="font-bold text-zinc-500">Terms & Conditions: </span>
-                    <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline">
-                      {formValues.termsConditions}
-                    </a>
-                  </div>
-                </div>
-              </div>
 
-              {/* Signature Blocks */}
-              <div className="flex w-full mt-2.5 border border-zinc-200 text-[9px] relative">
-                <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
-                  <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
-                    Prepared & Approved By (Ruaad Smart)
-                  </div>
-                  
-                  {/* Official Stamp Overlay */}
-                  <div className="absolute bottom-1 right-8 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none">
-                    <Image 
-                      src="/stamp.png" 
-                      alt="Ruaad Smart Stamp" 
-                      fill 
-                      className="object-contain"
-                    />
-                  </div>
-                  
-                  <div className="pt-8 text-zinc-700 space-y-0.5 relative z-10">
-                    <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
-                    <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
-                  </div>
-                </div>
+                  {/* Signature Blocks */}
+                  <div className="flex w-full mt-2.5 border border-zinc-200 text-[9px] relative">
+                    <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
+                      <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
+                        Prepared & Approved By (Ruaad Smart)
+                      </div>
+                      
+                      {/* Official Stamp Overlay */}
+                      <div className="absolute bottom-1 right-8 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none">
+                        <Image 
+                          src="/stamp.png" 
+                          alt="Ruaad Smart Stamp" 
+                          fill 
+                          className="object-contain"
+                        />
+                      </div>
+                      
+                      <div className="pt-8 text-zinc-700 space-y-0.5 relative z-10">
+                        <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
+                        <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
+                      </div>
+                    </div>
 
-                <div className="w-[50%] p-3 min-h-[90px] flex flex-col justify-between">
-                  <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
-                    Client Acceptance
+                    <div className="w-[50%] p-3 min-h-[90px] flex flex-col justify-between">
+                      <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
+                        Client Acceptance
+                      </div>
+                      
+                      <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-6 mb-2" />
+                      
+                      <div className="text-zinc-700 space-y-0.5">
+                        <div><span className="font-bold text-zinc-400">Name: ______________________</span></div>
+                        <div><span className="font-bold text-zinc-400">Date: ______________________</span></div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-6 mb-2" />
-                  
-                  <div className="text-zinc-700 space-y-0.5">
-                    <div><span className="font-bold text-zinc-400">Name: ______________________</span></div>
-                    <div><span className="font-bold text-zinc-400">Date: ______________________</span></div>
-                  </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
 
-            {/* Bottom Company Info Block 1 (Page 1) */}
-            <div className="border border-zinc-200 mt-2.5 text-[9px]">
-              <div className="text-[#0F4C81] font-bold px-3 py-1 border-b border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
-                COMPANY & BANK DETAILS
-              </div>
-              <div className="flex w-full">
-                <div className="w-[50%] p-2 border-r border-zinc-200">
-                  <span className="font-bold text-zinc-500 block uppercase text-[8px]">Company Name</span>
-                  <span className="text-zinc-800 font-semibold">{formValues.companyName || "RUAAD SMART SMART MACHINE TRADING LLC"}</span>
+            {formValues.items.length <= 5 && (
+              <div className="border border-zinc-200 mt-2 text-[9px] rounded overflow-hidden">
+                <div className="text-[#0F4C81] font-bold px-3 py-1 border-b border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
+                  COMPANY & BANK DETAILS
                 </div>
-                <div className="w-[50%] p-2">
-                  <span className="font-bold text-zinc-500 block uppercase text-[8px]">Bank Name</span>
-                  <span className="text-zinc-800 font-semibold">{formValues.bankName || "ABUDHABI COMML.BANK"}</span>
+                <div className="flex w-full border-b border-zinc-150">
+                  <div className="w-[50%] p-1.5 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Company Name</span>
+                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.companyName || "RUAAD SMART SMART MACHINE TRADING LLC"}</span>
+                  </div>
+                  <div className="w-[50%] p-1.5">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Bank Name</span>
+                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.bankName || "ABUDHABI COMML.BANK"}</span>
+                  </div>
+                </div>
+                <div className="flex w-full border-b border-zinc-150">
+                  <div className="w-[50%] p-1.5 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Company Address</span>
+                    <span className="text-zinc-800 font-medium text-[9px] leading-tight">{formValues.companyAddress || "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates"}</span>
+                  </div>
+                  <div className="w-[50%] p-1.5">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">IBAN</span>
+                    <span className="text-zinc-900 font-mono font-bold text-[9px] tracking-wider leading-tight">{formValues.bankIban || "AE100351641005629371001"}</span>
+                  </div>
+                </div>
+                <div className="flex w-full">
+                  <div className="w-[50%] p-1.5 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Email</span>
+                    <a href={`mailto:${formValues.companyEmail || "info@support.ruaadalraqamia.com"}`} className="text-blue-600 font-semibold text-[9px] leading-tight">{formValues.companyEmail || "info@support.ruaadalraqamia.com"}</a>
+                  </div>
+                  <div className="w-[50%] p-1.5">
+                    &nbsp;
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* PAGE 2 SHOWN AS A4 PAPER */}
-          <div 
-            ref={page2Ref}
-            id="quotation-page-2"
-            dir="ltr"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
-            style={{ boxSizing: "border-box", direction: "ltr" }}
-          >
-            <div>
-              {/* Document Header Page 2 */}
-              <div className="flex items-start justify-between border-b-[2px] border-zinc-200 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-10 h-10 bg-white">
-                    <Image 
-                      src="/logo.jpg" 
-                      alt="Ruaad Smart Logo" 
-                      fill
-                      className="object-contain"
-                    />
+          {/* PAGE 2 SHOWN AS A4 PAPER */}
+          {formValues.items.length > 5 && (
+            <div 
+              ref={page2Ref}
+              id="quotation-page-2"
+              dir="ltr"
+              className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
+              style={{ boxSizing: "border-box", direction: "ltr" }}
+            >
+              <div>
+                {/* Document Header Page 2 */}
+                <div className="flex items-start justify-between border-b-[2px] border-zinc-200 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-10 h-10 bg-white">
+                      <Image 
+                        src="/logo.jpg" 
+                        alt="Ruaad Smart Logo" 
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-bold text-[#0F4C81] font-arabic m-0">رواد سمارت للأجهزة الذكية</h2>
+                      <p className="text-[8px] text-zinc-500 m-0">RUAAD SMART SMART MACHINE TRADING LLC</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-[#0F4C81] font-arabic m-0">رواد سمارت للأجهزة الذكية</h2>
-                    <p className="text-[8px] text-zinc-500 m-0">RUAAD SMART SMART MACHINE TRADING LLC</p>
+                  
+                  <div className="text-right">
+                    <span className="text-zinc-400 font-bold text-xs tracking-wider">PAGE 2 / 2</span>
                   </div>
                 </div>
-                
-                <div className="text-right">
-                  <span className="text-zinc-400 font-bold text-xs tracking-wider">PAGE 2 / 2</span>
-                </div>
-              </div>
 
-              {/* Quotation Table Continuation if items exceed 5 */}
-              {formValues.items.length > 5 && (
+                {/* Table for items continuation */}
                 <div className="mt-4">
-                  <div className="bg-zinc-100 text-[#0F4C81] font-bold px-3 py-1.5 text-[8.5px] mb-2 rounded border border-zinc-200">
-                    ITEMS LIST CONTINUATION
-                  </div>
                   <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
                     <thead>
                       <tr className="bg-[#0F4C81] text-white font-bold text-[8.5px]">
@@ -1150,45 +1177,124 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                           </td>
                         </tr>
                       ))}
+
+                      {/* Totals rows on Page 2 */}
+                      <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                        <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
+                        <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81]" style={{ width: "15%" }}>Subtotal:</td>
+                        <td className="p-1 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
+                          {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                        </td>
+                      </tr>
+                      {watchedDiscount > 0 && (
+                        <tr className="font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
+                          <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                          <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
+                          <td className="p-1 text-right font-mono font-bold text-red-650">
+                            -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                          </td>
+                        </tr>
+                      )}
+                      <tr className="font-bold text-zinc-900" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
+                        <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                        <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81] text-[10px]">TOTAL:</td>
+                        <td className="p-1 text-right font-mono text-[10px] text-[#0F4C81] font-bold">
+                          {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
-              )}
 
-              {/* Company Details Block 2 (Page 2) */}
-              <div className="mt-4 border border-zinc-200 text-[9px] rounded overflow-hidden">
-                <div className="text-[#0F4C81] font-bold px-3 py-1.5 border-b border-zinc-200 uppercase tracking-wider text-[8px]" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
-                  Additional Details & Bank Information
-                </div>
-                <div className="flex w-full border-b border-zinc-200">
-                  <div className="w-[50%] p-3 border-r border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.2)" }}>
-                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-1">Company Address</span>
-                    <span className="text-zinc-800 font-medium leading-relaxed">{formValues.companyAddress}</span>
+                {/* Terms and Conditions Section on Page 2 */}
+                <div className="mt-2 border border-zinc-200 rounded">
+                  <div className="px-2 py-0.5 font-bold text-[9px] text-[#0F4C81] border-b border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
+                    TERMS & CONDITIONS
                   </div>
-                  <div className="w-[50%] p-3" style={{ backgroundColor: "rgba(250, 250, 250, 0.2)" }}>
-                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-1">IBAN</span>
-                    <span className="text-zinc-900 font-mono font-bold tracking-wider">{formValues.bankIban}</span>
+                  <div className="flex justify-between p-2 text-[9px] gap-4">
+                    <div className="w-[48%]">
+                      <span className="font-bold text-zinc-500">Payment terms: </span>
+                      <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
+                    </div>
+                    <div className="w-[48%]">
+                      <span className="font-bold text-zinc-500">Terms & Conditions: </span>
+                      <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline text-[9px]">
+                        {formValues.termsConditions}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Signature Blocks on Page 2 */}
+                <div className="flex w-full mt-2.5 border border-zinc-200 text-[9px] relative">
+                  <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
+                    <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
+                      Prepared & Approved By (Ruaad Smart)
+                    </div>
+                    <div className="absolute bottom-1 right-8 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none">
+                      <Image 
+                        src="/stamp.png" 
+                        alt="Ruaad Smart Stamp" 
+                        fill 
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="pt-8 text-zinc-700 space-y-0.5 relative z-10">
+                      <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
+                      <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
+                    </div>
+                  </div>
+
+                  <div className="w-[50%] p-3 min-h-[90px] flex flex-col justify-between">
+                    <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
+                      Client Acceptance
+                    </div>
+                    <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-6 mb-2" />
+                    <div className="text-zinc-700 space-y-0.5">
+                      <div><span className="font-bold text-zinc-400">Name: ______________________</span></div>
+                      <div><span className="font-bold text-zinc-400">Date: ______________________</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Combined Company & Bank Details on Page 2 */}
+              <div className="border border-zinc-200 mt-2 text-[9px] rounded overflow-hidden">
+                <div className="text-[#0F4C81] font-bold px-3 py-1 border-b border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
+                  COMPANY & BANK DETAILS
+                </div>
+                <div className="flex w-full border-b border-zinc-150">
+                  <div className="w-[50%] p-1.5 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Company Name</span>
+                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.companyName || "RUAAD SMART SMART MACHINE TRADING LLC"}</span>
+                  </div>
+                  <div className="w-[50%] p-1.5">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Bank Name</span>
+                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.bankName || "ABUDHABI COMML.BANK"}</span>
+                  </div>
+                </div>
+                <div className="flex w-full border-b border-zinc-150">
+                  <div className="w-[50%] p-1.5 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Company Address</span>
+                    <span className="text-zinc-800 font-medium text-[9px] leading-tight">{formValues.companyAddress || "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates"}</span>
+                  </div>
+                  <div className="w-[50%] p-1.5">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">IBAN</span>
+                    <span className="text-zinc-900 font-mono font-bold text-[9px] tracking-wider leading-tight">{formValues.bankIban || "AE100351641005629371001"}</span>
                   </div>
                 </div>
                 <div className="flex w-full">
-                  <div className="w-[50%] p-3 border-r border-zinc-200">
-                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-1">Email</span>
-                    <a href={`mailto:${formValues.companyEmail}`} className="text-blue-600 font-semibold">{formValues.companyEmail}</a>
+                  <div className="w-[50%] p-1.5 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Email</span>
+                    <a href={`mailto:${formValues.companyEmail || "info@support.ruaadalraqamia.com"}`} className="text-blue-600 font-semibold text-[9px] leading-tight">{formValues.companyEmail || "info@support.ruaadalraqamia.com"}</a>
                   </div>
-                  <div className="w-[50%] p-3" style={{ backgroundColor: "rgba(250, 250, 250, 0.1)" }}>
+                  <div className="w-[50%] p-1.5">
                     &nbsp;
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Verification Footer Statement */}
-            <div className="border-t border-zinc-200 pt-4 text-center">
-              <p className="italic text-zinc-400 text-[9px] m-0">
-                This receipt is only valid when signed by an authorised Ruaad Smart representative.
-              </p>
-            </div>
-          </div>
+          )}
 
         </div>
 
