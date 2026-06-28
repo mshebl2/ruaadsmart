@@ -469,7 +469,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
             id="receipt-preview-page"
             dir="ltr"
             className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col justify-between relative text-xs select-none text-left"
-            style={{ boxSizing: "border-box" }}
+            style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
               {/* Document Header */}

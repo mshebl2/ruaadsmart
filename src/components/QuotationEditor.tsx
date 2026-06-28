@@ -869,7 +869,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
             id="quotation-page-1"
             dir="ltr"
             className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
-            style={{ boxSizing: "border-box" }}
+            style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
               {/* Document Header */}
@@ -1091,7 +1091,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
             id="quotation-page-2"
             dir="ltr"
             className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
-            style={{ boxSizing: "border-box" }}
+            style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
               {/* Document Header Page 2 */}
@@ -1201,7 +1201,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
             id="company-costing-page"
             dir="ltr"
             className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
-            style={{ boxSizing: "border-box" }}
+            style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
               {/* Document Header */}
