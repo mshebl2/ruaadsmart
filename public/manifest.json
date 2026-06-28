@@ -1,0 +1,17 @@
+{
+  "name": "Ruaad Smart",
+  "short_name": "RuaadSmart",
+  "description": "Ruaad Smart PWA for Quotation and Work Completion Certificate management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
