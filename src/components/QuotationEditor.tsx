@@ -54,6 +54,7 @@ const DEFAULT_QUOTATION_VALUES = {
     }
   ],
   subtotal: 180,
+  discount: 0,
   total: 180,
   paymentTerms: "Immediate Payment",
   termsConditions: "https://support.ruaadalraqamia.com/terms",
@@ -121,12 +122,13 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   }, [id, reset, setValue, router]);
 
   // Calculate totals on the fly
+  const watchedDiscount = Number(watch("discount")) || 0;
   const subtotal = watchedItems.reduce((acc, item) => acc + (item.qty || 0) * (item.unitPrice || 0), 0);
-  const total = subtotal;
+  const total = Math.max(0, subtotal - watchedDiscount);
 
   // Calculate internal cost and margins
   const totalCost = watchedItems.reduce((acc, item) => acc + ((item.cost || 0) * (item.qty || 0)), 0);
-  const totalRevenue = subtotal;
+  const totalRevenue = total;
   const profitMargin = totalRevenue - totalCost;
   const marginPercentage = totalRevenue > 0 ? (profitMargin / totalRevenue) * 100 : 0;
 
@@ -178,12 +180,16 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       }));
       const calculatedSubtotal = processedItems.reduce((acc, item) => acc + item.total, 0);
 
+      const discountVal = Number(data.discount) || 0;
+      const calculatedTotal = Math.max(0, calculatedSubtotal - discountVal);
+
       const updatedDoc: Quotation = {
         ...data,
         items: processedItems,
         id: documentId,
         subtotal: calculatedSubtotal,
-        total: calculatedSubtotal,
+        discount: discountVal,
+        total: calculatedTotal,
         createdAt: data.createdAt || now,
         updatedAt: now
       };
@@ -621,6 +627,37 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               ))}
             </div>
 
+            {/* Totals & Discount Card */}
+            <div className="bg-zinc-900/60 border border-zinc-850 p-5 rounded-xl space-y-4">
+              <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider border-b border-zinc-800 pb-2">
+                {language === "ar" ? "تفاصيل التكلفة والخصم" : "Pricing Summary & Discount"}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{t("subtotal")}</label>
+                  <div className="w-full bg-zinc-950/80 border border-zinc-850 rounded-lg px-3 py-2 text-sm text-zinc-400 font-mono">
+                    {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{t("discount")}</label>
+                  <input 
+                    type="number" 
+                    step="any"
+                    {...register("discount", { valueAsNumber: true })} 
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none font-mono"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{t("total")}</label>
+                  <div className="w-full bg-zinc-950/80 border border-blue-900/30 rounded-lg px-3 py-2 text-sm text-blue-400 font-bold font-mono">
+                    {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Internal Costing & Profit Margin Dashboard Summary */}
             <div className="bg-zinc-900/60 border border-emerald-900/40 p-5 rounded-xl space-y-4">
               <h2 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider border-b border-emerald-900/40 pb-2 flex items-center gap-2">
@@ -927,6 +964,15 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                         {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                       </td>
                     </tr>
+                    {watchedDiscount > 0 && (
+                      <tr className="font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
+                        <td colSpan={3} className="p-2 border-r border-zinc-200">&nbsp;</td>
+                        <td className="p-2 text-right border-r border-zinc-200 text-red-650">Discount:</td>
+                        <td className="p-2 text-right font-mono font-bold text-red-650">
+                          -{watchedDiscount.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                        </td>
+                      </tr>
+                    )}
                     <tr className="font-bold text-zinc-900" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
                       <td colSpan={3} className="p-2 border-r border-zinc-200">&nbsp;</td>
                       <td className="p-2 text-right border-r border-zinc-200 text-[#0F4C81] text-[10px]">TOTAL:</td>
@@ -1173,6 +1219,9 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="text-center p-2 border-r border-zinc-200">
                   <span className="font-bold text-zinc-500 block uppercase text-[8px] mb-1">Total Client Price (Revenue)</span>
                   <span className="text-zinc-900 font-extrabold text-sm font-mono">{totalRevenue.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED</span>
+                  {watchedDiscount > 0 && (
+                    <span className="block text-[7px] text-zinc-400 font-bold mt-0.5">(Discount: {watchedDiscount.toLocaleString("en-AE")} AED)</span>
+                  )}
                 </div>
                 <div className="text-center p-2 border-r border-zinc-200">
                   <span className="font-bold text-zinc-500 block uppercase text-[8px] mb-1">Total Cost Price</span>

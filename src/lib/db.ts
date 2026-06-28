@@ -32,6 +32,7 @@ export interface Quotation {
   projectReference: string;
   items: QuotationItem[];
   subtotal: number;
+  discount?: number;
   total: number;
   paymentTerms: string;
   termsConditions: string;

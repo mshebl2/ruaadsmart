@@ -59,6 +59,8 @@ const translations: TranslationDictionary = {
   unit: { en: "Unit", ar: "الوحدة" },
   unitPrice: { en: "Unit Price (AED)", ar: "سعر الوحدة (درهم)" },
   itemTotal: { en: "Total (AED)", ar: "الإجمالي (درهم)" },
+  subtotal: { en: "Subtotal", ar: "المجموع الفرعي" },
+  discount: { en: "Discount", ar: "الخصم" },
   termsConditions: { en: "Terms & Conditions", ar: "الشروط والأحكام" },
   paymentTerms: { en: "Payment Terms", ar: "شروط الدفع" },
   termsLink: { en: "Terms Link", ar: "رابط الشروط" },
