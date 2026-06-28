@@ -126,10 +126,19 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     }
   };
 
-  const generatePDF = async (): Promise<jsPDF | null> => {
-    if (!previewRef.current) return null;
-    setExporting(true);
-    document.body.classList.add("pdf-generating");
+  const captureElementAsCanvas = async (element: HTMLDivElement): Promise<HTMLCanvasElement> => {
+    const clone = element.cloneNode(true) as HTMLDivElement;
+    clone.style.position = "absolute";
+    clone.style.top = "0";
+    clone.style.left = "-9999px";
+    clone.style.width = "210mm";
+    clone.style.height = "297mm";
+    clone.style.minWidth = "210mm";
+    clone.style.minHeight = "297mm";
+    clone.style.zoom = "1";
+    clone.style.transform = "none";
+    document.body.appendChild(clone);
+    await new Promise((resolve) => setTimeout(resolve, 150));
     try {
       const options = {
         scale: 2,
@@ -137,7 +146,18 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
         allowTaint: true,
         backgroundColor: "#ffffff",
       };
-      const canvas = await html2canvas(previewRef.current, options);
+      return await html2canvas(clone, options);
+    } finally {
+      document.body.removeChild(clone);
+    }
+  };
+
+  const generatePDF = async (): Promise<jsPDF | null> => {
+    if (!previewRef.current) return null;
+    setExporting(true);
+    document.body.classList.add("pdf-generating");
+    try {
+      const canvas = await captureElementAsCanvas(previewRef.current);
       const imgData = canvas.toDataURL("image/jpeg", 0.98);
       const pdf = new jsPDF("p", "mm", "a4");
       pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
@@ -478,35 +498,48 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
               </div>
 
               {/* Receipt Metadata */}
-              <div className="grid grid-cols-4 border border-zinc-200 mt-4 text-[10px]">
-                <div className="bg-zinc-50 p-2.5 font-bold border-r border-b border-zinc-200 text-[#0F4C81] flex justify-between">
-                  <span>Receipt No.</span>
-                  <span className="font-arabic">رقم السند</span>
-                </div>
-                <div className="p-2.5 border-r border-b border-zinc-200 font-mono font-bold text-zinc-800">{formValues.receiptNo}</div>
-                <div className="bg-zinc-50 p-2.5 font-bold border-r border-b border-zinc-200 text-[#0F4C81] flex justify-between">
-                  <span>Date</span>
-                  <span className="font-arabic">التاريخ</span>
-                </div>
-                <div className="p-2.5 border-b border-zinc-200 text-zinc-700 font-semibold">{formValues.date}</div>
-
-                <div className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81] flex justify-between">
-                  <span>Amount</span>
-                  <span className="font-arabic">المبلغ</span>
-                </div>
-                <div className="p-2.5 border-r border-zinc-200 text-[#0F4C81] font-bold font-mono text-sm" style={{ backgroundColor: "rgba(239, 246, 255, 0.2)" }}>
-                  {formValues.amount ? Number(formValues.amount).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"} AED
-                </div>
-                <div className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81] flex justify-between">
-                  <span>Method</span>
-                  <span className="font-arabic">طريقة الدفع</span>
-                </div>
-                <div className="p-2.5 text-zinc-700 capitalize font-bold">
-                  {formValues.paymentMethod === "cash" && (language === "ar" ? "نقداً" : "Cash")}
-                  {formValues.paymentMethod === "bank" && (language === "ar" ? "تحويل بنكي" : `Bank: ${formValues.bankName || ""}`)}
-                  {formValues.paymentMethod === "cheque" && (language === "ar" ? `شيك: ${formValues.chequeNo || ""}` : `Cheque: ${formValues.chequeNo || ""}`)}
-                </div>
-              </div>
+              <table className="w-full border border-zinc-200 mt-4 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
+                <tbody>
+                  <tr className="border-b border-zinc-200">
+                    <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                      <div className="flex justify-between">
+                        <span>Receipt No.</span>
+                        <span className="font-arabic">رقم السند</span>
+                      </div>
+                    </td>
+                    <td className="p-2.5 border-r border-zinc-200 font-mono font-bold text-zinc-800" style={{ width: "25%" }}>{formValues.receiptNo}</td>
+                    <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                      <div className="flex justify-between">
+                        <span>Date</span>
+                        <span className="font-arabic">التاريخ</span>
+                      </div>
+                    </td>
+                    <td className="p-2.5 text-zinc-700 font-semibold" style={{ width: "25%" }}>{formValues.date}</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                      <div className="flex justify-between">
+                        <span>Amount</span>
+                        <span className="font-arabic">المبلغ</span>
+                      </div>
+                    </td>
+                    <td className="p-2.5 border-r border-zinc-200 text-[#0F4C81] font-bold font-mono text-sm" style={{ backgroundColor: "rgba(239, 246, 255, 0.2)", width: "25%" }}>
+                      {formValues.amount ? Number(formValues.amount).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"} AED
+                    </td>
+                    <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                      <div className="flex justify-between">
+                        <span>Method</span>
+                        <span className="font-arabic">طريقة الدفع</span>
+                      </div>
+                    </td>
+                    <td className="p-2.5 text-zinc-700 capitalize font-bold" style={{ width: "25%" }}>
+                      {formValues.paymentMethod === "cash" && (language === "ar" ? "نقداً" : "Cash")}
+                      {formValues.paymentMethod === "bank" && (language === "ar" ? "تحويل بنكي" : `Bank: ${formValues.bankName || ""}`)}
+                      {formValues.paymentMethod === "cheque" && (language === "ar" ? `شيك: ${formValues.chequeNo || ""}` : `Cheque: ${formValues.chequeNo || ""}`)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* Core Receipt content (Legal text style) */}
               <div className="mt-4 border border-zinc-200 rounded-lg p-4 space-y-4 text-zinc-800 leading-relaxed text-justify text-[10px]">
@@ -563,8 +596,8 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
             {/* Bottom Section: Signatures & Address info */}
             <div>
               {/* Signatures block */}
-              <div className="grid grid-cols-2 gap-4 border border-zinc-200 rounded-lg p-3.5" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
-                <div className="text-center flex flex-col justify-between min-h-[90px]">
+              <div className="flex w-full justify-between gap-4 border border-zinc-200 rounded-lg p-3.5" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                <div className="w-[48%] text-center flex flex-col justify-between min-h-[90px]">
                   <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider">
                     Client Signature / Seal <br/>
                     <span className="font-arabic text-zinc-400">توقيع / ختم العميل</span>
@@ -572,7 +605,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4" />
                 </div>
                 
-                <div className="text-center flex flex-col justify-between min-h-[90px] relative">
+                <div className="w-[48%] text-center flex flex-col justify-between min-h-[90px] relative">
                   <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider relative z-10">
                     Authorized Receiver Signature <br/>
                     <span className="font-arabic text-zinc-400">توقيع / ختم المستلم المصرح له</span>

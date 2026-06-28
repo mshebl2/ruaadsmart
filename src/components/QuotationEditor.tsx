@@ -206,12 +206,19 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
     }
   };
 
-  // Generate PDF from DOM
-  const generatePDF = async (): Promise<jsPDF | null> => {
-    if (!page1Ref.current || !page2Ref.current) return null;
-    
-    setExporting(true);
-    document.body.classList.add("pdf-generating");
+  const captureElementAsCanvas = async (element: HTMLDivElement): Promise<HTMLCanvasElement> => {
+    const clone = element.cloneNode(true) as HTMLDivElement;
+    clone.style.position = "absolute";
+    clone.style.top = "0";
+    clone.style.left = "-9999px";
+    clone.style.width = "210mm";
+    clone.style.height = "297mm";
+    clone.style.minWidth = "210mm";
+    clone.style.minHeight = "297mm";
+    clone.style.zoom = "1";
+    clone.style.transform = "none";
+    document.body.appendChild(clone);
+    await new Promise((resolve) => setTimeout(resolve, 150));
     try {
       const options = {
         scale: 2,
@@ -219,11 +226,23 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
         allowTaint: true,
         backgroundColor: "#ffffff",
       };
+      return await html2canvas(clone, options);
+    } finally {
+      document.body.removeChild(clone);
+    }
+  };
 
-      const canvas1 = await html2canvas(page1Ref.current, options);
+  // Generate PDF from DOM
+  const generatePDF = async (): Promise<jsPDF | null> => {
+    if (!page1Ref.current || !page2Ref.current) return null;
+    
+    setExporting(true);
+    document.body.classList.add("pdf-generating");
+    try {
+      const canvas1 = await captureElementAsCanvas(page1Ref.current);
       const imgData1 = canvas1.toDataURL("image/jpeg", 0.98);
 
-      const canvas2 = await html2canvas(page2Ref.current, options);
+      const canvas2 = await captureElementAsCanvas(page2Ref.current);
       const imgData2 = canvas2.toDataURL("image/jpeg", 0.98);
 
       const pdf = new jsPDF("p", "mm", "a4");
@@ -250,13 +269,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
     setExporting(true);
     document.body.classList.add("pdf-generating");
     try {
-      const options = {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-      };
-      const canvas = await html2canvas(companyPageRef.current, options);
+      const canvas = await captureElementAsCanvas(companyPageRef.current);
       const imgData = canvas.toDataURL("image/jpeg", 0.98);
       const pdf = new jsPDF("p", "mm", "a4");
       pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
@@ -885,65 +898,76 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </div>
 
               {/* Metadata Grid Table */}
-              <div className="grid grid-cols-4 border border-zinc-200 mt-4 text-[10px]">
-                <div className="bg-zinc-50 p-2 font-bold border-r border-b border-zinc-200 text-[#0F4C81]">Quotation No.</div>
-                <div className="p-2 border-r border-b border-zinc-200 font-mono font-bold text-zinc-700">{formValues.quotationNo}</div>
-                <div className="bg-zinc-50 p-2 font-bold border-r border-b border-zinc-200 text-[#0F4C81]">Date</div>
-                <div className="p-2 border-b border-zinc-200 text-zinc-700">{formValues.date}</div>
-
-                <div className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]">Valid Until</div>
-                <div className="p-2 border-r border-zinc-200 text-zinc-700">{formValues.validUntil}</div>
-                <div className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]">Prepared By</div>
-                <div className="p-2 text-zinc-700">{formValues.preparedBy}</div>
-              </div>
+              <table className="w-full border border-zinc-200 mt-4 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
+                <tbody>
+                  <tr className="border-b border-zinc-200">
+                    <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Quotation No.</td>
+                    <td className="p-2 border-r border-zinc-200 font-mono font-bold text-zinc-700" style={{ width: "25%" }}>{formValues.quotationNo}</td>
+                    <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Date</td>
+                    <td className="p-2 text-zinc-700" style={{ width: "25%" }}>{formValues.date}</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Valid Until</td>
+                    <td className="p-2 border-r border-zinc-200 text-zinc-700" style={{ width: "25%" }}>{formValues.validUntil}</td>
+                    <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Prepared By</td>
+                    <td className="p-2 text-zinc-700" style={{ width: "25%" }}>{formValues.preparedBy}</td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* Client Info Grid Table */}
               <div className="mt-4">
                 <div className="text-[#0F4C81] font-bold px-3 py-1 text-[10px] tracking-wider rounded-t border-t border-l border-r border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
                   CLIENT INFORMATION
                 </div>
-                <div className="grid grid-cols-4 border border-zinc-200 text-[10px]">
-                  <div className="bg-zinc-50 p-2 font-bold border-r border-b border-zinc-200 text-[#0F4C81]">Client Name</div>
-                  <div className="p-2 border-r border-b border-zinc-200 font-semibold text-zinc-800 col-span-3">{formValues.clientName || "-"}</div>
-
-                  <div className="bg-zinc-50 p-2 font-bold border-r border-b border-zinc-200 text-[#0F4C81]">Email</div>
-                  <div className="p-2 border-r border-b border-zinc-200 text-zinc-700">{formValues.email || "-"}</div>
-                  <div className="bg-zinc-50 p-2 font-bold border-r border-b border-zinc-200 text-[#0F4C81]">Contact No.</div>
-                  <div className="p-2 border-b border-zinc-200 text-zinc-700">{formValues.contactNo || "-"}</div>
-
-                  <div className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]">Project Reference</div>
-                  <div className="p-2 border-r border-zinc-200 text-zinc-700">{formValues.projectReference || "-"}</div>
-                  <div className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]">Location / Area</div>
-                  <div className="p-2 text-zinc-700">{formValues.locationArea || "-"}</div>
-                </div>
+                <table className="w-full border border-zinc-200 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
+                  <tbody>
+                    <tr className="border-b border-zinc-200">
+                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Client Name</td>
+                      <td colSpan={3} className="p-2 font-semibold text-zinc-800" style={{ width: "75%" }}>{formValues.clientName || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-200">
+                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Email</td>
+                      <td className="p-2 border-r border-zinc-200 text-zinc-700" style={{ width: "25%" }}>{formValues.email || "-"}</td>
+                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Contact No.</td>
+                      <td className="p-2 text-zinc-700" style={{ width: "25%" }}>{formValues.contactNo || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Project Reference</td>
+                      <td className="p-2 border-r border-zinc-200 text-zinc-700 break-words" style={{ width: "25%" }}>{formValues.projectReference || "-"}</td>
+                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Location / Area</td>
+                      <td className="p-2 text-zinc-700 break-words" style={{ width: "25%" }}>{formValues.locationArea || "-"}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               {/* Items Table */}
               <div className="mt-4">
-                <table className="w-full border border-zinc-200 text-[9px] text-left border-collapse">
+                <table className="w-full border border-zinc-200 text-[9px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
                   <thead>
                     <tr className="bg-[#0F4C81] text-white font-bold text-[9px]">
-                      <th className="p-2 w-8 text-center border-r border-[#0e4372]">#</th>
-                      <th className="p-2 border-r border-[#0e4372]">Description / Scope of Work</th>
-                      <th className="p-2 w-20 text-center border-r border-[#0e4372]">Qty</th>
-                      <th className="p-2 w-24 text-right border-r border-[#0e4372]">Unit Price (AED)</th>
-                      <th className="p-2 w-28 text-right">Total (AED)</th>
+                      <th className="p-2 text-center border-r border-[#0e4372]" style={{ width: "5%" }}>#</th>
+                      <th className="p-2 border-r border-[#0e4372]" style={{ width: "55%" }}>Description / Scope of Work</th>
+                      <th className="p-2 text-center border-r border-[#0e4372]" style={{ width: "10%" }}>Qty</th>
+                      <th className="p-2 text-right border-r border-[#0e4372]" style={{ width: "15%" }}>Unit Price (AED)</th>
+                      <th className="p-2 text-right" style={{ width: "15%" }}>Total (AED)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {formValues.items.slice(0, 8).map((item, idx) => (
                       <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
-                        <td className="p-2 text-center border-r border-zinc-200 font-semibold text-zinc-500">{idx + 1}</td>
-                        <td className="p-2 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium">
+                        <td className="p-2 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 1}</td>
+                        <td className="p-2 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
                           {item.description || "No description"}
                         </td>
-                        <td className="p-2 text-center border-r border-zinc-200 text-zinc-700">
+                        <td className="p-2 text-center border-r border-zinc-200 text-zinc-700" style={{ width: "10%" }}>
                           {item.qty ? Number(item.qty).toFixed(2) : "0.00"} {item.unit || "Units"}
                         </td>
-                        <td className="p-2 text-right border-r border-zinc-200 text-zinc-700 font-mono">
+                        <td className="p-2 text-right border-r border-zinc-200 text-zinc-700 font-mono" style={{ width: "15%" }}>
                           {item.unitPrice ? Number(item.unitPrice).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"}
                         </td>
-                        <td className="p-2 text-right text-zinc-900 font-bold font-mono">
+                        <td className="p-2 text-right text-zinc-900 font-bold font-mono" style={{ width: "15%" }}>
                           {((item.qty || 0) * (item.unitPrice || 0)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                         </td>
                       </tr>
@@ -951,18 +975,18 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     
                     {formValues.items.slice(0, 8).length < 5 && Array.from({ length: 5 - formValues.items.slice(0, 8).length }).map((_, emptyIdx) => (
                       <tr key={`empty-${emptyIdx}`} className="border-b border-zinc-100 min-h-[30px] opacity-10">
-                        <td className="p-2 text-center border-r border-zinc-100">&nbsp;</td>
-                        <td className="p-2 border-r border-zinc-100">&nbsp;</td>
-                        <td className="p-2 text-center border-r border-zinc-100">&nbsp;</td>
-                        <td className="p-2 text-right border-r border-zinc-100">&nbsp;</td>
-                        <td className="p-2 text-right">&nbsp;</td>
+                        <td className="p-2 text-center border-r border-zinc-100" style={{ width: "5%" }}>&nbsp;</td>
+                        <td className="p-2 border-r border-zinc-100" style={{ width: "55%" }}>&nbsp;</td>
+                        <td className="p-2 text-center border-r border-zinc-100" style={{ width: "10%" }}>&nbsp;</td>
+                        <td className="p-2 text-right border-r border-zinc-100" style={{ width: "15%" }}>&nbsp;</td>
+                        <td className="p-2 text-right" style={{ width: "15%" }}>&nbsp;</td>
                       </tr>
                     ))}
 
                     <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
-                      <td colSpan={3} className="p-2 border-r border-zinc-200">&nbsp;</td>
-                      <td className="p-2 text-right border-r border-zinc-200 text-[#0F4C81]">Subtotal:</td>
-                      <td className="p-2 text-right font-mono font-bold text-zinc-800">
+                      <td colSpan={3} className="p-2 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
+                      <td className="p-2 text-right border-r border-zinc-200 text-[#0F4C81]" style={{ width: "15%" }}>Subtotal:</td>
+                      <td className="p-2 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
                         {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                       </td>
                     </tr>
@@ -991,12 +1015,12 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="px-3 py-1 font-bold text-[9px] text-[#0F4C81] border-b border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
                   TERMS & CONDITIONS
                 </div>
-                <div className="grid grid-cols-2 p-2.5 text-[9px] gap-4">
-                  <div>
+                <div className="flex justify-between p-2.5 text-[9px] gap-4">
+                  <div className="w-[48%]">
                     <span className="font-bold text-zinc-500">Payment terms: </span>
                     <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
                   </div>
-                  <div>
+                  <div className="w-[48%]">
                     <span className="font-bold text-zinc-500">Terms & Conditions: </span>
                     <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline">
                       {formValues.termsConditions}
@@ -1006,8 +1030,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </div>
 
               {/* Signature Blocks */}
-              <div className="grid grid-cols-2 mt-4 border border-zinc-200 text-[9px] relative">
-                <div className="p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
+              <div className="flex w-full mt-4 border border-zinc-200 text-[9px] relative">
+                <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
                   <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
                     Prepared & Approved By (Ruaad Smart)
                   </div>
@@ -1028,7 +1052,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   </div>
                 </div>
 
-                <div className="p-3 min-h-[90px] flex flex-col justify-between">
+                <div className="w-[50%] p-3 min-h-[90px] flex flex-col justify-between">
                   <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
                     Client Acceptance
                   </div>
@@ -1036,8 +1060,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-6 mb-2" />
                   
                   <div className="text-zinc-700 space-y-0.5">
-                    <div><span className="font-bold text-zinc-400">Name:</span> ______________________</div>
-                    <div><span className="font-bold text-zinc-400">Date:</span> ______________________</div>
+                    <div><span className="font-bold text-zinc-400">Name: ______________________</span></div>
+                    <div><span className="font-bold text-zinc-400">Date: ______________________</span></div>
                   </div>
                 </div>
               </div>
@@ -1048,12 +1072,12 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               <div className="text-[#0F4C81] font-bold px-3 py-1 border-b border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
                 COMPANY & BANK DETAILS
               </div>
-              <div className="grid grid-cols-2">
-                <div className="p-2 border-r border-zinc-200">
+              <div className="flex w-full">
+                <div className="w-[50%] p-2 border-r border-zinc-200">
                   <span className="font-bold text-zinc-500 block uppercase text-[8px]">Company Name</span>
                   <span className="text-zinc-800 font-semibold">{formValues.companyName || "RUAAD SMART SMART MACHINE TRADING LLC"}</span>
                 </div>
-                <div className="p-2">
+                <div className="w-[50%] p-2">
                   <span className="font-bold text-zinc-500 block uppercase text-[8px]">Bank Name</span>
                   <span className="text-zinc-800 font-semibold">{formValues.bankName || "ABUDHABI COMML.BANK"}</span>
                 </div>
@@ -1098,30 +1122,30 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   <div className="bg-zinc-100 text-[#0F4C81] font-bold px-3 py-1 text-[9px] mb-2 rounded border border-zinc-200">
                     ITEMS LIST CONTINUATION
                   </div>
-                  <table className="w-full border border-zinc-200 text-[9px] text-left border-collapse">
+                  <table className="w-full border border-zinc-200 text-[9px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
                     <thead>
                       <tr className="bg-[#0F4C81] text-white font-bold text-[9px]">
-                        <th className="p-2 w-8 text-center border-r border-[#0e4372]">#</th>
-                        <th className="p-2 border-r border-[#0e4372]">Description / Scope of Work</th>
-                        <th className="p-2 w-20 text-center border-r border-[#0e4372]">Qty</th>
-                        <th className="p-2 w-24 text-right border-r border-[#0e4372]">Unit Price (AED)</th>
-                        <th className="p-2 w-28 text-right">Total (AED)</th>
+                        <th className="p-2 text-center border-r border-[#0e4372]" style={{ width: "5%" }}>#</th>
+                        <th className="p-2 border-r border-[#0e4372]" style={{ width: "55%" }}>Description / Scope of Work</th>
+                        <th className="p-2 text-center border-r border-[#0e4372]" style={{ width: "10%" }}>Qty</th>
+                        <th className="p-2 text-right border-r border-[#0e4372]" style={{ width: "15%" }}>Unit Price (AED)</th>
+                        <th className="p-2 text-right" style={{ width: "15%" }}>Total (AED)</th>
                       </tr>
                     </thead>
                     <tbody>
                       {formValues.items.slice(8).map((item, idx) => (
                         <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
-                          <td className="p-2 text-center border-r border-zinc-200 font-semibold text-zinc-500">{idx + 9}</td>
-                          <td className="p-2 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium">
+                          <td className="p-2 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 9}</td>
+                          <td className="p-2 border-r border-zinc-200 text-zinc-800 leading-normal whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
                             {item.description || "No description"}
                           </td>
-                          <td className="p-2 text-center border-r border-zinc-200 text-zinc-700">
+                          <td className="p-2 text-center border-r border-zinc-200 text-zinc-700" style={{ width: "10%" }}>
                             {item.qty ? Number(item.qty).toFixed(2) : "0.00"} {item.unit || "Units"}
                           </td>
-                          <td className="p-2 text-right border-r border-zinc-200 text-zinc-700 font-mono">
+                          <td className="p-2 text-right border-r border-zinc-200 text-zinc-700 font-mono" style={{ width: "15%" }}>
                             {item.unitPrice ? Number(item.unitPrice).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"}
                           </td>
-                          <td className="p-2 text-right text-zinc-900 font-bold font-mono">
+                          <td className="p-2 text-right text-zinc-900 font-bold font-mono" style={{ width: "15%" }}>
                             {((item.qty || 0) * (item.unitPrice || 0)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                           </td>
                         </tr>
@@ -1136,22 +1160,22 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="text-[#0F4C81] font-bold px-3 py-1.5 border-b border-zinc-200 uppercase tracking-wider text-[8px]" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
                   Additional Details & Bank Information
                 </div>
-                <div className="grid grid-cols-2 border-b border-zinc-200">
-                  <div className="p-3 border-r border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.2)" }}>
+                <div className="flex w-full border-b border-zinc-200">
+                  <div className="w-[50%] p-3 border-r border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.2)" }}>
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-1">Company Address</span>
                     <span className="text-zinc-800 font-medium leading-relaxed">{formValues.companyAddress}</span>
                   </div>
-                  <div className="p-3" style={{ backgroundColor: "rgba(250, 250, 250, 0.2)" }}>
+                  <div className="w-[50%] p-3" style={{ backgroundColor: "rgba(250, 250, 250, 0.2)" }}>
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-1">IBAN</span>
                     <span className="text-zinc-900 font-mono font-bold tracking-wider">{formValues.bankIban}</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-2">
-                  <div className="p-3 border-r border-zinc-200">
+                <div className="flex w-full">
+                  <div className="w-[50%] p-3 border-r border-zinc-200">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-1">Email</span>
                     <a href={`mailto:${formValues.companyEmail}`} className="text-blue-600 font-semibold">{formValues.companyEmail}</a>
                   </div>
-                  <div className="p-3" style={{ backgroundColor: "rgba(250, 250, 250, 0.1)" }}>
+                  <div className="w-[50%] p-3" style={{ backgroundColor: "rgba(250, 250, 250, 0.1)" }}>
                     &nbsp;
                   </div>
                 </div>

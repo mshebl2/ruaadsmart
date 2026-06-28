@@ -154,10 +154,19 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     }
   };
 
-  const generatePDF = async (): Promise<jsPDF | null> => {
-    if (!previewRef.current) return null;
-    setExporting(true);
-    document.body.classList.add("pdf-generating");
+  const captureElementAsCanvas = async (element: HTMLDivElement): Promise<HTMLCanvasElement> => {
+    const clone = element.cloneNode(true) as HTMLDivElement;
+    clone.style.position = "absolute";
+    clone.style.top = "0";
+    clone.style.left = "-9999px";
+    clone.style.width = "210mm";
+    clone.style.height = "297mm";
+    clone.style.minWidth = "210mm";
+    clone.style.minHeight = "297mm";
+    clone.style.zoom = "1";
+    clone.style.transform = "none";
+    document.body.appendChild(clone);
+    await new Promise((resolve) => setTimeout(resolve, 150));
     try {
       const options = {
         scale: 2,
@@ -165,8 +174,18 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
         allowTaint: true,
         backgroundColor: "#ffffff",
       };
+      return await html2canvas(clone, options);
+    } finally {
+      document.body.removeChild(clone);
+    }
+  };
 
-      const canvas = await html2canvas(previewRef.current, options);
+  const generatePDF = async (): Promise<jsPDF | null> => {
+    if (!previewRef.current) return null;
+    setExporting(true);
+    document.body.classList.add("pdf-generating");
+    try {
+      const canvas = await captureElementAsCanvas(previewRef.current);
       const imgData = canvas.toDataURL("image/jpeg", 0.98);
 
       const pdf = new jsPDF("p", "mm", "a4");
@@ -613,20 +632,20 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                   The EXTRA LOW POWER systems are handed over as follows:
                 </p>
                 
-                <table className="w-full border border-zinc-300 text-[10px] text-left border-collapse rounded overflow-hidden">
+                <table className="w-full border border-zinc-300 text-[10px] text-left border-collapse rounded overflow-hidden" style={{ tableLayout: "fixed" }}>
                   <thead>
                     <tr className="bg-zinc-50 border-b border-zinc-300 font-bold text-zinc-700 text-[9px] uppercase tracking-wider">
-                      <th className="p-3 border-r border-zinc-300">System</th>
-                      <th className="p-3 border-r border-zinc-300">Remarks</th>
-                      <th className="p-3 w-16 text-center">Done</th>
+                      <th className="p-3 border-r border-zinc-300" style={{ width: "35%" }}>System</th>
+                      <th className="p-3 border-r border-zinc-300" style={{ width: "50%" }}>Remarks</th>
+                      <th className="p-3 text-center" style={{ width: "15%" }}>Done</th>
                     </tr>
                   </thead>
                   <tbody>
                     {formValues.checklist.map((item) => (
                       <tr key={item.id} className="border-b border-zinc-200">
-                        <td className="p-2.5 border-r border-zinc-200 font-bold text-[#0F4C81]">{item.system || "Unnamed System"}</td>
-                        <td className="p-2.5 border-r border-zinc-200 font-medium text-zinc-600">{item.remarks || "-"}</td>
-                        <td className="p-2.5 text-center font-bold text-green-600 text-sm">
+                        <td className="p-2.5 border-r border-zinc-200 font-bold text-[#0F4C81] break-words" style={{ width: "35%" }}>{item.system || "Unnamed System"}</td>
+                        <td className="p-2.5 border-r border-zinc-200 font-medium text-zinc-600 break-words" style={{ width: "50%" }}>{item.remarks || "-"}</td>
+                        <td className="p-2.5 text-center font-bold text-green-600 text-sm" style={{ width: "15%" }}>
                           {item.done ? (
                             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-50 text-green-600 border border-green-200">✓</span>
                           ) : (
@@ -647,10 +666,10 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
 
             {/* Bottom Signature Blocks & Footer */}
             <div>
-              <div className="grid grid-cols-2 mt-8 gap-12 text-[10px] relative">
+              <div className="flex justify-between mt-8 gap-12 text-[10px] relative">
                 
                 {/* Left signature: client */}
-                <div className="border-t border-zinc-200 pt-3 relative">
+                <div className="w-[45%] border-t border-zinc-200 pt-3 relative">
                   <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">Company / Client Acceptance</span>
                   
                   <div className="h-16 relative w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
@@ -673,7 +692,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                 </div>
 
                 {/* Right signature: integrator */}
-                <div className="border-t border-zinc-200 pt-3 relative">
+                <div className="w-[45%] border-t border-zinc-200 pt-3 relative">
                   <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">System Integrator: Ruaad Smart</span>
                   
                   <div className="h-16 relative w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden z-10" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
