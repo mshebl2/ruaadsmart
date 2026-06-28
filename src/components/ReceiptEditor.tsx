@@ -545,13 +545,24 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4" />
                 </div>
                 
-                <div className="text-center flex flex-col justify-between min-h-[110px]">
-                  <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider">
+                <div className="text-center flex flex-col justify-between min-h-[110px] relative">
+                  <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider relative z-10">
                     Authorized Receiver Signature <br/>
                     <span className="font-arabic text-zinc-400">توقيع / ختم المستلم المصرح له</span>
                   </p>
+                  
+                  {/* Official Stamp Overlay */}
+                  <div className="absolute bottom-2 right-12 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none z-0">
+                    <Image 
+                      src="/stamp.png" 
+                      alt="Ruaad Smart Stamp" 
+                      fill 
+                      className="object-contain"
+                    />
+                  </div>
+
                   {formValues.integratorSignature ? (
-                    <div className="relative w-36 h-12 mx-auto mt-2">
+                    <div className="relative w-36 h-12 mx-auto mt-2 z-10">
                       <Image 
                         src={formValues.integratorSignature} 
                         alt="Receiver Signature" 
@@ -560,9 +571,9 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                       />
                     </div>
                   ) : (
-                    <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4" />
+                    <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4 z-10" />
                   )}
-                  <p className="text-[9px] text-[#0F4C81] font-bold mt-1">{formValues.receivedBy || "Ruaad Smart"}</p>
+                  <p className="text-[9px] text-[#0F4C81] font-bold mt-1 relative z-10">{formValues.receivedBy || "Ruaad Smart"}</p>
                 </div>
               </div>
 
