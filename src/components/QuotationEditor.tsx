@@ -124,7 +124,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   // Calculate totals on the fly
   const watchedDiscount = Number(watch("discount")) || 0;
   const subtotal = watchedItems.reduce((acc, item) => acc + (item.qty || 0) * (item.unitPrice || 0), 0);
-  const total = Math.max(0, subtotal - watchedDiscount);
+  const discountAmount = subtotal * (watchedDiscount / 100);
+  const total = Math.max(0, subtotal - discountAmount);
 
   // Calculate internal cost and margins
   const totalCost = watchedItems.reduce((acc, item) => acc + ((item.cost || 0) * (item.qty || 0)), 0);
@@ -181,7 +182,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       const calculatedSubtotal = processedItems.reduce((acc, item) => acc + item.total, 0);
 
       const discountVal = Number(data.discount) || 0;
-      const calculatedTotal = Math.max(0, calculatedSubtotal - discountVal);
+      const discountAmount = calculatedSubtotal * (discountVal / 100);
+      const calculatedTotal = Math.max(0, calculatedSubtotal - discountAmount);
 
       const updatedDoc: Quotation = {
         ...data,
@@ -967,9 +969,9 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     {watchedDiscount > 0 && (
                       <tr className="font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
                         <td colSpan={3} className="p-2 border-r border-zinc-200">&nbsp;</td>
-                        <td className="p-2 text-right border-r border-zinc-200 text-red-650">Discount:</td>
+                        <td className="p-2 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
                         <td className="p-2 text-right font-mono font-bold text-red-650">
-                          -{watchedDiscount.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                          -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                         </td>
                       </tr>
                     )}
@@ -1220,7 +1222,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   <span className="font-bold text-zinc-500 block uppercase text-[8px] mb-1">Total Client Price (Revenue)</span>
                   <span className="text-zinc-900 font-extrabold text-sm font-mono">{totalRevenue.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED</span>
                   {watchedDiscount > 0 && (
-                    <span className="block text-[7px] text-zinc-400 font-bold mt-0.5">(Discount: {watchedDiscount.toLocaleString("en-AE")} AED)</span>
+                    <span className="block text-[7px] text-zinc-400 font-bold mt-0.5">(Discount: {watchedDiscount}% / -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED)</span>
                   )}
                 </div>
                 <div className="text-center p-2 border-r border-zinc-200">
