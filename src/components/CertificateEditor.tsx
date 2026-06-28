@@ -553,7 +553,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                 <h1 className="text-xl font-extrabold tracking-widest text-[#0F4C81] uppercase mt-4 mb-2">
                   Work Completion Certificate
                 </h1>
-                <div className="h-0.5 w-16 bg-[#0F4C81]/80 rounded" />
+                <div className="h-0.5 w-16 rounded" style={{ backgroundColor: "rgba(15, 76, 129, 0.8)" }} />
               </div>
 
               {/* Project & Tech Block */}
@@ -592,7 +592,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                   </thead>
                   <tbody>
                     {formValues.checklist.map((item) => (
-                      <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/25">
+                      <tr key={item.id} className="border-b border-zinc-200">
                         <td className="p-2.5 border-r border-zinc-200 font-bold text-[#0F4C81]">{item.system || "Unnamed System"}</td>
                         <td className="p-2.5 border-r border-zinc-200 font-medium text-zinc-600">{item.remarks || "-"}</td>
                         <td className="p-2.5 text-center font-bold text-green-600 text-sm">
@@ -622,7 +622,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                 <div className="border-t border-zinc-200 pt-3 relative">
                   <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">Company / Client Acceptance</span>
                   
-                  <div className="h-16 relative w-full border border-zinc-100 rounded bg-zinc-50/30 flex items-center justify-center overflow-hidden">
+                  <div className="h-16 relative w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
                     {formValues.clientSignature ? (
                       <Image 
                         src={formValues.clientSignature} 
@@ -645,7 +645,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                 <div className="border-t border-zinc-200 pt-3 relative">
                   <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">System Integrator: Ruaad Smart</span>
                   
-                  <div className="h-16 relative w-full border border-zinc-100 rounded bg-zinc-50/30 flex items-center justify-center overflow-hidden z-10">
+                  <div className="h-16 relative w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden z-10" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
                     {formValues.integratorSignature ? (
                       <Image 
                         src={formValues.integratorSignature} 

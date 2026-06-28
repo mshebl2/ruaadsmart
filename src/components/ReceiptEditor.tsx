@@ -424,7 +424,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
             ref={previewRef}
             id="receipt-preview-page"
             dir="ltr"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[20mm] flex flex-col justify-between relative text-xs select-none text-left"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col justify-between relative text-xs select-none text-left"
             style={{ boxSizing: "border-box" }}
           >
             <div>
@@ -454,7 +454,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
               </div>
 
               {/* Receipt Metadata */}
-              <div className="grid grid-cols-4 border border-zinc-200 mt-6 text-[10px]">
+              <div className="grid grid-cols-4 border border-zinc-200 mt-4 text-[10px]">
                 <div className="bg-zinc-50 p-2.5 font-bold border-r border-b border-zinc-200 text-[#0F4C81] flex justify-between">
                   <span>Receipt No.</span>
                   <span className="font-arabic">رقم السند</span>
@@ -485,7 +485,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
               </div>
 
               {/* Core Receipt content (Legal text style) */}
-              <div className="mt-8 border border-zinc-200 rounded-lg p-5 space-y-6 text-zinc-800 leading-loose text-justify text-[11px]">
+              <div className="mt-4 border border-zinc-200 rounded-lg p-4 space-y-4 text-zinc-800 leading-relaxed text-justify text-[10px]">
                 <div>
                   <span className="font-bold text-[#0F4C81] inline-block w-36">
                     Received From:
@@ -539,8 +539,8 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
             {/* Bottom Section: Signatures & Address info */}
             <div>
               {/* Signatures block */}
-              <div className="grid grid-cols-2 gap-8 border border-zinc-200 rounded-lg p-5" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
-                <div className="text-center flex flex-col justify-between min-h-[110px]">
+              <div className="grid grid-cols-2 gap-4 border border-zinc-200 rounded-lg p-3.5" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                <div className="text-center flex flex-col justify-between min-h-[90px]">
                   <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider">
                     Client Signature / Seal <br/>
                     <span className="font-arabic text-zinc-400">توقيع / ختم العميل</span>
@@ -548,7 +548,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4" />
                 </div>
                 
-                <div className="text-center flex flex-col justify-between min-h-[110px] relative">
+                <div className="text-center flex flex-col justify-between min-h-[90px] relative">
                   <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider relative z-10">
                     Authorized Receiver Signature <br/>
                     <span className="font-arabic text-zinc-400">توقيع / ختم المستلم المصرح له</span>
@@ -581,7 +581,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
               </div>
 
               {/* Receipt Footer Contact */}
-              <div className="mt-8 border-t border-zinc-200 pt-4 text-center text-zinc-500 text-[8px] flex justify-between leading-normal">
+              <div className="mt-4 border-t border-zinc-200 pt-3 text-center text-zinc-500 text-[8px] flex justify-between leading-normal">
                 <div>
                   <span className="font-bold">Address:</span> Abraj Al Mamzar, Block A F 106, Dubai, UAE
                 </div>
