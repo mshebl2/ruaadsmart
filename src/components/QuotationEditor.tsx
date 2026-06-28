@@ -775,7 +775,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
             : previewTab === "client-preview" 
               ? "flex-1 flex" 
               : "hidden"
-        }`}>
+        } ${previewTab === "company-preview" ? "no-print" : ""}`}>
           
           {/* PAGE 1 SHOWN AS A4 PAPER */}
           <div 
@@ -1087,7 +1087,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
         {/* PAGE 3: COMPANY INTERNAL COSTING SHEET */}
         <div className={`bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 print-area ${
           previewTab === "company-preview" ? "flex-1 flex" : "hidden"
-        }`}>
+        } ${previewTab !== "company-preview" ? "no-print" : ""}`}>
           <div 
             ref={companyPageRef}
             id="company-costing-page"

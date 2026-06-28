@@ -24,6 +24,9 @@ export async function POST(request: Request) {
     const client = await clientPromise;
     const db = client.db('ruaad_smart_db');
     
+    // Remove immutable MongoDB _id if present to prevent update errors
+    delete body._id;
+
     // Upsert receipt using ID
     const result = await db.collection('receipts').replaceOne(
       { id: body.id },
