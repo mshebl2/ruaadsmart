@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -72,12 +72,22 @@ const DEFAULT_QUOTATION_VALUES = {
 
 export default function QuotationEditor({ id }: QuotationEditorProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, language, isRtl } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [previewTab, setPreviewTab] = useState<"edit" | "client-preview" | "company-preview">("edit");
   const [viewInvoice, setViewInvoice] = useState<PurchaseInvoice | null>(null);
+  const [isInvoiceMode, setIsInvoiceMode] = useState(false);
+
+  useEffect(() => {
+    const view = searchParams.get("view");
+    if (view === "invoice") {
+      setPreviewTab("client-preview");
+      setIsInvoiceMode(true);
+    }
+  }, [searchParams]);
   
   const page1Ref = useRef<HTMLDivElement>(null);
   const page2Ref = useRef<HTMLDivElement>(null);
@@ -287,8 +297,9 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   const handleDownloadPDF = async () => {
     const pdf = await generatePDF();
     if (pdf) {
-      const qNo = watch("quotationNo") || "Quotation";
-      pdf.save(`Ruaad_Smart_Quotation_${qNo}.pdf`);
+      const qNo = watch("quotationNo") || "Document";
+      const prefix = isInvoiceMode ? "Invoice" : "Quotation";
+      pdf.save(`Ruaad_Smart_${prefix}_${qNo}.pdf`);
     }
   };
 
@@ -312,15 +323,16 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
     }
     
     try {
-      const qNo = watch("quotationNo") || "Quotation";
+      const qNo = watch("quotationNo") || "Document";
+      const prefix = isInvoiceMode ? "Invoice" : "Quotation";
       const blob = pdf.output("blob");
-      const file = new File([blob], `Ruaad_Smart_Quotation_${qNo}.pdf`, { type: "application/pdf" });
+      const file = new File([blob], `Ruaad_Smart_${prefix}_${qNo}.pdf`, { type: "application/pdf" });
       
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: `Ruaad Smart Quotation ${qNo}`,
-          text: `Please find attached our quotation ${qNo} from Ruaad Smart.`
+          title: `Ruaad Smart ${prefix} ${qNo}`,
+          text: `Please find attached our ${prefix.toLowerCase()} ${qNo} from Ruaad Smart.`
         });
       } else {
         handleDownloadPDF();
@@ -391,6 +403,26 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
 
         {/* Center/Right: Tabs & Desktop Actions */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+          {/* Document Type Selector (Visible only in Client Preview mode) */}
+          {previewTab === "client-preview" && (
+            <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800 w-full md:w-auto justify-around md:justify-start">
+              <button 
+                type="button"
+                onClick={() => setIsInvoiceMode(false)}
+                className={`flex-1 md:flex-initial px-3 py-1.5 text-xs font-semibold rounded text-center ${!isInvoiceMode ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+              >
+                {t("quotationMode")}
+              </button>
+              <button 
+                type="button"
+                onClick={() => setIsInvoiceMode(true)}
+                className={`flex-1 md:flex-initial px-3 py-1.5 text-xs font-semibold rounded text-center ${isInvoiceMode ? "bg-emerald-600 text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+              >
+                {t("invoiceMode")}
+              </button>
+            </div>
+          )}
+
           {/* View Toggle Tabs */}
           <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800 w-full md:w-auto justify-around md:justify-start">
             <button 
@@ -891,52 +923,52 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 </div>
                 
                 <div className="text-right">
-                  <div className="bg-[#0F4C81] text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
-                    QUOTATION
+                  <div className={`text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block ${isInvoiceMode ? "bg-emerald-600" : "bg-[#0F4C81]"}`}>
+                    {isInvoiceMode ? t("invoiceTitle") : "QUOTATION"}
                   </div>
                   <p className="text-[9px] text-zinc-500 mt-1 m-0">Smart Home & Automation Systems</p>
                 </div>
               </div>
 
               {/* Metadata Grid Table */}
-              <table className="w-full border border-zinc-200 mt-2.5 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
+              <table className="w-full border border-zinc-200 mt-4 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
                 <tbody>
                   <tr className="border-b border-zinc-200">
-                    <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Quotation No.</td>
+                    <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>{isInvoiceMode ? t("invoiceNo") : "Quotation No."}</td>
                     <td className="p-2 border-r border-zinc-200 font-mono font-bold text-zinc-700" style={{ width: "25%" }}>{formValues.quotationNo}</td>
-                    <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Date</td>
+                    <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>{isInvoiceMode ? "Invoice Date" : "Date"}</td>
                     <td className="p-2 text-zinc-700" style={{ width: "25%" }}>{formValues.date}</td>
                   </tr>
                   <tr>
-                    <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Valid Until</td>
+                    <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>{isInvoiceMode ? "Due Date" : "Valid Until"}</td>
                     <td className="p-2 border-r border-zinc-200 text-zinc-700" style={{ width: "25%" }}>{formValues.validUntil}</td>
-                    <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Prepared By</td>
+                    <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Prepared By</td>
                     <td className="p-2 text-zinc-700" style={{ width: "25%" }}>{formValues.preparedBy}</td>
                   </tr>
                 </tbody>
               </table>
 
               {/* Client Info Grid Table */}
-              <div className="mt-2.5">
-                <div className="text-[#0F4C81] font-bold px-3 py-1 text-[10px] tracking-wider rounded-t border-t border-l border-r border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
+              <div className="mt-4">
+                <div className={`font-bold px-3 py-1 text-[10px] tracking-wider rounded-t border-t border-l border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.1)" : "rgba(15, 76, 129, 0.1)" }}>
                   CLIENT INFORMATION
                 </div>
                 <table className="w-full border border-zinc-200 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
                   <tbody>
                     <tr className="border-b border-zinc-200">
-                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Client Name</td>
+                      <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Client Name</td>
                       <td colSpan={3} className="p-2 font-semibold text-zinc-800" style={{ width: "75%" }}>{formValues.clientName || "-"}</td>
                     </tr>
                     <tr className="border-b border-zinc-200">
-                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Email</td>
+                      <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Email</td>
                       <td className="p-2 border-r border-zinc-200 text-zinc-700" style={{ width: "25%" }}>{formValues.email || "-"}</td>
-                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Contact No.</td>
+                      <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Contact No.</td>
                       <td className="p-2 text-zinc-700" style={{ width: "25%" }}>{formValues.contactNo || "-"}</td>
                     </tr>
                     <tr>
-                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Project Reference</td>
+                      <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Project Reference</td>
                       <td className="p-2 border-r border-zinc-200 text-zinc-700 break-words" style={{ width: "25%" }}>{formValues.projectReference || "-"}</td>
-                      <td className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>Location / Area</td>
+                      <td className={`bg-zinc-50 p-2 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Location / Area</td>
                       <td className="p-2 text-zinc-700 break-words" style={{ width: "25%" }}>{formValues.locationArea || "-"}</td>
                     </tr>
                   </tbody>
@@ -944,14 +976,14 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </div>
 
               {/* Items Table */}
-              <div className="mt-2.5">
+              <div className="mt-4">
                 <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
                   <thead>
-                    <tr className="bg-[#0F4C81] text-white font-bold text-[8.5px]">
-                      <th className="p-1.5 text-center border-r border-[#0e4372]" style={{ width: "5%" }}>#</th>
-                      <th className="p-1.5 border-r border-[#0e4372]" style={{ width: "55%" }}>Description / Scope of Work</th>
-                      <th className="p-1.5 text-center border-r border-[#0e4372]" style={{ width: "10%" }}>Qty</th>
-                      <th className="p-1.5 text-right border-r border-[#0e4372]" style={{ width: "15%" }}>Unit Price (AED)</th>
+                    <tr className={`text-white font-bold text-[8.5px] ${isInvoiceMode ? "bg-emerald-600" : "bg-[#0F4C81]"}`}>
+                      <th className={`p-1.5 text-center border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "5%" }}>#</th>
+                      <th className={`p-1.5 border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "55%" }}>Description / Scope of Work</th>
+                      <th className={`p-1.5 text-center border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "10%" }}>Qty</th>
+                      <th className={`p-1.5 text-right border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "15%" }}>Unit Price (AED)</th>
                       <th className="p-1.5 text-right" style={{ width: "15%" }}>Total (AED)</th>
                     </tr>
                   </thead>
@@ -974,8 +1006,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       </tr>
                     ))}
                     
-                    {formValues.items.slice(0, formValues.items.length > 7 ? 8 : 7).length < 4 && Array.from({ length: 4 - formValues.items.slice(0, formValues.items.length > 7 ? 8 : 7).length }).map((_, emptyIdx) => (
-                      <tr key={`empty-${emptyIdx}`} className="border-b border-zinc-100 min-h-[25px] opacity-10">
+                    {formValues.items.slice(0, formValues.items.length > 7 ? 8 : 7).length < 6 && Array.from({ length: 6 - formValues.items.slice(0, formValues.items.length > 7 ? 8 : 7).length }).map((_, emptyIdx) => (
+                      <tr key={`empty-${emptyIdx}`} className="border-b border-zinc-100 opacity-10" style={{ height: "35px" }}>
                         <td className="p-1.5 text-center border-r border-zinc-100" style={{ width: "5%" }}>&nbsp;</td>
                         <td className="p-1.5 border-r border-zinc-100" style={{ width: "55%" }}>&nbsp;</td>
                         <td className="p-1.5 text-center border-r border-zinc-100" style={{ width: "10%" }}>&nbsp;</td>
@@ -988,7 +1020,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       <>
                         <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
                           <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
-                          <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81]" style={{ width: "15%" }}>Subtotal:</td>
+                          <td className={`p-1 text-right border-r border-zinc-200 font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "15%" }}>Subtotal:</td>
                           <td className="p-1 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
                             {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                           </td>
@@ -1002,10 +1034,10 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                             </td>
                           </tr>
                         )}
-                        <tr className="font-bold text-zinc-900" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
+                        <tr className="font-bold text-zinc-900" style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.05)" : "rgba(15, 76, 129, 0.05)" }}>
                           <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                          <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81] text-[10px]">TOTAL:</td>
-                          <td className="p-1 text-right font-mono text-[10px] text-[#0F4C81] font-bold">
+                          <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>TOTAL:</td>
+                          <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
                             {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                           </td>
                         </tr>
@@ -1018,8 +1050,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               {formValues.items.length <= 7 && (
                 <>
                   {/* Terms and Conditions Section */}
-                  <div className="mt-2 border border-zinc-200 rounded">
-                    <div className="px-2 py-0.5 font-bold text-[9px] text-[#0F4C81] border-b border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
+                  <div className="mt-4 border border-zinc-200 rounded">
+                    <div className={`px-2 py-0.5 font-bold text-[9px] border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
                       TERMS & CONDITIONS
                     </div>
                     <div className="flex justify-between p-2 text-[9px] gap-4">
@@ -1037,9 +1069,9 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   </div>
 
                   {/* Signature Blocks */}
-                  <div className="flex w-full mt-2.5 border border-zinc-200 text-[9px] relative">
+                  <div className="flex w-full mt-4 border border-zinc-200 text-[9px] relative">
                     <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
-                      <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
+                      <div className={`font-bold border-b border-zinc-100 pb-1 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
                         Prepared & Approved By (Ruaad Smart)
                       </div>
                       
@@ -1060,7 +1092,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     </div>
 
                     <div className="w-[50%] p-3 min-h-[90px] flex flex-col justify-between">
-                      <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
+                      <div className={`font-bold border-b border-zinc-100 pb-1 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
                         Client Acceptance
                       </div>
                       
@@ -1077,8 +1109,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
             </div>
 
             {formValues.items.length <= 7 && (
-              <div className="border border-zinc-200 mt-2 text-[9px] rounded overflow-hidden">
-                <div className="text-[#0F4C81] font-bold px-3 py-1 border-b border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
+              <div className="border border-zinc-200 mt-4 text-[9px] rounded overflow-hidden">
+                <div className={`font-bold px-3 py-1 border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.1)" : "rgba(15, 76, 129, 0.1)" }}>
                   COMPANY & BANK DETAILS
                 </div>
                 <div className="flex w-full border-b border-zinc-150">
@@ -1137,13 +1169,13 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       />
                     </div>
                     <div>
-                      <h2 className="text-sm font-bold text-[#0F4C81] font-arabic m-0">رواد سمارت للأجهزة الذكية</h2>
+                      <h2 className={`text-sm font-bold font-arabic m-0 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>رواد سمارت للأجهزة الذكية</h2>
                       <p className="text-[8px] text-zinc-500 m-0">RUAAD SMART SMART MACHINE TRADING LLC</p>
                     </div>
                   </div>
                   
                   <div className="text-right">
-                    <span className="text-zinc-400 font-bold text-xs tracking-wider">PAGE 2 / 2</span>
+                    <span className="text-zinc-400 font-bold text-xs tracking-wider">{isInvoiceMode ? "INVOICE " : ""}PAGE 2 / 2</span>
                   </div>
                 </div>
 
@@ -1151,11 +1183,11 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="mt-4">
                   <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
                     <thead>
-                      <tr className="bg-[#0F4C81] text-white font-bold text-[8.5px]">
-                        <th className="p-1.5 text-center border-r border-[#0e4372]" style={{ width: "5%" }}>#</th>
-                        <th className="p-1.5 border-r border-[#0e4372]" style={{ width: "55%" }}>Description / Scope of Work</th>
-                        <th className="p-1.5 text-center border-r border-[#0e4372]" style={{ width: "10%" }}>Qty</th>
-                        <th className="p-1.5 text-right border-r border-[#0e4372]" style={{ width: "15%" }}>Unit Price (AED)</th>
+                      <tr className={`text-white font-bold text-[8.5px] ${isInvoiceMode ? "bg-emerald-600" : "bg-[#0F4C81]"}`}>
+                        <th className={`p-1.5 text-center border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "5%" }}>#</th>
+                        <th className={`p-1.5 border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "55%" }}>Description / Scope of Work</th>
+                        <th className={`p-1.5 text-center border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "10%" }}>Qty</th>
+                        <th className={`p-1.5 text-right border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "15%" }}>Unit Price (AED)</th>
                         <th className="p-1.5 text-right" style={{ width: "15%" }}>Total (AED)</th>
                       </tr>
                     </thead>
@@ -1178,10 +1210,20 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                         </tr>
                       ))}
 
+                      {formValues.items.slice(8).length < 4 && Array.from({ length: 4 - formValues.items.slice(8).length }).map((_, emptyIdx) => (
+                        <tr key={`empty-p2-${emptyIdx}`} className="border-b border-zinc-100 opacity-10" style={{ height: "35px" }}>
+                          <td className="p-1.5 text-center border-r border-zinc-100" style={{ width: "5%" }}>&nbsp;</td>
+                          <td className="p-1.5 border-r border-zinc-100" style={{ width: "55%" }}>&nbsp;</td>
+                          <td className="p-1.5 text-center border-r border-zinc-100" style={{ width: "10%" }}>&nbsp;</td>
+                          <td className="p-1.5 text-right border-r border-zinc-100" style={{ width: "15%" }}>&nbsp;</td>
+                          <td className="p-1.5 text-right" style={{ width: "15%" }}>&nbsp;</td>
+                        </tr>
+                      ))}
+
                       {/* Totals rows on Page 2 */}
                       <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
                         <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
-                        <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81]" style={{ width: "15%" }}>Subtotal:</td>
+                        <td className={`p-1 text-right border-r border-zinc-200 font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "15%" }}>Subtotal:</td>
                         <td className="p-1 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
                           {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                         </td>
@@ -1195,10 +1237,10 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                           </td>
                         </tr>
                       )}
-                      <tr className="font-bold text-zinc-900" style={{ backgroundColor: "rgba(15, 76, 129, 0.05)" }}>
+                      <tr className="font-bold text-zinc-900" style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.05)" : "rgba(15, 76, 129, 0.05)" }}>
                         <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                        <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81] text-[10px]">TOTAL:</td>
-                        <td className="p-1 text-right font-mono text-[10px] text-[#0F4C81] font-bold">
+                        <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>TOTAL:</td>
+                        <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
                           {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                         </td>
                       </tr>
@@ -1207,8 +1249,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 </div>
 
                 {/* Terms and Conditions Section on Page 2 */}
-                <div className="mt-2 border border-zinc-200 rounded">
-                  <div className="px-2 py-0.5 font-bold text-[9px] text-[#0F4C81] border-b border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
+                <div className="mt-4 border border-zinc-200 rounded">
+                  <div className={`px-2 py-0.5 font-bold text-[9px] border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
                     TERMS & CONDITIONS
                   </div>
                   <div className="flex justify-between p-2 text-[9px] gap-4">
@@ -1226,9 +1268,9 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 </div>
 
                 {/* Signature Blocks on Page 2 */}
-                <div className="flex w-full mt-2.5 border border-zinc-200 text-[9px] relative">
+                <div className="flex w-full mt-4 border border-zinc-200 text-[9px] relative">
                   <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
-                    <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
+                    <div className={`font-bold border-b border-zinc-100 pb-1 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
                       Prepared & Approved By (Ruaad Smart)
                     </div>
                     <div className="absolute bottom-1 right-8 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none">
@@ -1246,7 +1288,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   </div>
 
                   <div className="w-[50%] p-3 min-h-[90px] flex flex-col justify-between">
-                    <div className="font-bold text-[#0F4C81] border-b border-zinc-100 pb-1 uppercase tracking-wider">
+                    <div className={`font-bold border-b border-zinc-100 pb-1 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
                       Client Acceptance
                     </div>
                     <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-6 mb-2" />
@@ -1259,8 +1301,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               </div>
 
               {/* Combined Company & Bank Details on Page 2 */}
-              <div className="border border-zinc-200 mt-2 text-[9px] rounded overflow-hidden">
-                <div className="text-[#0F4C81] font-bold px-3 py-1 border-b border-zinc-200" style={{ backgroundColor: "rgba(15, 76, 129, 0.1)" }}>
+              <div className="border border-zinc-200 mt-4 text-[9px] rounded overflow-hidden">
+                <div className={`font-bold px-3 py-1 border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.1)" : "rgba(15, 76, 129, 0.1)" }}>
                   COMPANY & BANK DETAILS
                 </div>
                 <div className="flex w-full border-b border-zinc-150">

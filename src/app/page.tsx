@@ -19,7 +19,8 @@ import {
   Paperclip,
   Languages,
   Globe,
-  LogOut
+  LogOut,
+  Receipt as ReceiptIcon
 } from "lucide-react";
 import { 
   getAllQuotations, 
@@ -394,6 +395,13 @@ export default function Dashboard() {
                             </td>
                             <td className="py-4 px-6 text-center">
                               <div className="flex items-center justify-center gap-2">
+                                <Link 
+                                  href={`/quotation/${quote.id}?view=invoice`}
+                                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-emerald-450 hover:text-emerald-300 hover:border-emerald-800/80 hover:bg-emerald-950/20 transition-all"
+                                  title={t("clientInvoice")}
+                                >
+                                  <ReceiptIcon className="w-4 h-4" />
+                                </Link>
                                 <Link 
                                   href={`/quotation/${quote.id}`}
                                   className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
