@@ -17,7 +17,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { saveReceipt, getReceipt, Receipt } from "@/lib/db";
+import { saveReceipt, getReceipt, Receipt, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -49,6 +49,11 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
+  const [settings, setSettings] = useState<Settings | null>(null);
+
+  useEffect(() => {
+    getSettings().then(setSettings).catch(console.error);
+  }, []);
 
   const previewRef = useRef<HTMLDivElement>(null);
   const sigRef = useRef<SignatureCanvas>(null);
@@ -477,7 +482,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 bg-white">
                     <Image 
-                      src="/logo.jpg" 
+                      src={settings?.logoBase64 || "/logo.jpg"} 
                       alt="Smart Nexus Logo" 
                       fill
                       className="object-contain"
@@ -614,7 +619,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   {/* Official Stamp Overlay */}
                   <div className="absolute bottom-2 right-12 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none z-0">
                     <Image 
-                      src="/stamp.png" 
+                      src={settings?.stampBase64 || "/stamp.png"} 
                       alt="Smart Nexus Stamp" 
                       fill 
                       className="object-contain"
@@ -643,7 +648,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   <span className="font-bold">Address:</span> Abraj Al Mamzar, Block A F 106, Dubai, UAE
                 </div>
                 <div>
-                  <span className="font-bold">Website:</span> support.ruaadalraqamia.com
+                  <span className="font-bold">Website:</span> smartnexus.ae
                 </div>
                 <div>
                   <span className="font-bold">Phone:</span> 00971551616298

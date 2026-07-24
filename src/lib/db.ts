@@ -195,3 +195,30 @@ export async function deleteReceipt(id: string): Promise<void> {
   });
   if (!res.ok) throw new Error('Failed to delete receipt');
 }
+
+export interface Settings {
+  logoBase64?: string;
+  stampBase64?: string;
+}
+
+export async function getSettings(): Promise<Settings> {
+  try {
+    const res = await fetch('/api/settings');
+    if (!res.ok) return {};
+    return await res.json();
+  } catch (e) {
+    return {};
+  }
+}
+
+export async function saveSettings(settings: Settings): Promise<void> {
+  const res = await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to save settings');
+  }
+}

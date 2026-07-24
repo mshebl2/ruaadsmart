@@ -20,6 +20,7 @@ import {
   Languages,
   Globe,
   LogOut,
+  Settings as SettingsIcon,
   Receipt as ReceiptIcon
 } from "lucide-react";
 import { 
@@ -31,7 +32,8 @@ import {
   Certificate,
   getAllReceipts,
   deleteReceipt,
-  Receipt 
+  Receipt,
+  getSettings
 } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 
@@ -54,18 +56,21 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"quotations" | "certificates" | "receipts">("quotations");
+  const [settingsLogo, setSettingsLogo] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [quotes, certs, recs] = await Promise.all([
+        const [quotes, certs, recs, settings] = await Promise.all([
           getAllQuotations(),
           getAllCertificates(),
-          getAllReceipts()
+          getAllReceipts(),
+          getSettings()
         ]);
         setQuotations(quotes);
         setCertificates(certs);
         setReceipts(recs);
+        if (settings?.logoBase64) setSettingsLogo(settings.logoBase64);
       } catch (error) {
         console.error("Failed to load documents:", error);
       } finally {
@@ -149,7 +154,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 p-1 flex items-center justify-center">
               <Image 
-                src="/logo.jpg" 
+                src={settingsLogo || "/logo.jpg"} 
                 alt="Smart Nexus Logo" 
                 fill 
                 className="object-contain rounded-lg"
@@ -174,6 +179,14 @@ export default function Dashboard() {
               <Globe className="w-4 h-4 text-blue-400" />
               <span>{language === "ar" ? "English" : "العربية"}</span>
             </button>
+
+            <Link
+              href="/settings"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 font-semibold text-xs transition-all duration-300"
+            >
+              <SettingsIcon className="w-4 h-4 text-zinc-400" />
+              <span>{language === "ar" ? "الإعدادات" : "Settings"}</span>
+            </Link>
 
             {/* Logout Button */}
             <button

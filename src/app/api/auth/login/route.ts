@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     const { username, password } = await request.json();
 
     const expectedUsername = process.env.ADMIN_USERNAME || 'admin';
-    const expectedPassword = process.env.ADMIN_PASSWORD || 'ruaadsmart2026';
+    const expectedPassword = process.env.ADMIN_PASSWORD || 'smartnexus2026';
     const sessionToken = process.env.SESSION_TOKEN || 'smart_nexus_secure_session_token_2026_xyz';
 
     if (username === expectedUsername && password === expectedPassword) {

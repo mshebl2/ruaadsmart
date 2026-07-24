@@ -23,7 +23,7 @@ import {
   TrendingUp,
   X
 } from "lucide-react";
-import { saveQuotation, getQuotation, Quotation, QuotationItem, PurchaseInvoice } from "@/lib/db";
+import { saveQuotation, getQuotation, Quotation, QuotationItem, PurchaseInvoice, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -57,7 +57,7 @@ const DEFAULT_QUOTATION_VALUES = {
   discount: 0,
   total: 180,
   paymentTerms: "Immediate Payment",
-  termsConditions: "https://support.ruaadalraqamia.com/terms",
+  termsConditions: "https://smartnexus.ae/terms",
   preparedByName: "mostafa",
   preparedByDate: new Date().toLocaleDateString("en-GB"),
   clientAcceptanceName: "",
@@ -68,7 +68,7 @@ const DEFAULT_QUOTATION_VALUES = {
   bankBic: "WIOBAEADXXX",
   bankAddress: "Etihad Airways Centre 5th Floor, Abu Dhabi, UAE",
   companyAddress: "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates",
-  companyEmail: "info@support.ruaadalraqamia.com",
+  companyEmail: "info@smartnexus.ae",
   purchaseInvoices: []
 };
 
@@ -82,6 +82,11 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   const [previewTab, setPreviewTab] = useState<"edit" | "client-preview" | "company-preview">("edit");
   const [viewInvoice, setViewInvoice] = useState<PurchaseInvoice | null>(null);
   const [isInvoiceMode, setIsInvoiceMode] = useState(false);
+  const [settings, setSettings] = useState<Settings | null>(null);
+
+  useEffect(() => {
+    getSettings().then(setSettings).catch(console.error);
+  }, []);
 
   useEffect(() => {
     const view = searchParams.get("view");
@@ -930,7 +935,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 bg-white">
                     <Image 
-                      src="/logo.jpg" 
+                      src={settings?.logoBase64 || "/logo.jpg"} 
                       alt="Smart Nexus Logo" 
                       fill
                       className="object-contain"
@@ -1098,7 +1103,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       {/* Official Stamp Overlay */}
                       <div className="absolute bottom-1 right-8 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none">
                         <Image 
-                          src="/stamp.png" 
+                          src={settings?.stampBase64 || "/stamp.png"} 
                           alt="Smart Nexus Stamp" 
                           fill 
                           className="object-contain"
@@ -1156,7 +1161,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="flex w-full">
                   <div className="w-[50%] p-1.5 border-r border-zinc-200">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Email</span>
-                    <a href={`mailto:${formValues.companyEmail || "info@support.ruaadalraqamia.com"}`} className="text-blue-600 font-semibold text-[9px] leading-tight">{formValues.companyEmail || "info@support.ruaadalraqamia.com"}</a>
+                    <a href={`mailto:${formValues.companyEmail || "info@smartnexus.ae"}`} className="text-blue-600 font-semibold text-[9px] leading-tight">{formValues.companyEmail || "info@smartnexus.ae"}</a>
                   </div>
                   <div className="w-[50%] p-1.5">
                     &nbsp;
@@ -1182,7 +1187,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 bg-white">
                       <Image 
-                        src="/logo.jpg" 
+                        src={settings?.logoBase64 || "/logo.jpg"} 
                         alt="Smart Nexus Logo" 
                         fill
                         className="object-contain"
@@ -1295,7 +1300,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     </div>
                     <div className="absolute bottom-1 right-8 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none">
                       <Image 
-                        src="/stamp.png" 
+                        src={settings?.stampBase64 || "/stamp.png"} 
                         alt="Smart Nexus Stamp" 
                         fill 
                         className="object-contain"
@@ -1348,7 +1353,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="flex w-full">
                   <div className="w-[50%] p-1.5 border-r border-zinc-200">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Email</span>
-                    <a href={`mailto:${formValues.companyEmail || "info@support.ruaadalraqamia.com"}`} className="text-blue-600 font-semibold text-[9px] leading-tight">{formValues.companyEmail || "info@support.ruaadalraqamia.com"}</a>
+                    <a href={`mailto:${formValues.companyEmail || "info@smartnexus.ae"}`} className="text-blue-600 font-semibold text-[9px] leading-tight">{formValues.companyEmail || "info@smartnexus.ae"}</a>
                   </div>
                   <div className="w-[50%] p-1.5">
                     &nbsp;
@@ -1377,7 +1382,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 bg-white">
                     <Image 
-                      src="/logo.jpg" 
+                      src={settings?.logoBase64 || "/logo.jpg"} 
                       alt="Smart Nexus Logo" 
                       fill
                       className="object-contain"

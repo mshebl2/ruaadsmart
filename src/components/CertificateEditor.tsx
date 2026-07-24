@@ -19,7 +19,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { saveCertificate, getCertificate, Certificate, CertificateItem } from "@/lib/db";
+import { saveCertificate, getCertificate, Certificate, CertificateItem, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -48,7 +48,7 @@ const DEFAULT_CERTIFICATE_VALUES = {
   integratorSignature: "",
   integratorDate: new Date().toLocaleDateString("en-GB"),
   address: "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates",
-  website: "support.ruaadalraqamia.com",
+  website: "smartnexus.ae",
   phone: "00971551616298"
 };
 
@@ -60,6 +60,11 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
+  const [settings, setSettings] = useState<Settings | null>(null);
+
+  useEffect(() => {
+    getSettings().then(setSettings).catch(console.error);
+  }, []);
 
   const previewRef = useRef<HTMLDivElement>(null);
   const clientSigRef = useRef<SignatureCanvas>(null);
@@ -594,7 +599,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
               <div className="flex flex-col items-center justify-center pt-2">
                 <div className="relative w-28 h-28 bg-white">
                   <Image 
-                    src="/logo.jpg" 
+                    src={settings?.logoBase64 || "/logo.jpg"} 
                     alt="Smart Nexus Logo" 
                     fill 
                     className="object-contain"
@@ -711,7 +716,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                   {/* Official Stamp overlay */}
                   <div className="absolute top-2 right-12 w-24 h-24 opacity-85 mix-blend-multiply pointer-events-none z-20">
                     <Image 
-                      src="/stamp.png" 
+                      src={settings?.stampBase64 || "/stamp.png"} 
                       alt="Smart Nexus Stamp" 
                       fill 
                       className="object-contain"
@@ -747,7 +752,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
               <div className="flex justify-center mt-3 opacity-20">
                 <div className="relative w-8 h-8">
                   <Image 
-                    src="/logo.jpg" 
+                    src={settings?.logoBase64 || "/logo.jpg"} 
                     alt="Smart Nexus Logo Dec" 
                     fill 
                     className="object-contain"
