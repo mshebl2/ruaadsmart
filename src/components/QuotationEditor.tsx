@@ -946,7 +946,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-[#0F4C81] font-arabic m-0 leading-tight">سمارت نيكسس</h2>
+                    <h2 className="text-sm font-bold text-[#0F4C81] font-sans m-0 leading-tight">SMART NEXUS</h2>
                     <p className="text-[8px] text-zinc-500 m-0 tracking-wider">Smart Nexus FZE LLC</p>
                   </div>
                 </div>
@@ -1179,7 +1179,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       <Image src={settings?.logoBase64 || "/logo.jpg"} alt="Smart Nexus Logo" fill className="object-contain" />
                     </div>
                     <div>
-                      <h2 className={`text-xs font-bold font-arabic m-0 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>سمارت نيكسس</h2>
+                      <h2 className={`text-xs font-bold font-sans m-0 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>SMART NEXUS</h2>
                       <p className="text-[8px] text-zinc-500 m-0">Smart Nexus FZE LLC</p>
                     </div>
                   </div>
@@ -1342,7 +1342,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-[#0F4C81] font-arabic m-0 leading-tight">سمارت نيكسس</h2>
+                    <h2 className="text-base font-bold text-[#0F4C81] font-sans m-0 leading-tight">SMART NEXUS</h2>
                     <p className="text-[9px] text-zinc-500 m-0 tracking-wider">INTERNAL COSTING & PROFIT SHEET</p>
                   </div>
                 </div>

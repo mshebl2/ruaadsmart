@@ -593,7 +593,7 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 text-center text-xs text-zinc-600 mt-16 font-arabic">
-        <p>سمارت نيكسس وكاميرات المراقبة © {new Date().getFullYear()}</p>
+        <p className="font-sans">Smart Nexus FZE LLC © {new Date().getFullYear()}</p>
         <p className="mt-1 font-sans">Developed offline-first. All data is saved on this browser device.</p>
       </footer>
     </div>

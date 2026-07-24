@@ -489,7 +489,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                     />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-[#0F4C81] font-arabic m-0 leading-tight">سمارت نيكسس</h2>
+                    <h2 className="text-base font-bold text-[#0F4C81] font-sans m-0 leading-tight">SMART NEXUS</h2>
                     <p className="text-[9px] text-zinc-500 m-0 tracking-wider">Smart Nexus FZE LLC</p>
                   </div>
                 </div>
