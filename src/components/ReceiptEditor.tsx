@@ -37,7 +37,7 @@ const DEFAULT_RECEIPT_VALUES = {
   chequeDate: "",
   bankName: "",
   receivedFor: "Advance payment for smart home supply & installation",
-  receivedBy: "Ruaad Smart",
+  receivedBy: "Smart Nexus",
   integratorSignature: "",
 };
 
@@ -468,7 +468,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
             ref={previewRef}
             id="receipt-preview-page"
             dir="ltr"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col justify-between relative text-xs select-none text-left"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col gap-6 relative text-xs select-none text-left"
             style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
@@ -478,14 +478,14 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   <div className="relative w-12 h-12 bg-white">
                     <Image 
                       src="/logo.jpg" 
-                      alt="Ruaad Smart Logo" 
+                      alt="Smart Nexus Logo" 
                       fill
                       className="object-contain"
                     />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-[#0F4C81] font-arabic m-0 leading-tight">رواد سمارت للأجهزة الذكية</h2>
-                    <p className="text-[9px] text-zinc-500 m-0 tracking-wider">RUAAD SMART SMART MACHINE TRADING LLC</p>
+                    <h2 className="text-base font-bold text-[#0F4C81] font-arabic m-0 leading-tight">سمارت نيكسس</h2>
+                    <p className="text-[9px] text-zinc-500 m-0 tracking-wider">Smart Nexus FZE LLC</p>
                   </div>
                 </div>
                 
@@ -615,7 +615,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   <div className="absolute bottom-2 right-12 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none z-0">
                     <Image 
                       src="/stamp.png" 
-                      alt="Ruaad Smart Stamp" 
+                      alt="Smart Nexus Stamp" 
                       fill 
                       className="object-contain"
                     />
@@ -633,7 +633,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   ) : (
                     <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4 z-10" />
                   )}
-                  <p className="text-[9px] text-[#0F4C81] font-bold mt-1 relative z-10">{formValues.receivedBy || "Ruaad Smart"}</p>
+                  <p className="text-[9px] text-[#0F4C81] font-bold mt-1 relative z-10">{formValues.receivedBy || "Smart Nexus"}</p>
                 </div>
               </div>
 

@@ -3,8 +3,8 @@ import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionToken = request.cookies.get('ruaad_session')?.value;
-  const expectedToken = process.env.SESSION_TOKEN || 'ruaad_smart_secure_session_token_2026_xyz';
+  const sessionToken = request.cookies.get('nexus_session')?.value;
+  const expectedToken = process.env.SESSION_TOKEN || 'smart_nexus_secure_session_token_2026_xyz';
 
   // Define public paths that bypass authentication
   const isPublicPath = 

@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('ruaad_smart_db');
+    const db = client.db('smart_nexus_db');
     const certificate = await db.collection('certificates').findOne({ id });
     if (!certificate) {
       return NextResponse.json({ error: 'Certificate not found' }, { status: 404 });
@@ -27,7 +27,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('ruaad_smart_db');
+    const db = client.db('smart_nexus_db');
     const result = await db.collection('certificates').deleteOne({ id });
     return NextResponse.json({ success: true, result });
   } catch (e) {

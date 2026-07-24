@@ -13,7 +13,7 @@ interface TranslationDictionary {
 
 const translations: TranslationDictionary = {
   // Dashboard
-  dashboardTitle: { en: "Ruaad Smart Systems", ar: "رواد سمارت للأجهزة الذكية" },
+  dashboardTitle: { en: "Smart Nexus Systems", ar: "سمارت نيكسس" },
   newQuotation: { en: "New Quotation", ar: "عرض سعر جديد" },
   newCertificate: { en: "New Certificate", ar: "شهادة إنجاز جديدة" },
   totalQuotations: { en: "Total Quotations", ar: "إجمالي عروض الأسعار" },
@@ -117,7 +117,7 @@ const translations: TranslationDictionary = {
   
   // Login Page & Logout
   loginTitle: { en: "Sign In", ar: "تسجيل الدخول" },
-  loginSubtitle: { en: "Ruaad Smart Systems Admin Dashboard", ar: "لوحة تحكم أنظمة رواد سمارت للأجهزة الذكية" },
+  loginSubtitle: { en: "Smart Nexus Systems Admin Dashboard", ar: "لوحة تحكم أنظمة سمارت نيكسس" },
   username: { en: "Username", ar: "اسم المستخدم" },
   password: { en: "Password", ar: "كلمة المرور" },
   signInBtn: { en: "Sign In", ar: "دخول" },
@@ -163,7 +163,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("ruaad_smart_lang") as Language;
+      const stored = localStorage.getItem("smart_nexus_lang") as Language;
       if (stored === "en" || stored === "ar") {
         setLanguageState(stored);
       }
@@ -173,7 +173,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     if (typeof window !== "undefined") {
-      localStorage.setItem("ruaad_smart_lang", lang);
+      localStorage.setItem("smart_nexus_lang", lang);
     }
   };
 

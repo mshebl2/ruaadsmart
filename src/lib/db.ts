@@ -1,4 +1,4 @@
-const DB_NAME = 'ruaad_smart_db';
+const DB_NAME = 'smart_nexus_db';
 const DB_VERSION = 1;
 
 export interface PurchaseInvoice {
@@ -43,6 +43,8 @@ export interface Quotation {
   companyName: string;
   bankName: string;
   bankIban: string;
+  bankBic?: string;
+  bankAddress?: string;
   companyAddress: string;
   companyEmail: string;
   purchaseInvoices?: PurchaseInvoice[];

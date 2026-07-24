@@ -6,13 +6,13 @@ export async function POST(request: Request) {
 
     const expectedUsername = process.env.ADMIN_USERNAME || 'admin';
     const expectedPassword = process.env.ADMIN_PASSWORD || 'ruaadsmart2026';
-    const sessionToken = process.env.SESSION_TOKEN || 'ruaad_smart_secure_session_token_2026_xyz';
+    const sessionToken = process.env.SESSION_TOKEN || 'smart_nexus_secure_session_token_2026_xyz';
 
     if (username === expectedUsername && password === expectedPassword) {
       const response = NextResponse.json({ success: true });
       
       // Set secure HTTP-only cookie
-      response.cookies.set('ruaad_session', sessionToken, {
+      response.cookies.set('nexus_session', sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

@@ -1,7 +1,7 @@
 {
-  "name": "Ruaad Smart",
-  "short_name": "RuaadSmart",
-  "description": "Ruaad Smart PWA for Quotation and Work Completion Certificate management",
+  "name": "Smart Nexus",
+  "short_name": "SmartNexus",
+  "description": "Smart Nexus PWA for Quotation and Work Completion Certificate management",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#09090b",

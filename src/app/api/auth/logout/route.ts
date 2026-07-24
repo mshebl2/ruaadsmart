@@ -5,7 +5,7 @@ export async function POST() {
     const response = NextResponse.json({ success: true });
     
     // Clear the cookie by setting maxAge to 0 and path to '/'
-    response.cookies.set('ruaad_session', '', {
+    response.cookies.set('nexus_session', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

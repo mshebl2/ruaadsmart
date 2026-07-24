@@ -71,7 +71,7 @@ function LoginForm() {
             <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900 p-1 flex items-center justify-center mb-4">
               <Image
                 src="/logo.jpg"
-                alt="Ruaad Smart Logo"
+                alt="Smart Nexus Logo"
                 fill
                 className="object-contain rounded-xl"
                 priority

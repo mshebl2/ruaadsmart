@@ -62,9 +62,11 @@ const DEFAULT_QUOTATION_VALUES = {
   preparedByDate: new Date().toLocaleDateString("en-GB"),
   clientAcceptanceName: "",
   clientAcceptanceDate: "",
-  companyName: "RUAAD SMART SMART MACHINE TRADING LLC",
-  bankName: "Saudi National Bank",
-  bankIban: "SA7210000001400033305105",
+  companyName: "Smart Nexus FZE LLC",
+  bankName: "Wio Bank",
+  bankIban: "AE590860000009974815140",
+  bankBic: "WIOBAEADXXX",
+  bankAddress: "Etihad Airways Centre 5th Floor, Abu Dhabi, UAE",
   companyAddress: "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates",
   companyEmail: "info@support.ruaadalraqamia.com",
   purchaseInvoices: []
@@ -299,7 +301,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
     if (pdf) {
       const qNo = watch("quotationNo") || "Document";
       const prefix = isInvoiceMode ? "Invoice" : "Quotation";
-      pdf.save(`Ruaad_Smart_${prefix}_${qNo}.pdf`);
+      pdf.save(`Smart_Nexus_${prefix}_${qNo}.pdf`);
     }
   };
 
@@ -307,7 +309,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
     const pdf = await generateCompanyPDF();
     if (pdf) {
       const qNo = watch("quotationNo") || "Quotation";
-      pdf.save(`Ruaad_Smart_Company_Costing_${qNo}.pdf`);
+      pdf.save(`Smart_Nexus_Company_Costing_${qNo}.pdf`);
     }
   };
 
@@ -326,13 +328,13 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       const qNo = watch("quotationNo") || "Document";
       const prefix = isInvoiceMode ? "Invoice" : "Quotation";
       const blob = pdf.output("blob");
-      const file = new File([blob], `Ruaad_Smart_${prefix}_${qNo}.pdf`, { type: "application/pdf" });
+      const file = new File([blob], `Smart_Nexus_${prefix}_${qNo}.pdf`, { type: "application/pdf" });
       
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: `Ruaad Smart ${prefix} ${qNo}`,
-          text: `Please find attached our ${prefix.toLowerCase()} ${qNo} from Ruaad Smart.`
+          title: `Smart Nexus ${prefix} ${qNo}`,
+          text: `Please find attached our ${prefix.toLowerCase()} ${qNo} from Smart Nexus.`
         });
       } else {
         handleDownloadPDF();
@@ -866,6 +868,24 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none"
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">BIC / Swift</label>
+                    <input 
+                      type="text" 
+                      {...register("bankBic")} 
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">Bank Address</label>
+                    <input 
+                      type="text" 
+                      {...register("bankAddress")} 
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none"
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{t("companyAddress")}</label>
                   <input 
@@ -901,7 +921,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
             ref={page1Ref}
             id="quotation-page-1"
             dir="ltr"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col gap-6 relative text-xs select-none text-left"
             style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
@@ -911,14 +931,14 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   <div className="relative w-12 h-12 bg-white">
                     <Image 
                       src="/logo.jpg" 
-                      alt="Ruaad Smart Logo" 
+                      alt="Smart Nexus Logo" 
                       fill
                       className="object-contain"
                     />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-[#0F4C81] font-arabic m-0 leading-tight">رواد سمارت للأجهزة الذكية</h2>
-                    <p className="text-[9px] text-zinc-500 m-0 tracking-wider">RUAAD SMART SMART MACHINE TRADING LLC</p>
+                    <h2 className="text-base font-bold text-[#0F4C81] font-arabic m-0 leading-tight">سمارت نيكسس</h2>
+                    <p className="text-[9px] text-zinc-500 m-0 tracking-wider">Smart Nexus FZE LLC</p>
                   </div>
                 </div>
                 
@@ -1072,14 +1092,14 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   <div className="flex w-full mt-4 border border-zinc-200 text-[9px] relative">
                     <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
                       <div className={`font-bold border-b border-zinc-100 pb-1 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                        Prepared & Approved By (Ruaad Smart)
+                        Prepared & Approved By (Smart Nexus)
                       </div>
                       
                       {/* Official Stamp Overlay */}
                       <div className="absolute bottom-1 right-8 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none">
                         <Image 
                           src="/stamp.png" 
-                          alt="Ruaad Smart Stamp" 
+                          alt="Smart Nexus Stamp" 
                           fill 
                           className="object-contain"
                         />
@@ -1116,11 +1136,11 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="flex w-full border-b border-zinc-150">
                   <div className="w-[50%] p-1.5 border-r border-zinc-200">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Company Name</span>
-                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.companyName || "RUAAD SMART SMART MACHINE TRADING LLC"}</span>
+                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.companyName || "Smart Nexus FZE LLC"}</span>
                   </div>
                   <div className="w-[50%] p-1.5">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Bank Name</span>
-                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.bankName || "ABUDHABI COMML.BANK"}</span>
+                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.bankName || "Wio Bank"}</span>
                   </div>
                 </div>
                 <div className="flex w-full border-b border-zinc-150">
@@ -1130,7 +1150,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   </div>
                   <div className="w-[50%] p-1.5">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">IBAN</span>
-                    <span className="text-zinc-900 font-mono font-bold text-[9px] tracking-wider leading-tight">{formValues.bankIban || "AE100351641005629371001"}</span>
+                    <span className="text-zinc-900 font-mono font-bold text-[9px] tracking-wider leading-tight">{formValues.bankIban || "AE590860000009974815140"}</span>
                   </div>
                 </div>
                 <div className="flex w-full">
@@ -1153,7 +1173,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               ref={page2Ref}
               id="quotation-page-2"
               dir="ltr"
-              className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
+              className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col gap-6 relative text-xs select-none text-left"
               style={{ boxSizing: "border-box", direction: "ltr" }}
             >
               <div>
@@ -1163,14 +1183,14 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     <div className="relative w-10 h-10 bg-white">
                       <Image 
                         src="/logo.jpg" 
-                        alt="Ruaad Smart Logo" 
+                        alt="Smart Nexus Logo" 
                         fill
                         className="object-contain"
                       />
                     </div>
                     <div>
-                      <h2 className={`text-sm font-bold font-arabic m-0 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>رواد سمارت للأجهزة الذكية</h2>
-                      <p className="text-[8px] text-zinc-500 m-0">RUAAD SMART SMART MACHINE TRADING LLC</p>
+                      <h2 className={`text-sm font-bold font-arabic m-0 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>سمارت نيكسس</h2>
+                      <p className="text-[8px] text-zinc-500 m-0">Smart Nexus FZE LLC</p>
                     </div>
                   </div>
                   
@@ -1271,12 +1291,12 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="flex w-full mt-4 border border-zinc-200 text-[9px] relative">
                   <div className="w-[50%] p-3 border-r border-zinc-200 min-h-[90px] relative flex flex-col justify-between">
                     <div className={`font-bold border-b border-zinc-100 pb-1 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                      Prepared & Approved By (Ruaad Smart)
+                      Prepared & Approved By (Smart Nexus)
                     </div>
                     <div className="absolute bottom-1 right-8 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none">
                       <Image 
                         src="/stamp.png" 
-                        alt="Ruaad Smart Stamp" 
+                        alt="Smart Nexus Stamp" 
                         fill 
                         className="object-contain"
                       />
@@ -1308,11 +1328,11 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 <div className="flex w-full border-b border-zinc-150">
                   <div className="w-[50%] p-1.5 border-r border-zinc-200">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Company Name</span>
-                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.companyName || "RUAAD SMART SMART MACHINE TRADING LLC"}</span>
+                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.companyName || "Smart Nexus FZE LLC"}</span>
                   </div>
                   <div className="w-[50%] p-1.5">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">Bank Name</span>
-                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.bankName || "ABUDHABI COMML.BANK"}</span>
+                    <span className="text-zinc-800 font-semibold text-[9px] leading-tight">{formValues.bankName || "Wio Bank"}</span>
                   </div>
                 </div>
                 <div className="flex w-full border-b border-zinc-150">
@@ -1322,7 +1342,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   </div>
                   <div className="w-[50%] p-1.5">
                     <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">IBAN</span>
-                    <span className="text-zinc-900 font-mono font-bold text-[9px] tracking-wider leading-tight">{formValues.bankIban || "AE100351641005629371001"}</span>
+                    <span className="text-zinc-900 font-mono font-bold text-[9px] tracking-wider leading-tight">{formValues.bankIban || "AE590860000009974815140"}</span>
                   </div>
                 </div>
                 <div className="flex w-full">
@@ -1348,7 +1368,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
             ref={companyPageRef}
             id="company-costing-page"
             dir="ltr"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-between relative text-xs select-none text-left"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col gap-6 relative text-xs select-none text-left"
             style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
@@ -1358,13 +1378,13 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                   <div className="relative w-12 h-12 bg-white">
                     <Image 
                       src="/logo.jpg" 
-                      alt="Ruaad Smart Logo" 
+                      alt="Smart Nexus Logo" 
                       fill
                       className="object-contain"
                     />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-[#0F4C81] font-arabic m-0 leading-tight">رواد سمارت للأجهزة الذكية</h2>
+                    <h2 className="text-base font-bold text-[#0F4C81] font-arabic m-0 leading-tight">سمارت نيكسس</h2>
                     <p className="text-[9px] text-zinc-500 m-0 tracking-wider">INTERNAL COSTING & PROFIT SHEET</p>
                   </div>
                 </div>

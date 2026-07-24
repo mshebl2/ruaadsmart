@@ -31,7 +31,7 @@ interface CertificateEditorProps {
 const DEFAULT_CERTIFICATE_VALUES = {
   project: "Mr. Mohamed Villa 1 Al Aweer - Sharjah",
   systemType: "Extra Low Voltage & Wireless Home Automation & Network",
-  statement: "This is to certify that M/S Ruaad Smart has completed the ELV system's supply, installation, testing, and commissioning for the project mentioned above and handed it over within the stipulated period, and also maintained the quality of work.",
+  statement: "This is to certify that M/S Smart Nexus has completed the ELV system's supply, installation, testing, and commissioning for the project mentioned above and handed it over within the stipulated period, and also maintained the quality of work.",
   checklist: [
     { id: "c-1", system: "Curtain System", remarks: "8 Curtain Motors", done: true },
     { id: "c-2", system: "Lighting Control System", remarks: "17 Lighting Switches", done: true },
@@ -44,7 +44,7 @@ const DEFAULT_CERTIFICATE_VALUES = {
   clientName: "",
   clientSignature: "",
   clientDate: new Date().toLocaleDateString("en-GB"),
-  integratorName: "Ruaad Smart",
+  integratorName: "Smart Nexus",
   integratorSignature: "",
   integratorDate: new Date().toLocaleDateString("en-GB"),
   address: "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates",
@@ -586,7 +586,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
             ref={previewRef}
             id="certificate-preview-page"
             dir="ltr"
-            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[20mm] flex flex-col justify-between relative text-xs select-none text-left"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 shadow-2xl p-[20mm] flex flex-col gap-6 relative text-xs select-none text-left"
             style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
@@ -595,7 +595,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                 <div className="relative w-28 h-28 bg-white">
                   <Image 
                     src="/logo.jpg" 
-                    alt="Ruaad Smart Logo" 
+                    alt="Smart Nexus Logo" 
                     fill 
                     className="object-contain"
                   />
@@ -693,7 +693,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
 
                 {/* Right signature: integrator */}
                 <div className="w-[45%] border-t border-zinc-200 pt-3 relative">
-                  <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">System Integrator: Ruaad Smart</span>
+                  <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">System Integrator: Smart Nexus</span>
                   
                   <div className="h-16 relative w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden z-10" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
                     {formValues.integratorSignature ? (
@@ -712,14 +712,14 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                   <div className="absolute top-2 right-12 w-24 h-24 opacity-85 mix-blend-multiply pointer-events-none z-20">
                     <Image 
                       src="/stamp.png" 
-                      alt="Ruaad Smart Stamp" 
+                      alt="Smart Nexus Stamp" 
                       fill 
                       className="object-contain"
                     />
                   </div>
 
                   <div className="mt-2 text-zinc-700 space-y-0.5 relative z-10">
-                    <div><span className="font-semibold text-zinc-500">Name:</span> {formValues.integratorName || "Ruaad Smart"}</div>
+                    <div><span className="font-semibold text-zinc-500">Name:</span> {formValues.integratorName || "Smart Nexus"}</div>
                     <div><span className="font-semibold text-zinc-500">Date:</span> {formValues.integratorDate || "_________________"}</div>
                   </div>
                 </div>
@@ -748,7 +748,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                 <div className="relative w-8 h-8">
                   <Image 
                     src="/logo.jpg" 
-                    alt="Ruaad Smart Logo Dec" 
+                    alt="Smart Nexus Logo Dec" 
                     fill 
                     className="object-contain"
                   />

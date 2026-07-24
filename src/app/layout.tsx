@@ -14,8 +14,8 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "Ruaad Smart | Rowad Digital",
-  description: "Ruaad Smart - Quotation & Work Completion Certificate Generator",
+  title: "Smart Nexus | Rowad Digital",
+  description: "Smart Nexus - Quotation & Work Completion Certificate Generator",
   manifest: "/manifest.json",
 };
 

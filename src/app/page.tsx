@@ -150,7 +150,7 @@ export default function Dashboard() {
             <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 p-1 flex items-center justify-center">
               <Image 
                 src="/logo.jpg" 
-                alt="Ruaad Smart Logo" 
+                alt="Smart Nexus Logo" 
                 fill 
                 className="object-contain rounded-lg"
                 priority
@@ -161,7 +161,7 @@ export default function Dashboard() {
                 <h1 className="text-2xl font-bold tracking-tight text-white font-arabic">{t("dashboardTitle")}</h1>
                 <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-medium">PWA</span>
               </div>
-              <p className="text-sm text-zinc-400 mt-0.5">RUAAD SMART SMART MACHINE TRADING LLC</p>
+              <p className="text-sm text-zinc-400 mt-0.5">Smart Nexus FZE LLC</p>
             </div>
           </div>
           
@@ -580,7 +580,7 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 text-center text-xs text-zinc-600 mt-16 font-arabic">
-        <p>رواد سمارت للأجهزة الذكية وكاميرات المراقبة © {new Date().getFullYear()}</p>
+        <p>سمارت نيكسس وكاميرات المراقبة © {new Date().getFullYear()}</p>
         <p className="mt-1 font-sans">Developed offline-first. All data is saved on this browser device.</p>
       </footer>
     </div>

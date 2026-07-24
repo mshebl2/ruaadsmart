@@ -4,7 +4,7 @@ import clientPromise from '@/lib/mongodb';
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db('ruaad_smart_db');
+    const db = client.db('smart_nexus_db');
     const quotations = await db.collection('quotations').find({}).toArray();
     // Sort by updatedAt descending
     quotations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing quotation ID' }, { status: 400 });
     }
     const client = await clientPromise;
-    const db = client.db('ruaad_smart_db');
+    const db = client.db('smart_nexus_db');
     
     // Remove immutable MongoDB _id if present to prevent update errors
     delete body._id;
