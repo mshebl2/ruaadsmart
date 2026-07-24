@@ -925,12 +925,12 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
               : "hidden"
         } ${previewTab === "company-preview" ? "no-print" : ""}`}>
           
-          {/* PAGE 1 SHOWN AS A4 PAPER */}
+          {/* SINGLE DYNAMIC CONTINUOUS SHEET (A4 MIN HEIGHT) */}
           <div 
             ref={page1Ref}
             id="quotation-page-1"
             dir="ltr"
-            className="w-[210mm] min-h-[297mm] max-h-[297mm] h-[297mm] overflow-hidden bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col justify-between relative text-xs select-none text-left"
+            className="w-[210mm] min-h-[297mm] h-auto bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col justify-start gap-3 relative text-xs select-none text-left print-area"
             style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
@@ -1017,7 +1017,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {formValues.items.slice(0, formValues.items.length > 7 ? 7 : formValues.items.length).map((item, idx) => (
+                    {formValues.items.map((item, idx) => (
                       <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
                         <td className="p-1 text-center border-r border-zinc-200 font-semibold text-zinc-500" style={{ width: "5%" }}>{idx + 1}</td>
                         <td className="p-1 border-r border-zinc-200 text-zinc-800 leading-tight whitespace-pre-line font-medium break-words" style={{ width: "55%" }}>
@@ -1035,253 +1035,92 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                       </tr>
                     ))}
 
-                    {formValues.items.length <= 7 && (
-                      <>
-                        <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
-                          <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
-                          <td className={`p-1 text-right border-r border-zinc-200 font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "15%" }}>Subtotal:</td>
-                          <td className="p-1 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
-                            {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
-                          </td>
-                        </tr>
-                        {watchedDiscount > 0 && (
-                          <tr className="font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
-                            <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                            <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
-                            <td className="p-1 text-right font-mono font-bold text-red-650">
-                              -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
-                            </td>
-                          </tr>
-                        )}
-                        <tr className="font-bold text-zinc-900" style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.05)" : "rgba(15, 76, 129, 0.05)" }}>
-                          <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                          <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>TOTAL:</td>
-                          <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                            {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
-                          </td>
-                        </tr>
-                      </>
+                    {/* Subtotal, Discount, TOTAL Rows */}
+                    <tr className="totals-block font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                      <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
+                      <td className={`p-1 text-right border-r border-zinc-200 font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "15%" }}>Subtotal:</td>
+                      <td className="p-1 text-right font-mono font-bold text-zinc-800" style={{ width: "15%" }}>
+                        {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                      </td>
+                    </tr>
+                    {watchedDiscount > 0 && (
+                      <tr className="totals-block font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
+                        <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                        <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
+                        <td className="p-1 text-right font-mono font-bold text-red-650">
+                          -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                        </td>
+                      </tr>
                     )}
+                    <tr className="totals-block font-bold text-zinc-900" style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.05)" : "rgba(15, 76, 129, 0.05)" }}>
+                      <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                      <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>TOTAL:</td>
+                      <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                        {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
 
-              {formValues.items.length <= 7 && (
-                <>
-                  {/* Terms and Conditions Section */}
-                  <div className="mt-2 border border-zinc-200 rounded">
-                    <div className={`px-2 py-0.5 font-bold text-[9px] border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
-                      TERMS & CONDITIONS
-                    </div>
-                    <div className="flex justify-between p-1.5 text-[8.5px] gap-4">
-                      <div className="w-[48%]">
-                        <span className="font-bold text-zinc-500">Payment terms: </span>
-                        <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
-                      </div>
-                      <div className="w-[48%]">
-                        <span className="font-bold text-zinc-500">Terms & Conditions: </span>
-                        <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline text-[8.5px]">
-                          {formValues.termsConditions}
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Signature Blocks */}
-                  <div className="flex w-full mt-2 border border-zinc-200 text-[8.5px] relative">
-                    <div className="w-[50%] p-2 border-r border-zinc-200 min-h-[75px] relative flex flex-col justify-between">
-                      <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                        Prepared & Approved By (Smart Nexus)
-                      </div>
-                      
-                      {/* Official Stamp Overlay */}
-                      <div className="absolute bottom-1 right-6 w-16 h-16 opacity-90 mix-blend-multiply pointer-events-none">
-                        <Image 
-                          src={settings?.stampBase64 || "/stamp.png"} 
-                          alt="Smart Nexus Stamp" 
-                          fill 
-                          className="object-contain"
-                        />
-                      </div>
-                      
-                      <div className="pt-4 text-zinc-700 space-y-0.5 relative z-10">
-                        <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
-                        <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
-                      </div>
-                    </div>
-
-                    <div className="w-[50%] p-2 min-h-[75px] flex flex-col justify-between">
-                      <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                        Client Acceptance
-                      </div>
-                      
-                      <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4 mb-1" />
-                      
-                      <div className="text-zinc-700 space-y-0.5">
-                        <div><span className="font-bold text-zinc-400">Name: ______________________</span></div>
-                        <div><span className="font-bold text-zinc-400">Date: ______________________</span></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Company & Bank Details */}
-                  <div className="border border-zinc-200 mt-2 text-[8.5px] rounded overflow-hidden">
-                    <div className={`font-bold px-2 py-0.5 border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.1)" : "rgba(15, 76, 129, 0.1)" }}>
-                      COMPANY & BANK DETAILS
-                    </div>
-                    <div className="flex w-full border-b border-zinc-150">
-                      <div className="w-[50%] p-1 border-r border-zinc-200">
-                        <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Company Name</span>
-                        <span className="text-zinc-800 font-semibold text-[8.5px] leading-tight">{formValues.companyName || "Smart Nexus FZE LLC"}</span>
-                      </div>
-                      <div className="w-[50%] p-1">
-                        <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Bank Name</span>
-                        <span className="text-zinc-800 font-semibold text-[8.5px] leading-tight">{formValues.bankName || "Wio Bank"}</span>
-                      </div>
-                    </div>
-                    <div className="flex w-full border-b border-zinc-150">
-                      <div className="w-[50%] p-1 border-r border-zinc-200">
-                        <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Company Address</span>
-                        <span className="text-zinc-800 font-medium text-[8.5px] leading-tight">{formValues.companyAddress || "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates"}</span>
-                      </div>
-                      <div className="w-[50%] p-1">
-                        <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">IBAN</span>
-                        <span className="text-zinc-900 font-mono font-bold text-[8.5px] tracking-wider leading-tight">{formValues.bankIban || "AE590860000009974815140"}</span>
-                      </div>
-                    </div>
-                    <div className="flex w-full">
-                      <div className="w-[50%] p-1 border-r border-zinc-200">
-                        <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Email</span>
-                        <a href={`mailto:${formValues.companyEmail || "info@smartnexus.ae"}`} className="text-blue-600 font-semibold text-[8.5px] leading-tight">{formValues.companyEmail || "info@smartnexus.ae"}</a>
-                      </div>
-                      <div className="w-[50%] p-1">&nbsp;</div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* PAGE 2 SHOWN AS A4 PAPER */}
-          {formValues.items.length > 7 && (
-            <div 
-              ref={page2Ref}
-              id="quotation-page-2"
-              dir="ltr"
-              className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] max-h-[297mm] overflow-hidden bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col justify-between relative text-xs select-none text-left"
-              style={{ boxSizing: "border-box", direction: "ltr" }}
-            >
-              <div>
-                {/* Document Header Page 2 */}
-                <div className="flex items-start justify-between border-b-[2px] border-zinc-200 pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-9 h-9 bg-white">
-                      <Image src={settings?.logoBase64 || "/logo.jpg"} alt="Smart Nexus Logo" fill className="object-contain" />
-                    </div>
-                    <div>
-                      <h2 className={`text-xs font-bold font-sans m-0 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>SMART NEXUS</h2>
-                      <p className="text-[8px] text-zinc-500 m-0">Smart Nexus FZE LLC</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-zinc-400 font-bold text-xs tracking-wider">{isInvoiceMode ? "INVOICE " : ""}PAGE 2 / 2</span>
-                  </div>
+              {/* Terms and Conditions Section */}
+              <div className="terms-block mt-2 border border-zinc-200 rounded">
+                <div className={`px-2 py-0.5 font-bold text-[9px] border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
+                  TERMS & CONDITIONS
                 </div>
-
-                {/* Table for items continuation */}
-                <div className="mt-3">
-                  <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
-                    <thead>
-                      <tr className={`text-white font-bold text-[8.5px] ${isInvoiceMode ? "bg-emerald-600" : "bg-[#0F4C81]"}`}>
-                        <th className="p-1 text-center border-r" style={{ width: "5%" }}>#</th>
-                        <th className="p-1 border-r" style={{ width: "55%" }}>Description / Scope of Work</th>
-                        <th className="p-1 text-center border-r" style={{ width: "10%" }}>Qty</th>
-                        <th className="p-1 text-right border-r" style={{ width: "15%" }}>Unit Price (AED)</th>
-                        <th className="p-1 text-right" style={{ width: "15%" }}>Total (AED)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {formValues.items.slice(7).map((item, idx) => (
-                        <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
-                          <td className="p-1 text-center border-r border-zinc-200 font-semibold text-zinc-500">{idx + 8}</td>
-                          <td className="p-1 border-r border-zinc-200 text-zinc-800 leading-tight whitespace-pre-line font-medium break-words">{item.description || "No description"}</td>
-                          <td className="p-1 text-center border-r border-zinc-200 text-zinc-700">{item.qty ? Number(item.qty).toFixed(2) : "0.00"} {item.unit || "Units"}</td>
-                          <td className="p-1 text-right border-r border-zinc-200 text-zinc-700 font-mono">{item.unitPrice ? Number(item.unitPrice).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"}</td>
-                          <td className="p-1 text-right text-zinc-900 font-bold font-mono">{((item.qty || 0) * (item.unitPrice || 0)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED</td>
-                        </tr>
-                      ))}
-
-                      {/* Totals on Page 2 */}
-                      <tr className="font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
-                        <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                        <td className={`p-1 text-right border-r border-zinc-200 font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>Subtotal:</td>
-                        <td className="p-1 text-right font-mono font-bold text-zinc-800">{subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED</td>
-                      </tr>
-                      {watchedDiscount > 0 && (
-                        <tr className="font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
-                          <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                          <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
-                          <td className="p-1 text-right font-mono font-bold text-red-650">-{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED</td>
-                        </tr>
-                      )}
-                      <tr className="font-bold text-zinc-900" style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.05)" : "rgba(15, 76, 129, 0.05)" }}>
-                        <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                        <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>TOTAL:</td>
-                        <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>{total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Terms and Conditions on Page 2 */}
-                <div className="mt-2 border border-zinc-200 rounded">
-                  <div className={`px-2 py-0.5 font-bold text-[9px] border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
-                    TERMS & CONDITIONS
+                <div className="flex justify-between p-1.5 text-[8.5px] gap-4">
+                  <div className="w-[48%]">
+                    <span className="font-bold text-zinc-500">Payment terms: </span>
+                    <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
                   </div>
-                  <div className="flex justify-between p-1.5 text-[8.5px] gap-4">
-                    <div className="w-[48%]">
-                      <span className="font-bold text-zinc-500">Payment terms: </span>
-                      <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
-                    </div>
-                    <div className="w-[48%]">
-                      <span className="font-bold text-zinc-500">Terms & Conditions: </span>
-                      <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline text-[8.5px]">
-                        {formValues.termsConditions}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Signature Blocks on Page 2 */}
-                <div className="flex w-full mt-2 border border-zinc-200 text-[8.5px] relative">
-                  <div className="w-[50%] p-2 border-r border-zinc-200 min-h-[75px] relative flex flex-col justify-between">
-                    <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                      Prepared & Approved By (Smart Nexus)
-                    </div>
-                    <div className="absolute bottom-1 right-6 w-16 h-16 opacity-90 mix-blend-multiply pointer-events-none">
-                      <Image src={settings?.stampBase64 || "/stamp.png"} alt="Smart Nexus Stamp" fill className="object-contain" />
-                    </div>
-                    <div className="pt-4 text-zinc-700 space-y-0.5 relative z-10">
-                      <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
-                      <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
-                    </div>
-                  </div>
-
-                  <div className="w-[50%] p-2 min-h-[75px] flex flex-col justify-between">
-                    <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                      Client Acceptance
-                    </div>
-                    <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4 mb-1" />
-                    <div className="text-zinc-700 space-y-0.5">
-                      <div><span className="font-bold text-zinc-400">Name: ______________________</span></div>
-                      <div><span className="font-bold text-zinc-400">Date: ______________________</span></div>
-                    </div>
+                  <div className="w-[48%]">
+                    <span className="font-bold text-zinc-500">Terms & Conditions: </span>
+                    <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline text-[8.5px]">
+                      {formValues.termsConditions}
+                    </a>
                   </div>
                 </div>
               </div>
 
-              {/* Bank & Company Details on Page 2 */}
-              <div className="border border-zinc-200 mt-2 text-[8.5px] rounded overflow-hidden">
+              {/* Signature Blocks */}
+              <div className="signature-block flex w-full mt-2 border border-zinc-200 text-[8.5px] relative">
+                <div className="w-[50%] p-2 border-r border-zinc-200 min-h-[75px] relative flex flex-col justify-between">
+                  <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                    Prepared & Approved By (Smart Nexus)
+                  </div>
+                  
+                  {/* Official Stamp Overlay */}
+                  <div className="absolute bottom-1 right-6 w-16 h-16 opacity-90 mix-blend-multiply pointer-events-none">
+                    <Image 
+                      src={settings?.stampBase64 || "/stamp.png"} 
+                      alt="Smart Nexus Stamp" 
+                      fill 
+                      className="object-contain"
+                    />
+                  </div>
+                  
+                  <div className="pt-4 text-zinc-700 space-y-0.5 relative z-10">
+                    <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
+                    <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
+                  </div>
+                </div>
+
+                <div className="w-[50%] p-2 min-h-[75px] flex flex-col justify-between">
+                  <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                    Client Acceptance
+                  </div>
+                  
+                  <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4 mb-1" />
+                  
+                  <div className="text-zinc-700 space-y-0.5">
+                    <div><span className="font-bold text-zinc-400">Name: ______________________</span></div>
+                    <div><span className="font-bold text-zinc-400">Date: ______________________</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Company & Bank Details */}
+              <div className="bank-details-block border border-zinc-200 mt-2 text-[8.5px] rounded overflow-hidden">
                 <div className={`font-bold px-2 py-0.5 border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.1)" : "rgba(15, 76, 129, 0.1)" }}>
                   COMPANY & BANK DETAILS
                 </div>
@@ -1301,7 +1140,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     <span className="text-zinc-800 font-medium text-[8.5px] leading-tight">{formValues.companyAddress || "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates"}</span>
                   </div>
                   <div className="w-[50%] p-1">
-                    <span className="font-bold text-zinc-400 block uppercase text-[8px] mb-0.5">IBAN</span>
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">IBAN</span>
                     <span className="text-zinc-900 font-mono font-bold text-[8.5px] tracking-wider leading-tight">{formValues.bankIban || "AE590860000009974815140"}</span>
                   </div>
                 </div>
@@ -1314,7 +1153,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
         </div>
 
