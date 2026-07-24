@@ -73,9 +73,12 @@ const translations: TranslationDictionary = {
   preparedByName: { en: "Prepared By Name", ar: "اسم المُعِد" },
   preparedByDate: { en: "Prepared By Date", ar: "تاريخ الإعداد" },
   companyBankDetails: { en: "Company & Bank Details", ar: "تفاصيل الشركة والبنك" },
-  companyName: { en: "Company Name", ar: "اسم الشركة" },
+  companyName: { en: "Account Holder / Company Name", ar: "صاحب الحساب / اسم الشركة" },
+  accountHolder: { en: "Account Holder", ar: "صاحب الحساب" },
   bankName: { en: "Bank Name", ar: "اسم البنك" },
   iban: { en: "IBAN", ar: "رقم الآيبان" },
+  bankBic: { en: "BIC / Swift", ar: "رمز السويفت (BIC)" },
+  bankAddress: { en: "Bank Address", ar: "عنوان البنك" },
   companyAddress: { en: "Company Address", ar: "عنوان الشركة" },
   companyEmail: { en: "Company Email", ar: "البريد الإلكتروني للشركة" },
   

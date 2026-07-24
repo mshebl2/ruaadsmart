@@ -1126,12 +1126,12 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                 </div>
                 <div className="flex w-full border-b border-zinc-150">
                   <div className="w-[50%] p-1 border-r border-zinc-200">
-                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Company Name</span>
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Account Holder</span>
                     <span className="text-zinc-800 font-semibold text-[8.5px] leading-tight">{formValues.companyName || "Smart Nexus FZE LLC"}</span>
                   </div>
                   <div className="w-[50%] p-1">
-                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Bank Name</span>
-                    <span className="text-zinc-800 font-semibold text-[8.5px] leading-tight">{formValues.bankName || "Wio Bank"}</span>
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Bank Name & BIC</span>
+                    <span className="text-zinc-800 font-semibold text-[8.5px] leading-tight">{formValues.bankName || "Wio Bank"} - {formValues.bankBic || "WIOBAEADXXX"}</span>
                   </div>
                 </div>
                 <div className="flex w-full border-b border-zinc-150">
@@ -1149,7 +1149,10 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Email</span>
                     <a href={`mailto:${formValues.companyEmail || "info@smartnexus.ae"}`} className="text-blue-600 font-semibold text-[8.5px] leading-tight">{formValues.companyEmail || "info@smartnexus.ae"}</a>
                   </div>
-                  <div className="w-[50%] p-1">&nbsp;</div>
+                  <div className="w-[50%] p-1">
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Bank Address</span>
+                    <span className="text-zinc-800 font-medium text-[8.5px] leading-tight">{formValues.bankAddress || "Etihad Airways Centre 5th Floor, Abu Dhabi, UAE"}</span>
+                  </div>
                 </div>
               </div>
             </div>
