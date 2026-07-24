@@ -1,9 +1,15 @@
 import { MongoClient } from 'mongodb';
 
+const uri = process.env.MONGODB_URI;
+
 let clientPromise: Promise<MongoClient>;
 
 if (!uri) {
-  clientPromise = Promise.reject(new Error('Please add your Mongo URI to environment variables (MONGODB_URI)'));
+  clientPromise = new Promise((_, reject) => {
+    reject(new Error('Please add your Mongo URI to environment variables (MONGODB_URI)'));
+  });
+  // catch early to prevent unhandled rejection warnings at build time
+  clientPromise.catch(() => {});
 } else if (process.env.NODE_ENV === 'development') {
   const globalWithMongo = global as typeof globalThis & {
     _mongoClientPromise?: Promise<MongoClient>;
