@@ -150,6 +150,13 @@ const translations: TranslationDictionary = {
   totalReceiptsVal: { en: "Total Receipts Value", ar: "إجمالي المبالغ المستلمة" },
   clientTab: { en: "Client View", ar: "عرض العميل" },
   companyTab: { en: "Company Costs", ar: "كشف التكلفة للشركة" },
+  
+  // PWA Install Prompt
+  pwaInstallTitle: { en: "Install Smart Nexus", ar: "تثبيت سمارت نيكسس" },
+  pwaInstallDesc: { en: "Install the app on your device for quick access and offline work.", ar: "ثبّت التطبيق على جهازك للوصول السريع والعمل دون اتصال بالإنترنت." },
+  pwaInstallBtn: { en: "Install", ar: "تثبيت" },
+  pwaDismissBtn: { en: "Not Now", ar: "ليس الآن" },
+  pwaIosInstructions: { en: "To install: tap the Share button in Safari, then select 'Add to Home Screen'.", ar: "للتثبيت: اضغط على زر المشاركة في Safari ثم اختر 'إضافة إلى الصفحة الرئيسية'." },
 };
 
 interface LanguageContextProps {

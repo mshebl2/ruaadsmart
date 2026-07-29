@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Cairo } from "next/font/google";
 import { LanguageProvider } from "@/lib/i18n";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,6 +18,14 @@ export const metadata: Metadata = {
   title: "Smart Nexus | Smart Home Solutions",
   description: "Smart Nexus - Quotation & Work Completion Certificate Generator",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Smart Nexus",
+  },
+  icons: {
+    apple: "/logo.jpg",
+  },
 };
 
 export const viewport: Viewport = {
@@ -39,31 +48,22 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50">
         <LanguageProvider>
           {children}
+          <PWAInstallPrompt />
         </LanguageProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for (let registration of registrations) {
-                      registration.unregister().then(function(boolean) {
-                        if (boolean) console.log('SW unregistered successfully for localhost');
-                      });
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) {
+                      console.log('SW registered: ', registration.scope);
+                    },
+                    function(err) {
+                      console.log('SW registration failed: ', err);
                     }
-                  });
-                } else {
-                  window.addEventListener('load', function() {
-                    navigator.serviceWorker.register('/sw.js').then(
-                      function(registration) {
-                        console.log('SW registered: ', registration.scope);
-                      },
-                      function(err) {
-                        console.log('SW registration failed: ', err);
-                      }
-                    );
-                  });
-                }
+                  );
+                });
               }
             `,
           }}
