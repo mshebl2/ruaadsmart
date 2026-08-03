@@ -44,6 +44,27 @@ const translations: TranslationDictionary = {
   documentType: { en: "Document Type", ar: "نوع المستند" },
   invoiceMode: { en: "Invoice", ar: "فاتورة" },
   quotationMode: { en: "Quotation", ar: "عرض سعر" },
+  
+  // Status Translation
+  statusPending: { en: "Under Client Review", ar: "قيد مراجعة العميل" },
+  statusApproved: { en: "Approved", ar: "تم الموافقة" },
+  statusExecuted: { en: "Executed", ar: "تم التنفيذ" },
+  statusRejected: { en: "Rejected", ar: "تم الرفض" },
+  statusCancelled: { en: "Cancelled", ar: "ملغي" },
+
+  // Contracts UI
+  contractsTab: { en: "Contracts", ar: "العقود" },
+  newContract: { en: "New Contract", ar: "عقد جديد" },
+  contractTitle: { en: "Contract", ar: "العقد" },
+  contractNo: { en: "Contract No.", ar: "رقم العقد" },
+  firstParty: { en: "First Party (Client)", ar: "الطرف الأول (العميل)" },
+  secondParty: { en: "Second Party (Company)", ar: "الطرف الثاني (الشركة)" },
+  contractCost: { en: "Contract Value", ar: "قيمة العقد" },
+  generateContract: { en: "Generate Contract", ar: "إنشاء عقد" },
+  clausesLabel: { en: "Contract Clauses", ar: "بنود العقد" },
+  noContractsFound: { en: "No Contracts Found", ar: "لم يتم العثور على عقود" },
+  contractLocation: { en: "Contract Location", ar: "موقع العقد (الإمارة)" },
+  contractDetails: { en: "Contract Details", ar: "تفاصيل العقد" },
   editTitle: { en: "Edit", ar: "تعديل" },
   deleteTitle: { en: "Delete", ar: "حذف" },
   localDBSave: { en: "Saved in local DB", ar: "محفوظ محلياً في المتصفح" },

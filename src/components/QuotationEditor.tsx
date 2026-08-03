@@ -23,7 +23,7 @@ import {
   TrendingUp,
   X
 } from "lucide-react";
-import { saveQuotation, getQuotation, Quotation, QuotationItem, PurchaseInvoice, getSettings, Settings } from "@/lib/db";
+import { saveQuotation, getQuotation, Quotation, QuotationItem, PurchaseInvoice, getSettings, Settings, saveContract, getAllContracts } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -37,6 +37,7 @@ const DEFAULT_QUOTATION_VALUES = {
   date: new Date().toLocaleDateString("en-GB"),
   validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB"),
   preparedBy: "mostafa",
+  status: "pending",
   clientName: "",
   contactNo: "",
   email: "",
@@ -213,6 +214,142 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
         updatedAt: now
       };
       await saveQuotation(updatedDoc);
+
+      // If quotation is approved, check and auto-create contract
+      if (updatedDoc.status === 'approved') {
+        try {
+          const existingContracts = await getAllContracts();
+          const alreadyHasContract = existingContracts.some(c => c.quotationId === updatedDoc.id);
+          
+          if (!alreadyHasContract) {
+            const randomNo = "C" + String(Math.floor(Math.random() * 90000) + 10000);
+            
+            const itemLines = updatedDoc.items.map(
+              (item, i) => `${i + 1} - ${item.description.split('\n')[0]} (الكمية: ${item.qty} ${item.unit})`
+            ).join('\n');
+
+            const isCctvOnly = updatedDoc.items.every(item => 
+              item.description.toLowerCase().includes('cctv') || 
+              item.description.toLowerCase().includes('camera') || 
+              item.description.includes('كاميرا')
+            );
+            const isSmartOnly = updatedDoc.items.every(item => 
+              !item.description.toLowerCase().includes('cctv') && 
+              !item.description.toLowerCase().includes('camera') && 
+              !item.description.includes('كاميرا')
+            );
+            
+            let generatedTitle = "عقد توريد وتركيب أنظمة كاميرات مراقبة والبيت الذكي";
+            if (isCctvOnly) generatedTitle = "عقد توريد وتركيب أنظمة كاميرات مراقبة";
+            else if (isSmartOnly) generatedTitle = "عقد توريد وتركيب أنظمة البيت الذكي (Smart Home)";
+
+            const contractClauses = [
+              {
+                title: "البند الأول: نطاق العمل والخدمات",
+                content: `1 - يتعهد الطرف الثاني بتوريد وتركيب وتشغيل نظام متكامل في موقع الطرف الأول وفقًا لعرض السعر رقم (${updatedDoc.quotationNo}) والبنود المذكورة أدناه:
+${itemLines}
+2 - يقوم الطرف الثاني بتدريب الطرف الأول أو من يرشحه على كيفية تشغيل النظام وإعداداته.
+3 - يقوم الطرف الثانى بضبط زوايا الرؤية، إعدادات التشغيل، وكشف الحركة والبرمجة بما يتوافق مع متطلبات العميل.
+4 - يقوم الطرف الثانى بتوصيل وتهيئة الأجهزة بالشبكة الداخلية أو الإنترنت وضمان التشغيل الكامل للنظام.`
+              },
+              {
+                title: "البند الثاني: التكاليف وطريقة الدفع",
+                content: `1. التكلفة الإجمالية:
+تبلغ قيمة العقد الإجمالية (${updatedDoc.total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} درهم إماراتي) شاملة توريد المعدات والتركيب والتشغيل.
+2. جدول الدفع:
+- 30% مقدّم عند توقيع العقد.
+- 30% بعد توريد المعدات.
+- 30% بعد إتمام التركيب.
+- 10% عند تجربة النظام والتشغيل بنجاح.
+3. الضرائب والرسوم:
+يتحمل الطرف الأول أية ضرائب أو رسوم حكومية أو بلدية تتعلق بتنفيذ العقد.`
+              },
+              {
+                title: "البند الثالث: الضمان والصيانة",
+                content: `1. مدة الضمان:
+يضمن الطرف الثاني المعدات لمدة 3 سنوات من تاريخ التسليم النهائي.
+2. شروط الضمان:
+يشمل الضمان إصلاح أو استبدال أي قطعة بها عيب مصنعي دون أي تكلفة إضافية.
+3. خدمات ما بعد البيع:
+يقدم الطرف الثاني خدمات الصيانة الدورية عند الطلب، مقابل رسوم يتم الاتفاق عليها لاحقًا (إن وجدت).`
+              },
+              {
+                title: "البند الرابع: مدة العقد",
+                content: `1. مدة التنفيذ:
+مدة تنفيذ الأعمال هي 4 شهور تبدأ من تاريخ استلام الدفعة المقدمة أو أمر المباشرة بالعمل.
+2. مدة الضمان:
+تسري فترة الضمان بعد التسليم النهائي.
+3. التجديد:
+يجوز للطرفين تجديد العقد بناءً على اتفاق خطي بينهما.`
+              },
+              {
+                title: "البند الخامس: التزامات الأطراف",
+                content: `التزامات الشركة (الطرف الثاني):
+- توريد معدات جديدة وأصلية مطابقة للمواصفات.
+- تنفيذ التركيب من خلال فنيين مختصين.
+- تسليم النظام بعد التشغيل الكامل والتأكد من كفاءة الأداء.
+- تقديم التدريب والدعم الفني اللازم.
+
+التزامات العميل (الطرف الأول):
+- تهيئة موقع التركيب وتوفير مصادر الكهرباء والإنترنت.
+- تسهيل دخول الفنيين إلى الموقع في أوقات العمل.
+- الالتزام بسداد الدفعات في المواعيد المحددة.`
+              },
+              {
+                title: "البند السادس: شروط الإنهاء",
+                content: `1. يحق لأي طرف إنهاء العقد إذا أخل الطرف الآخر بأي من التزاماته بعد إشعاره خطيًا ومنحه مهلة (7) أيام لتصحيح الوضع.
+2. في حال الإلغاء قبل بدء التنفيذ، يتم خصم التكاليف الفعلية التي تكبدها الطرف الثاني.
+3. في حال الإنهاء بعد التنفيذ، لا يحق للطرف الأول استرداد المبالغ المدفوعة عن الأعمال المنجزة.`
+              },
+              {
+                title: "البند السابع: المسؤولية وخصوصية البيانات",
+                content: `1. حدود المسؤولية:
+لا يتحمل الطرف الثاني أي مسؤولية عن سوء استخدام النظام من قبل العميل أو أطراف أخرى.
+2. خصوصية البيانات:
+يتعهد الطرف الثاني بالمحافظة على سرية جميع التسجيلات والبيانات، وعدم الاطلاع عليها أو نسخها أو مشاركتها إلا بإذن خطي من الطرف الأول.`
+              },
+              {
+                title: "البند الثامن: القانون الواجب التطبيق وحل النزاعات",
+                content: `يخضع هذا العقد لأحكام القوانين السارية في دولة الإمارات العربية المتحدة.
+فى حال نشوء أي نزاع، يتم حله وديًا، وإذا تعذر ذلك، يُحال إلى الجهات القضائية المختصة في الدولة.`
+              },
+              {
+                title: "البند التاسع: الموقع والتوقيع",
+                content: `حرر هذا العقد في إمارة دبى بتاريخ ${new Date().toLocaleDateString("en-GB")} من نسعتين أصليتين، بيد كل طرف نسخة للعمل بموجبها.`
+              }
+            ];
+
+            const newContract = {
+              id: `contract-${Date.now()}`,
+              contractNo: randomNo,
+              date: new Date().toLocaleDateString("en-GB"),
+              location: "دبى",
+              title: generatedTitle,
+              firstPartyName: updatedDoc.clientName,
+              firstPartyPhone: updatedDoc.contactNo || "",
+              firstPartyAddress: updatedDoc.locationArea || "",
+              secondPartyName: updatedDoc.companyName || "كامشيلد م.م.ح",
+              secondPartyAddress: updatedDoc.companyAddress || "37 شارع آل مكتوم, دبى",
+              secondPartyPhone: "0563063601",
+              totalCost: updatedDoc.total,
+              totalCostWords: "",
+              clauses: contractClauses,
+              firstPartySignName: "",
+              firstPartySignDate: new Date().toLocaleDateString("en-GB"),
+              secondPartySignName: "",
+              secondPartySignDate: new Date().toLocaleDateString("en-GB"),
+              createdAt: now,
+              updatedAt: now,
+              quotationId: updatedDoc.id
+            };
+
+            await saveContract(newContract);
+          }
+        } catch (contractErr) {
+          console.error("Failed to auto-generate contract:", contractErr);
+        }
+      }
+
       alert(language === "ar" ? "تم حفظ عرض السعر بنجاح!" : "Quotation saved successfully!");
       router.push("/");
     } catch (error) {
@@ -539,6 +676,19 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
                     placeholder="DD/MM/YYYY"
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none"
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{t("status")}</label>
+                  <select 
+                    {...register("status")} 
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none"
+                  >
+                    <option value="pending">{t("statusPending")}</option>
+                    <option value="approved">{t("statusApproved")}</option>
+                    <option value="executed">{t("statusExecuted")}</option>
+                    <option value="rejected">{t("statusRejected")}</option>
+                    <option value="cancelled">{t("statusCancelled")}</option>
+                  </select>
                 </div>
               </div>
             </div>

@@ -48,6 +48,7 @@ export interface Quotation {
   companyAddress: string;
   companyEmail: string;
   purchaseInvoices?: PurchaseInvoice[];
+  status?: 'pending' | 'approved' | 'executed' | 'rejected' | 'cancelled';
   createdAt: string;
   updatedAt: string;
 }
@@ -221,4 +222,68 @@ export async function saveSettings(settings: Settings): Promise<void> {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || 'Failed to save settings');
   }
+}
+
+export interface ContractClause {
+  title: string;
+  content: string;
+}
+
+export interface Contract {
+  id: string;
+  contractNo: string;
+  date: string;
+  location: string;
+  title: string;
+  firstPartyName: string;
+  firstPartyPhone: string;
+  firstPartyAddress: string;
+  secondPartyName: string;
+  secondPartyPhone: string;
+  secondPartyAddress: string;
+  clauses: ContractClause[];
+  totalCost: number;
+  totalCostWords: string;
+  firstPartySignName: string;
+  firstPartySignature?: string;
+  firstPartySignDate: string;
+  secondPartySignName: string;
+  secondPartySignature?: string;
+  secondPartySignDate: string;
+  createdAt: string;
+  updatedAt: string;
+  quotationId?: string;
+}
+
+// Contract Operations
+export async function saveContract(contract: Contract): Promise<void> {
+  const res = await fetch('/api/contracts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(contract),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to save contract');
+  }
+}
+
+export async function getContract(id: string): Promise<Contract | null> {
+  const res = await fetch(`/api/contracts/${id}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('Failed to fetch contract');
+  return res.json();
+}
+
+export async function getAllContracts(): Promise<Contract[]> {
+  const res = await fetch('/api/contracts');
+  if (!res.ok) throw new Error('Failed to fetch contracts');
+  return res.json();
+}
+
+export async function deleteContract(id: string): Promise<void> {
+  const res = await fetch(`/api/contracts/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete contract');
 }
