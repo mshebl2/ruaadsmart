@@ -179,7 +179,22 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
   const handleDownloadPDF = async () => {
     const pdf = await generatePDF();
     if (pdf) {
-      pdf.save(`Receipt_Voucher_${formValues.receiptNo}_${formValues.clientName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
+      const fileName = `Receipt_Voucher_${formValues.receiptNo}_${formValues.clientName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      const isStandalone = typeof window !== 'undefined' && (
+        window.matchMedia('(display-mode: standalone)').matches || 
+        (window.navigator as any).standalone
+      );
+      
+      if (isStandalone) {
+        const blob = pdf.output("blob");
+        const url = URL.createObjectURL(blob);
+        const newWindow = window.open(url, "_blank");
+        if (!newWindow) {
+          window.location.href = url;
+        }
+      } else {
+        pdf.save(fileName);
+      }
     }
   };
 

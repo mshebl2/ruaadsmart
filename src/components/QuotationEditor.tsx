@@ -447,7 +447,22 @@ ${itemLines}
     if (pdf) {
       const qNo = watch("quotationNo") || "Document";
       const prefix = isInvoiceMode ? "Invoice" : "Quotation";
-      pdf.save(`Smart_Nexus_${prefix}_${qNo}.pdf`);
+      const fileName = `Smart_Nexus_${prefix}_${qNo}.pdf`;
+      const isStandalone = typeof window !== 'undefined' && (
+        window.matchMedia('(display-mode: standalone)').matches || 
+        (window.navigator as any).standalone
+      );
+      
+      if (isStandalone) {
+        const blob = pdf.output("blob");
+        const url = URL.createObjectURL(blob);
+        const newWindow = window.open(url, "_blank");
+        if (!newWindow) {
+          window.location.href = url;
+        }
+      } else {
+        pdf.save(fileName);
+      }
     }
   };
 
@@ -455,7 +470,22 @@ ${itemLines}
     const pdf = await generateCompanyPDF();
     if (pdf) {
       const qNo = watch("quotationNo") || "Quotation";
-      pdf.save(`Smart_Nexus_Company_Costing_${qNo}.pdf`);
+      const fileName = `Smart_Nexus_Company_Costing_${qNo}.pdf`;
+      const isStandalone = typeof window !== 'undefined' && (
+        window.matchMedia('(display-mode: standalone)').matches || 
+        (window.navigator as any).standalone
+      );
+      
+      if (isStandalone) {
+        const blob = pdf.output("blob");
+        const url = URL.createObjectURL(blob);
+        const newWindow = window.open(url, "_blank");
+        if (!newWindow) {
+          window.location.href = url;
+        }
+      } else {
+        pdf.save(fileName);
+      }
     }
   };
 

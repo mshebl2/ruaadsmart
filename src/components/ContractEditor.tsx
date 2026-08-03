@@ -299,8 +299,13 @@ ${itemLines}
     clone.style.top = "0";
     clone.style.left = "-9999px";
     clone.style.width = "210mm";
-    clone.style.height = "auto";
     clone.style.minWidth = "210mm";
+    if (element.clientHeight > 0) {
+      clone.style.height = `${element.clientHeight}px`;
+      clone.style.minHeight = `${element.clientHeight}px`;
+    } else {
+      clone.style.height = "auto";
+    }
     clone.style.zoom = "1";
     clone.style.transform = "none";
     
@@ -356,10 +361,33 @@ ${itemLines}
   };
 
   const handleDownloadPDF = async () => {
-    const pdf = await generatePDF();
-    if (pdf) {
-      const cNo = watch("contractNo") || "Contract";
-      pdf.save(`Contract_${cNo}.pdf`);
+    try {
+      const pdf = await generatePDF();
+      if (pdf) {
+        const cNo = watch("contractNo") || "Contract";
+        
+        // Detect mobile or PWA standalone
+        const isStandalone = typeof window !== 'undefined' && (
+          window.matchMedia('(display-mode: standalone)').matches || 
+          (window.navigator as any).standalone
+        );
+        
+        if (isStandalone) {
+          const blob = pdf.output("blob");
+          const url = URL.createObjectURL(blob);
+          const newWindow = window.open(url, "_blank");
+          if (!newWindow) {
+            window.location.href = url;
+          }
+        } else {
+          pdf.save(`Contract_${cNo}.pdf`);
+        }
+      } else {
+        alert(language === "ar" ? "فشل إنشاء ملف PDF. يرجى المحاولة مرة أخرى." : "Failed to generate PDF. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(language === "ar" ? "حدث خطأ أثناء تحميل ملف PDF." : "An error occurred while downloading the PDF.");
     }
   };
 

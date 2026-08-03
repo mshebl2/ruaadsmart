@@ -209,7 +209,22 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     const pdf = await generatePDF();
     if (pdf) {
       const proj = watch("project") || "Certificate";
-      pdf.save(`Work_Completion_Certificate_${proj.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
+      const fileName = `Work_Completion_Certificate_${proj.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      const isStandalone = typeof window !== 'undefined' && (
+        window.matchMedia('(display-mode: standalone)').matches || 
+        (window.navigator as any).standalone
+      );
+      
+      if (isStandalone) {
+        const blob = pdf.output("blob");
+        const url = URL.createObjectURL(blob);
+        const newWindow = window.open(url, "_blank");
+        if (!newWindow) {
+          window.location.href = url;
+        }
+      } else {
+        pdf.save(fileName);
+      }
     }
   };
 
