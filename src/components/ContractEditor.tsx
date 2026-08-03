@@ -338,8 +338,8 @@ ${itemLines}
       pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
+      while (heightLeft > 5) {
+        position -= pageHeight;
         pdf.addPage();
         pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
@@ -771,7 +771,6 @@ ${itemLines}
               ref={previewRef}
               dir="rtl"
               className="w-[210mm] min-h-[297mm] bg-white text-zinc-900 p-[20mm] shadow-2xl relative flex flex-col font-arabic"
-              style={{ contentVisibility: "auto" }}
             >
               {/* Decorative Corner Borders */}
               <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
