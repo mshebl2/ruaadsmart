@@ -37,7 +37,9 @@ import {
   getSettings,
   Contract,
   getAllContracts,
-  deleteContract
+  deleteContract,
+  saveQuotation,
+  saveContract
 } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 
@@ -116,6 +118,153 @@ export default function Dashboard() {
     if (confirm(language === "ar" ? "هل أنت متأكد من حذف هذا العقد؟" : "Are you sure you want to delete this contract?")) {
       await deleteContract(id);
       setContracts(contracts.filter((c) => c.id !== id));
+    }
+  };
+
+  const handleStatusChange = async (quote: Quotation, newStatus: 'pending' | 'approved' | 'executed' | 'rejected' | 'cancelled') => {
+    try {
+      const updatedQuote = {
+        ...quote,
+        status: newStatus,
+        updatedAt: new Date().toISOString()
+      };
+      await saveQuotation(updatedQuote);
+
+      // If approved, trigger auto contract generation
+      if (newStatus === 'approved') {
+        const existingContracts = await getAllContracts();
+        const alreadyHasContract = existingContracts.some(c => c.quotationId === quote.id);
+        
+        if (!alreadyHasContract) {
+          const randomNo = "C" + String(Math.floor(Math.random() * 90000) + 10000);
+          const itemLines = quote.items.map(
+            (item, i) => `${i + 1} - ${item.description.split('\n')[0]} (الكمية: ${item.qty} ${item.unit})`
+          ).join('\n');
+
+          const isCctvOnly = quote.items.every(item => 
+            item.description.toLowerCase().includes('cctv') || 
+            item.description.toLowerCase().includes('camera') || 
+            item.description.includes('كاميرا')
+          );
+          const isSmartOnly = quote.items.every(item => 
+            !item.description.toLowerCase().includes('cctv') && 
+            !item.description.toLowerCase().includes('camera') && 
+            !item.description.includes('كاميرا')
+          );
+          
+          let generatedTitle = "عقد توريد وتركيب أنظمة كاميرات مراقبة والبيت الذكي";
+          if (isCctvOnly) generatedTitle = "عقد توريد وتركيب أنظمة كاميرات مراقبة";
+          else if (isSmartOnly) generatedTitle = "عقد توريد وتركيب أنظمة البيت الذكي (Smart Home)";
+
+          const contractClauses = [
+            {
+              title: "البند الأول: نطاق العمل والخدمات",
+              content: `1 - يتعهد الطرف الثاني بتوريد وتركيب وتشغيل نظام متكامل في موقع الطرف الأول وفقًا لعرض السعر رقم (${quote.quotationNo}) والبنود المذكورة أدناه:
+${itemLines}
+2 - يقوم الطرف الثاني بتدريب الطرف الأول أو من يرشحه على كيفية تشغيل النظام وإعداداته.
+3 - يقوم الطرف الثانى بضبط زوايا الرؤية، إعدادات التشغيل، وكشف الحركة والبرمجة بما يتوافق مع متطلبات العميل.
+4 - يقوم الطرف الثانى بتوصيل وتهيئة الأجهزة بالشبكة الداخلية أو الإنترنت وضمان التشغيل الكامل للنظام.`
+            },
+            {
+              title: "البند الثاني: التكاليف وطريقة الدفع",
+              content: `1. التكلفة الإجمالية:
+تبلغ قيمة العقد الإجمالية (${quote.total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} درهم إماراتي) شاملة توريد المعدات والتركيب والتشغيل.
+2. جدول الدفع:
+- 30% مقدّم عند توقيع العقد.
+- 30% بعد توريد المعدات.
+- 30% بعد إتمام التركيب.
+- 10% عند تجربة النظام والتشغيل بنجاح.
+3. الضرائب والرسوم:
+يتحمل الطرف الأول أية ضرائب أو رسوم حكومية أو بلدية تتعلق بتنفيذ العقد.`
+            },
+            {
+              title: "البند الثالث: الضمان والصيانة",
+              content: `1. مدة الضمان:
+يضمن الطرف الثاني المعدات لمدة 3 سنوات من تاريخ التسليم النهائي.
+2. شروط الضمان:
+يشمل الضمان إصلاح أو استبدال أي قطعة بها عيب مصنعي دون أي تكلفة إضافية.
+3. خدمات ما بعد البيع:
+يقدم الطرف الثاني خدمات الصيانة الدورية عند الطلب، مقابل رسوم يتم الاتفاق عليها لاحقًا (إن وجدت).`
+            },
+            {
+              title: "البند الرابع: مدة العقد",
+              content: `1. مدة التنفيذ:
+مدة تنفيذ الأعمال هي 4 شهور تبدأ من تاريخ استلام الدفعة المقدمة أو أمر المباشرة بالعمل.
+2. مدة الضمان:
+تسري فترة الضمان بعد التسليم النهائي.
+3. التجديد:
+يجوز للطرفين تجديد العقد بناءً على اتفاق خطي بينهما.`
+            },
+            {
+              title: "البند الخامس: التزامات الأطراف",
+              content: `التزامات الشركة (الطرف الثاني):
+- توريد معدات جديدة وأصلية مطابقة للمواصفات.
+- تنفيذ التركيب من خلال فنيين مختصين.
+- تسليم النظام بعد التشغيل الكامل والتأكد من كفاءة الأداء.
+- تقديم التدريب والدعم الفني اللازم.
+
+التزامات العميل (الطرف الأول):
+- تهيئة موقع التركيب وتوفير مصادر الكهرباء والإنترنت.
+- تسهيل دخول الفنيين إلى الموقع في أوقات العمل.
+- الالتزام بسداد الدفعات في المواعيد المحددة.`
+            },
+            {
+              title: "البند السادس: شروط الإنهاء",
+              content: `1. يحق لأي طرف إنهاء العقد إذا أخل الطرف الآخر بأي من التزاماته بعد إشعاره خطيًا ومنحه مهلة (7) أيام لتصحيح الوضع.
+2. في حال الإلغاء قبل بدء التنفيذ، يتم خصم التكاليف الفعلية التي تكبدها الطرف الثاني.
+3. في حال الإنهاء بعد التنفيذ، لا يحق للطرف الأول استرداد المبالغ المدفوعة عن الأعمال المنجزة.`
+            },
+            {
+              title: "البند السابع: المسؤولية وخصوصية البيانات",
+              content: `1. حدود المسؤولية:
+لا يتحمل الطرف الثاني أي مسؤولية عن سوء استخدام النظام من قبل العميل أو أطراف أخرى.
+2. خصوصية البيانات:
+يتعهد الطرف الثاني بالمحافظة على سرية جميع التسجيلات والبيانات، وعدم الاطلاع عليها أو نسخها أو مشاركتها إلا بإذن خطي من الطرف الأول.`
+            },
+            {
+              title: "البند الثامن: القانون الواجب التطبيق وحل النزاعات",
+              content: `يخضع هذا العقد لأحكام القوانين السارية في دولة الإمارات العربية المتحدة.
+فى حال نشوء أي نزاع، يتم حله وديًا، وإذا تعذر ذلك، يُحال إلى الجهات القضائية المختصة في الدولة.`
+            },
+            {
+              title: "البند التاسع: الموقع والتوقيع",
+              content: `حرر هذا العقد في إمارة دبى بتاريخ ${new Date().toLocaleDateString("en-GB")} من نسعتين أصليتين، بيد كل طرف نسخة للعمل بموجبها.`
+            }
+          ];
+
+          const newContract = {
+            id: `contract-${Date.now()}`,
+            contractNo: randomNo,
+            date: new Date().toLocaleDateString("en-GB"),
+            location: "دبى",
+            title: generatedTitle,
+            firstPartyName: quote.clientName,
+            firstPartyPhone: quote.contactNo || "",
+            firstPartyAddress: quote.locationArea || "",
+            secondPartyName: quote.companyName || "كامشيلد م.م.ح",
+            secondPartyAddress: quote.companyAddress || "37 شارع آل مكتوم, دبى",
+            secondPartyPhone: "0563063601",
+            totalCost: quote.total,
+            totalCostWords: "",
+            clauses: contractClauses,
+            firstPartySignName: "",
+            firstPartySignDate: new Date().toLocaleDateString("en-GB"),
+            secondPartySignName: "",
+            secondPartySignDate: new Date().toLocaleDateString("en-GB"),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            quotationId: quote.id
+          };
+
+          await saveContract(newContract);
+          const contrs = await getAllContracts();
+          setContracts(contrs);
+        }
+      }
+
+      setQuotations(prev => prev.map(q => q.id === quote.id ? { ...q, status: newStatus } : q));
+    } catch (err) {
+      console.error("Failed to update status:", err);
     }
   };
 
@@ -438,27 +587,24 @@ export default function Dashboard() {
                             <td className="py-4 px-6 text-center">
                               {(() => {
                                 const status = quote.status || 'pending';
-                                let badgeClass = "bg-amber-500/10 text-amber-400 border border-amber-500/20";
-                                let statusText = t("statusPending");
-                                
-                                if (status === 'approved') {
-                                  badgeClass = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-                                  statusText = t("statusApproved");
-                                } else if (status === 'executed') {
-                                  badgeClass = "bg-blue-500/10 text-blue-400 border border-blue-500/20";
-                                  statusText = t("statusExecuted");
-                                } else if (status === 'rejected') {
-                                  badgeClass = "bg-rose-500/10 text-rose-400 border border-rose-500/20";
-                                  statusText = t("statusRejected");
-                                } else if (status === 'cancelled') {
-                                  badgeClass = "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20";
-                                  statusText = t("statusCancelled");
-                                }
-                                
+                                let textClass = "text-amber-400 border-amber-500/30 bg-amber-500/5";
+                                if (status === 'approved') textClass = "text-emerald-400 border-emerald-500/30 bg-emerald-500/5";
+                                else if (status === 'executed') textClass = "text-blue-400 border-blue-500/30 bg-blue-500/5";
+                                else if (status === 'rejected') textClass = "text-rose-400 border-rose-500/30 bg-rose-500/5";
+                                else if (status === 'cancelled') textClass = "text-zinc-400 border-zinc-500/30 bg-zinc-500/5";
+
                                 return (
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
-                                    {statusText}
-                                  </span>
+                                  <select 
+                                    value={status}
+                                    onChange={(e) => handleStatusChange(quote, e.target.value as any)}
+                                    className={`px-2.5 py-1 rounded-full text-xs font-medium border outline-none cursor-pointer transition-all ${textClass}`}
+                                  >
+                                    <option value="pending" className="bg-zinc-950 text-amber-400">{t("statusPending")}</option>
+                                    <option value="approved" className="bg-zinc-950 text-emerald-400">{t("statusApproved")}</option>
+                                    <option value="executed" className="bg-zinc-950 text-blue-400">{t("statusExecuted")}</option>
+                                    <option value="rejected" className="bg-zinc-950 text-rose-400">{t("statusRejected")}</option>
+                                    <option value="cancelled" className="bg-zinc-950 text-zinc-400">{t("statusCancelled")}</option>
+                                  </select>
                                 );
                               })()}
                             </td>
