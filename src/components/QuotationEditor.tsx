@@ -1294,7 +1294,14 @@ ${itemLines}
 
               {/* Items Table */}
               <div className="mt-2">
-                <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed" }}>
+                <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed", width: "100%" }}>
+                  <colgroup>
+                    <col style={{ width: "5%" }} />
+                    <col style={{ width: "55%" }} />
+                    <col style={{ width: "10%" }} />
+                    <col style={{ width: "15%" }} />
+                    <col style={{ width: "15%" }} />
+                  </colgroup>
                   <thead>
                     <tr className={`text-white font-bold text-[8.5px] ${isInvoiceMode ? "bg-emerald-600" : "bg-[#0F4C81]"}`}>
                       <th className={`p-1 text-center border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "5%" }}>#</th>
@@ -1333,17 +1340,17 @@ ${itemLines}
                     </tr>
                     {watchedDiscount > 0 && (
                       <tr className="totals-block font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
-                        <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                        <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
-                        <td className="p-1 text-right font-mono font-bold text-red-650">
+                        <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
+                        <td className="p-1 text-right border-r border-zinc-200 text-red-650" style={{ width: "15%" }}>Discount ({watchedDiscount}%):</td>
+                        <td className="p-1 text-right font-mono font-bold text-red-650" style={{ width: "15%" }}>
                           -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                         </td>
                       </tr>
                     )}
                     <tr className="totals-block font-bold text-zinc-900" style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.05)" : "rgba(15, 76, 129, 0.05)" }}>
-                      <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                      <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>TOTAL:</td>
-                      <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                      <td colSpan={3} className="p-1 border-r border-zinc-200" style={{ width: "70%" }}>&nbsp;</td>
+                      <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "15%" }}>TOTAL:</td>
+                      <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "15%" }}>
                         {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                       </td>
                     </tr>
@@ -1356,55 +1363,70 @@ ${itemLines}
                 <div className={`px-2 py-0.5 font-bold text-[9px] border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
                   TERMS & CONDITIONS
                 </div>
-                <div className="flex justify-between p-1.5 text-[8.5px] gap-4">
-                  <div className="w-[48%]">
-                    <span className="font-bold text-zinc-500">Payment terms: </span>
-                    <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
-                  </div>
-                  <div className="w-[48%]">
-                    <span className="font-bold text-zinc-500">Terms & Conditions: </span>
-                    <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline text-[8.5px]">
-                      {formValues.termsConditions}
-                    </a>
-                  </div>
-                </div>
+                <table className="w-full border-collapse text-[8.5px]" style={{ tableLayout: "fixed", width: "100%" }}>
+                  <colgroup>
+                    <col style={{ width: "50%" }} />
+                    <col style={{ width: "50%" }} />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td className="p-1.5 border-r border-zinc-200 align-top" style={{ width: "50%" }}>
+                        <span className="font-bold text-zinc-500">Payment terms: </span>
+                        <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
+                      </td>
+                      <td className="p-1.5 align-top" style={{ width: "50%" }}>
+                        <span className="font-bold text-zinc-500">Terms & Conditions: </span>
+                        <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline text-[8.5px]">
+                          {formValues.termsConditions}
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               {/* Signature Blocks */}
-              <div className="signature-block flex w-full mt-2 border border-zinc-200 text-[8.5px] relative">
-                <div className="w-[50%] p-2 border-r border-zinc-200 min-h-[75px] relative flex flex-col justify-between">
-                  <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                    Prepared & Approved By (Smart Nexus)
-                  </div>
-                  
-                  {/* Official Stamp Overlay */}
-                  <div className="absolute bottom-1 right-6 w-16 h-16 opacity-90 mix-blend-multiply pointer-events-none flex items-center justify-center">
-                    <img 
-                      src={settings?.stampBase64 || "/stamp.png"} 
-                      alt="Smart Nexus Stamp" 
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-                  
-                  <div className="pt-4 text-zinc-700 space-y-0.5 relative z-10">
-                    <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
-                    <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
-                  </div>
-                </div>
+              <table className="signature-block w-full mt-2 border border-zinc-200 text-[8.5px] border-collapse relative" style={{ tableLayout: "fixed", width: "100%" }}>
+                <colgroup>
+                  <col style={{ width: "50%" }} />
+                  <col style={{ width: "50%" }} />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <td className="w-[50%] p-2 border-r border-zinc-200 min-h-[75px] relative align-top" style={{ width: "50%", verticalAlign: "top" }}>
+                      <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                        Prepared & Approved By (Smart Nexus)
+                      </div>
+                      
+                      {/* Official Stamp Overlay */}
+                      <div className="absolute bottom-1 right-6 w-16 h-16 opacity-90 mix-blend-multiply pointer-events-none flex items-center justify-center">
+                        <img 
+                          src={settings?.stampBase64 || "/stamp.png"} 
+                          alt="Smart Nexus Stamp" 
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      
+                      <div className="pt-4 text-zinc-700 space-y-0.5 relative z-10">
+                        <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
+                        <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
+                      </div>
+                    </td>
 
-                <div className="w-[50%] p-2 min-h-[75px] flex flex-col justify-between">
-                  <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                    Client Acceptance
-                  </div>
-                  
-                  <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4 mb-1" />
-                  
-                  <div className="text-zinc-700 space-y-0.5">
-                    <div><span className="font-bold text-zinc-400">Name: ______________________</span></div>
-                    <div><span className="font-bold text-zinc-400">Date: ______________________</span></div>
-                  </div>
-                </div>
-              </div>
+                    <td className="w-[50%] p-2 min-h-[75px] align-top" style={{ width: "50%", verticalAlign: "top" }}>
+                      <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                        Client Acceptance
+                      </div>
+                      
+                      <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-6 mb-1" />
+                      <div className="text-zinc-700 space-y-0.5 pt-1">
+                        <div><span className="font-bold text-zinc-400">Name:</span> {formValues.clientAcceptanceName || "..................................................."}</div>
+                        <div><span className="font-bold text-zinc-400">Date:</span> {formValues.clientAcceptanceDate || "..................................................."}</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* Company & Bank Details */}
               <div className="bank-details-block border border-zinc-200 mt-2 text-[8.5px] rounded overflow-hidden">
@@ -1413,7 +1435,7 @@ ${itemLines}
                 </div>
                 <div className="flex w-full border-b border-zinc-150">
                   <div className="w-[50%] p-1 border-r border-zinc-200">
-                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Account Holder</span>
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Company Name</span>
                     <span className="text-zinc-800 font-semibold text-[8.5px] leading-tight">{formValues.companyName || "Smart Nexus FZE LLC"}</span>
                   </div>
                   <div className="w-[50%] p-1">
