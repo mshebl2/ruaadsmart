@@ -109,6 +109,7 @@ body {
 #quotation-page-2,
 #company-costing-page,
 #receipt-preview-page,
+#contract-preview-page,
 .pdf-preview-container {
   --color-zinc-50: #fafafa !important;
   --color-zinc-100: #f4f4f5 !important;
@@ -180,7 +181,8 @@ body {
 #quotation-page-2, 
 #company-costing-page,
 #receipt-preview-page,
-#certificate-preview-page {
+#certificate-preview-page,
+#contract-preview-page {
   transform-origin: top center;
   transition: transform 0.2s ease-in-out;
 }
@@ -208,7 +210,8 @@ body {
   .print-area #quotation-page-2, 
   .print-area #company-costing-page,
   #receipt-preview-page,
-  #certificate-preview-page {
+  #certificate-preview-page,
+  #contract-preview-page {
     zoom: 0.8 !important;
   }
 }
@@ -218,7 +221,8 @@ body {
   .print-area #quotation-page-2, 
   .print-area #company-costing-page,
   #receipt-preview-page,
-  #certificate-preview-page {
+  #certificate-preview-page,
+  #contract-preview-page {
     zoom: 0.6 !important;
   }
 }
@@ -228,7 +232,8 @@ body {
   .print-area #quotation-page-2, 
   .print-area #company-costing-page,
   #receipt-preview-page,
-  #certificate-preview-page {
+  #certificate-preview-page,
+  #contract-preview-page {
     zoom: 0.42 !important;
   }
 }
@@ -238,7 +243,8 @@ body {
   .print-area #quotation-page-2, 
   .print-area #company-costing-page,
   #receipt-preview-page,
-  #certificate-preview-page {
+  #certificate-preview-page,
+  #contract-preview-page {
     zoom: 0.35 !important;
   }
 }
@@ -249,7 +255,8 @@ body {
   #quotation-page-2, 
   #company-costing-page,
   #receipt-preview-page,
-  #certificate-preview-page {
+  #certificate-preview-page,
+  #contract-preview-page {
     zoom: 1 !important;
   }
 }
@@ -258,7 +265,8 @@ body {
 .pdf-generating #quotation-page-2,
 .pdf-generating #company-costing-page,
 .pdf-generating #receipt-preview-page,
-.pdf-generating #certificate-preview-page {
+.pdf-generating #certificate-preview-page,
+.pdf-generating #contract-preview-page {
   zoom: 1 !important;
 }
 

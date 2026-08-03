@@ -397,8 +397,6 @@ ${itemLines}
         allowTaint: true,
         backgroundColor: "#ffffff",
         onclone: (clonedDoc: Document) => {
-          // Remove ALL external CSS — colors already baked as inline above
-          clonedDoc.querySelectorAll("link[rel='stylesheet'], link[as='style']").forEach((l) => l.remove());
           // Sanitise any remaining <style> tags too
           patchDocumentColors(clonedDoc);
         },
@@ -884,8 +882,9 @@ ${itemLines}
           <div className="w-[210mm] max-w-full no-print">
             <div 
               ref={previewRef}
+              id="contract-preview-page"
               dir="rtl"
-              className="w-[210mm] min-h-[297mm] bg-white text-zinc-900 p-[20mm] shadow-2xl relative flex flex-col font-arabic"
+              className="w-[210mm] min-h-[297mm] bg-white text-zinc-900 p-[20mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container"
             >
               {/* Decorative Corner Borders */}
               <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
