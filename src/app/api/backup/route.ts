@@ -4,7 +4,7 @@ import clientPromise from '@/lib/mongodb';
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db('smart_nexus_db');
+    const db = client.db();
 
     const quotations = await db.collection('quotations').find({}).toArray();
     const certificates = await db.collection('certificates').find({}).toArray();
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     const client = await clientPromise;
-    const db = client.db('smart_nexus_db');
+    const db = client.db();
 
     // Restore quotations if present
     if (Array.isArray(backupData.quotations)) {

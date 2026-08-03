@@ -11,7 +11,7 @@ export async function GET(
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('smart_nexus_db');
+    const db = client.db();
     const contract = await db.collection('contracts').findOne({ id });
     if (!contract) {
       return NextResponse.json({ error: 'Contract not found' }, { status: 404 });
@@ -34,7 +34,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('smart_nexus_db');
+    const db = client.db();
     const result = await db.collection('contracts').deleteOne({ id });
     return NextResponse.json({ success: true, result });
   } catch (e) {

@@ -4,7 +4,7 @@ import clientPromise from '@/lib/mongodb';
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db('smart_nexus_db');
+    const db = client.db();
     const settings = await db.collection('settings').findOne({ id: 'global_settings' });
     
     return NextResponse.json(settings || {});
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('smart_nexus_db');
+    const db = client.db();
     
     // Always use the same ID for global settings
     const settingsData = { ...body, id: 'global_settings', updatedAt: new Date().toISOString() };

@@ -7,7 +7,7 @@ export const revalidate = 0;
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db('smart_nexus_db');
+    const db = client.db();
     const contracts = await db.collection('contracts').find({}).toArray();
     // Sort by updatedAt descending
     contracts.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing contract ID' }, { status: 400 });
     }
     const client = await clientPromise;
-    const db = client.db('smart_nexus_db');
+    const db = client.db();
     
     // Remove immutable MongoDB _id if present to prevent update errors
     delete body._id;
