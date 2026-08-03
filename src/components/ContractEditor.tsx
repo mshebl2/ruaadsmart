@@ -233,21 +233,17 @@ ${itemLines}
             reset({
               ...DEFAULT_CONTRACT_VALUES,
               contractNo: randomNo,
-              title: generatedTitle,
               firstPartyName: quotation.clientName,
               firstPartyPhone: quotation.contactNo || "",
               firstPartyAddress: quotation.locationArea || "",
               secondPartyName: quotation.companyName || "كامشيلد م.م.ح",
               secondPartyAddress: quotation.companyAddress || "37 شارع آل مكتوم, دبى",
-              secondPartyPhone: "0563063601",
               totalCost: quotation.total,
-              totalCostWords: "",
               clauses: contractClauses,
               quotationId: quotation.id
             });
           }
         } else {
-          // Empty new contract
           const randomNo = "C" + String(Math.floor(Math.random() * 90000) + 10000);
           setValue("contractNo", randomNo);
         }
@@ -257,7 +253,6 @@ ${itemLines}
         setLoading(false);
       }
     }
-
     loadData();
   }, [id, searchParams, reset, setValue, router]);
 
@@ -305,7 +300,7 @@ ${itemLines}
     }
   };
 
-  // Create a tiny canvas-based oklch→rgb converter
+  // Canvas-based oklch→rgb converter (uses the browser's native color parser)
   const makeColorConverter = (doc: Document) => {
     const tmpCanvas = doc.createElement("canvas");
     tmpCanvas.width = 1;
@@ -326,39 +321,24 @@ ${itemLines}
     };
   };
 
-  // Patch all style tags and element inline styles in a cloned document
-  // to replace oklch/lab values that html2canvas cannot parse.
+  // Sanitise <style> tags and element inline styles in a cloned document
   const patchDocumentColors = (doc: Document) => {
     const toRgb = makeColorConverter(doc);
-
-    // 1. Patch <style> tag textContent (primary fix)
     doc.querySelectorAll("style").forEach((styleEl) => {
       if (!styleEl.textContent) return;
-      if (
-        styleEl.textContent.includes("oklch") ||
-        styleEl.textContent.includes("oklab") ||
-        styleEl.textContent.includes("lab(")
-      ) {
+      if (styleEl.textContent.includes("oklch") || styleEl.textContent.includes("oklab") || styleEl.textContent.includes("lab(")) {
         styleEl.textContent = styleEl.textContent
           .replace(/oklch\([^)]+\)/g, (m) => toRgb(m))
           .replace(/oklab\([^)]+\)/g, (m) => toRgb(m))
           .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
       }
     });
-
-    // 2. Patch inline styles on each element (secondary fix)
-    const colorProps = [
-      "color", "backgroundColor",
-      "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor",
-    ];
+    const colorProps = ["color", "backgroundColor", "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor"];
     doc.querySelectorAll("*").forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
       colorProps.forEach((prop) => {
         const val = node.style.getPropertyValue(prop);
-        if (
-          val &&
-          (val.includes("oklch") || val.includes("oklab") || val.includes("lab("))
-        ) {
+        if (val && (val.includes("oklch") || val.includes("oklab") || val.includes("lab("))) {
           node.style.setProperty(prop, toRgb(val));
         }
       });
@@ -381,6 +361,34 @@ ${itemLines}
     clone.style.zoom = "1";
     clone.style.transform = "none";
     document.body.appendChild(clone);
+
+    // ── Definitive oklch fix ─────────────────────────────────────────────────
+    // html2canvas reads colors from BOTH inline styles AND external <link> CSS
+    // files. Tailwind v4 / Next.js serves oklch colors via external CSS files
+    // that html2canvas cannot parse.
+    // Fix: read each element's COMPUTED color (which the browser already knows
+    // how to resolve) and bake it as an explicit inline style on the clone
+    // (converting any remaining oklch→rgb via a 1×1 canvas). When html2canvas
+    // later reads the inline value it sees plain rgb() — no parsing needed.
+    const toRgb = makeColorConverter(document);
+    const colorProps = ["color", "backgroundColor", "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor"];
+    const origEls  = [element, ...Array.from(element.querySelectorAll("*"))];
+    const cloneEls = [clone,   ...Array.from(clone.querySelectorAll("*"))];
+    origEls.forEach((orig, i) => {
+      const cloneEl = cloneEls[i];
+      if (!(orig instanceof HTMLElement) || !(cloneEl instanceof HTMLElement)) return;
+      const computed = window.getComputedStyle(orig);
+      colorProps.forEach((prop) => {
+        const val = computed.getPropertyValue(prop);
+        if (!val) return;
+        const safe = (val.includes("oklch") || val.includes("oklab") || val.includes("lab("))
+          ? toRgb(val)
+          : val;
+        cloneEl.style.setProperty(prop, safe, "important");
+      });
+    });
+    // ────────────────────────────────────────────────────────────────────────
+
     await new Promise((resolve) => setTimeout(resolve, 300));
     try {
       const options = {
@@ -388,8 +396,10 @@ ${itemLines}
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
-        // html2canvas clones the whole document here — patch style tags in that clone
         onclone: (clonedDoc: Document) => {
+          // Remove ALL external CSS — colors already baked as inline above
+          clonedDoc.querySelectorAll("link[rel='stylesheet'], link[as='style']").forEach((l) => l.remove());
+          // Sanitise any remaining <style> tags too
           patchDocumentColors(clonedDoc);
         },
       };
