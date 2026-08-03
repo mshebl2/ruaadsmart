@@ -171,16 +171,13 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     }
   };
 
-  // Use browser's native color parsing (via a 1×1 canvas) to convert any
-  // unsupported oklch/oklab/lab color to an rgb() value that html2canvas understands.
-  const resolveUnsupportedColors = (rootEl: HTMLElement) => {
-    const tmpCanvas = document.createElement("canvas");
+  const makeColorConverter = (doc: Document) => {
+    const tmpCanvas = doc.createElement("canvas");
     tmpCanvas.width = 1;
     tmpCanvas.height = 1;
     const ctx = tmpCanvas.getContext("2d");
-
-    const toRgb = (color: string): string | null => {
-      if (!ctx || !color || color === "none" || color === "transparent") return null;
+    return (color: string): string => {
+      if (!ctx) return "#000000";
       try {
         ctx.clearRect(0, 0, 1, 1);
         ctx.fillStyle = color;
@@ -189,32 +186,29 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
         if (a === 0) return "rgba(0,0,0,0)";
         return `rgb(${r},${g},${b})`;
       } catch {
-        return null;
+        return "#000000";
       }
     };
+  };
 
-    const colorProps = [
-      "color", "backgroundColor",
-      "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor",
-      "outlineColor", "textDecorationColor",
-    ];
-
-    const allEls = [rootEl, ...Array.from(rootEl.querySelectorAll("*"))] as HTMLElement[];
-    allEls.forEach((node) => {
+  const patchDocumentColors = (doc: Document) => {
+    const toRgb = makeColorConverter(doc);
+    doc.querySelectorAll("style").forEach((styleEl) => {
+      if (!styleEl.textContent) return;
+      if (styleEl.textContent.includes("oklch") || styleEl.textContent.includes("oklab") || styleEl.textContent.includes("lab(")) {
+        styleEl.textContent = styleEl.textContent
+          .replace(/oklch\([^)]+\)/g, (m) => toRgb(m))
+          .replace(/oklab\([^)]+\)/g, (m) => toRgb(m))
+          .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
+      }
+    });
+    const colorProps = ["color", "backgroundColor", "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor"];
+    doc.querySelectorAll("*").forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
-      const computed = window.getComputedStyle(node);
       colorProps.forEach((prop) => {
-        const val = computed.getPropertyValue(prop);
-        if (
-          val &&
-          (val.includes("oklch") ||
-            val.includes("oklab") ||
-            val.includes("lab(") ||
-            val.includes("color(display-p3") ||
-            val.includes("color(srgb"))
-        ) {
-          const rgb = toRgb(val);
-          if (rgb) (node.style as any)[prop] = rgb;
+        const val = node.style.getPropertyValue(prop);
+        if (val && (val.includes("oklch") || val.includes("oklab") || val.includes("lab("))) {
+          node.style.setProperty(prop, toRgb(val));
         }
       });
     });
@@ -232,8 +226,6 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     clone.style.zoom = "1";
     clone.style.transform = "none";
     document.body.appendChild(clone);
-    // Resolve oklch/lab colors before html2canvas reads them
-    resolveUnsupportedColors(clone);
     await new Promise((resolve) => setTimeout(resolve, 150));
     try {
       const options = {
@@ -241,8 +233,8 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
-        onclone: (_doc: Document, el: HTMLElement) => {
-          resolveUnsupportedColors(el);
+        onclone: (clonedDoc: Document) => {
+          patchDocumentColors(clonedDoc);
         },
       };
       return await html2canvas(clone, options);
