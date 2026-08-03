@@ -305,6 +305,33 @@ ${itemLines}
     }
   };
 
+  // Convert any oklch/lab color to a safe rgb fallback for html2canvas
+  const resolveUnsupportedColors = (el: HTMLElement) => {
+    const colorProps = [
+      "color", "backgroundColor", "borderColor",
+      "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor",
+      "outlineColor", "textDecorationColor", "caretColor", "fill", "stroke",
+    ];
+    const allEls = [el, ...Array.from(el.querySelectorAll("*"))] as HTMLElement[];
+    allEls.forEach((node) => {
+      if (!(node instanceof HTMLElement)) return;
+      const computed = window.getComputedStyle(node);
+      colorProps.forEach((prop) => {
+        const val = computed.getPropertyValue(prop);
+        if (val && (val.includes("oklch") || val.includes("oklab") || val.includes(" lab(") || val.includes("color("))) {
+          // Force a plain fallback by reading the rendered color via a temp canvas trick
+          // Simply clear the problematic inline color — html2canvas will default to inherited/white
+          (node.style as any)[prop] = "inherit";
+        }
+      });
+      // Also remove any CSS variables that might inject oklch values
+      const style = node.getAttribute("style") || "";
+      if (style.includes("oklch") || style.includes("oklab")) {
+        node.setAttribute("style", style.replace(/oklch\([^)]*\)/g, "#000").replace(/oklab\([^)]*\)/g, "#000"));
+      }
+    });
+  };
+
   const captureElementAsCanvas = async (element: HTMLDivElement): Promise<HTMLCanvasElement> => {
     const clone = element.cloneNode(true) as HTMLDivElement;
     clone.style.position = "absolute";
@@ -320,8 +347,9 @@ ${itemLines}
     }
     clone.style.zoom = "1";
     clone.style.transform = "none";
+    // Remove any oklch/oklab inline styles in the clone before capture
+    resolveUnsupportedColors(clone);
     
-    // Ensure all canvas/signature images are fully visible in clone
     document.body.appendChild(clone);
     await new Promise((resolve) => setTimeout(resolve, 300));
     try {
@@ -330,6 +358,9 @@ ${itemLines}
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
+        onclone: (_doc: Document, el: HTMLElement) => {
+          resolveUnsupportedColors(el);
+        },
       };
       return await html2canvas(clone, options);
     } finally {

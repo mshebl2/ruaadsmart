@@ -143,6 +143,30 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     }
   };
 
+  // Convert any oklch/lab color to a safe fallback for html2canvas
+  const resolveUnsupportedColors = (el: HTMLElement) => {
+    const colorProps = [
+      "color", "backgroundColor", "borderColor",
+      "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor",
+      "outlineColor", "textDecorationColor", "caretColor", "fill", "stroke",
+    ];
+    const allEls = [el, ...Array.from(el.querySelectorAll("*"))] as HTMLElement[];
+    allEls.forEach((node) => {
+      if (!(node instanceof HTMLElement)) return;
+      const computed = window.getComputedStyle(node);
+      colorProps.forEach((prop) => {
+        const val = computed.getPropertyValue(prop);
+        if (val && (val.includes("oklch") || val.includes("oklab") || val.includes(" lab(") || val.includes("color("))) {
+          (node.style as any)[prop] = "inherit";
+        }
+      });
+      const style = node.getAttribute("style") || "";
+      if (style.includes("oklch") || style.includes("oklab")) {
+        node.setAttribute("style", style.replace(/oklch\([^)]*\)/g, "#000").replace(/oklab\([^)]*\)/g, "#000"));
+      }
+    });
+  };
+
   const captureElementAsCanvas = async (element: HTMLDivElement): Promise<HTMLCanvasElement> => {
     const clone = element.cloneNode(true) as HTMLDivElement;
     clone.style.position = "absolute";
@@ -154,6 +178,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     clone.style.minHeight = "297mm";
     clone.style.zoom = "1";
     clone.style.transform = "none";
+    resolveUnsupportedColors(clone);
     document.body.appendChild(clone);
     await new Promise((resolve) => setTimeout(resolve, 150));
     try {
@@ -162,6 +187,9 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
+        onclone: (_doc: Document, el: HTMLElement) => {
+          resolveUnsupportedColors(el);
+        },
       };
       return await html2canvas(clone, options);
     } finally {
