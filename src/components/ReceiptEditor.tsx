@@ -163,6 +163,16 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     };
   };
 
+  // Helper to resolve Next.js & CSS font variables into explicit font-family fallback chains
+  const resolveFontFamily = (fontFamilyStr: string): string => {
+    if (!fontFamilyStr) return "'Cairo', 'Inter', system-ui, -apple-system, sans-serif";
+    return fontFamilyStr
+      .replace(/var\(--font-cairo\)/g, "'Cairo', 'Segoe UI', Tahoma, Geneva, sans-serif")
+      .replace(/var\(--font-arabic\)/g, "'Cairo', 'Segoe UI', Tahoma, Geneva, sans-serif")
+      .replace(/var\(--font-inter\)/g, "'Inter', system-ui, -apple-system, sans-serif")
+      .replace(/var\(--font-sans\)/g, "'Inter', system-ui, -apple-system, sans-serif");
+  };
+
   const patchDocumentColors = (doc: Document) => {
     const toRgb = makeColorConverter(doc);
     doc.querySelectorAll("style").forEach((styleEl) => {
@@ -194,7 +204,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
       "justify-content", "align-items", "align-content", "gap", "row-gap", "column-gap",
       "grid-template-columns", "grid-template-rows", "grid-column", "grid-row", "grid-auto-flow",
       "font-family", "font-size", "font-weight", "font-style", "line-height",
-      "text-align", "text-decoration", "letter-spacing", "white-space", "word-break", "direction",
+      "text-align", "text-decoration", "letter-spacing", "word-spacing", "white-space", "word-break", "direction",
       "color", "background-color", "background-image", "background-position", "background-size", "background-repeat",
       "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
       "border-top-style", "border-right-style", "border-bottom-style", "border-left-style",
@@ -215,6 +225,22 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
         let val = computed.getPropertyValue(prop);
         if (!val) return;
 
+        // 1. Resolve CSS font-family variables to explicit font names
+        if (prop === "font-family") {
+          val = resolveFontFamily(val);
+        }
+
+        // 2. Force letter-spacing to normal to prevent html2canvas character-by-character splitting on Arabic text
+        if (prop === "letter-spacing") {
+          val = "normal";
+        }
+
+        // 3. Ensure Arabic line-height does not collapse or overlap lines
+        if (prop === "line-height" && val === "normal") {
+          val = "1.6";
+        }
+
+        // 4. Convert oklch / oklab / lab colors to rgb
         if (val.includes("oklch") || val.includes("oklab") || val.includes("lab(")) {
           val = val
             .replace(/oklch\([^)]+\)/g, (m) => toRgb(m))
@@ -223,10 +249,22 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
         }
         cloneEl.style.setProperty(prop, val, "important");
       });
+
+      // Ensure Arabic ligature shaping and text rendering properties are explicitly enabled
+      cloneEl.style.setProperty("letter-spacing", "normal", "important");
+      cloneEl.style.setProperty("word-spacing", "normal", "important");
+      cloneEl.style.setProperty("font-variant-ligatures", "normal", "important");
+      cloneEl.style.setProperty("font-feature-settings", '"kern" 1, "liga" 1, "calt" 1', "important");
+      cloneEl.style.setProperty("text-rendering", "optimizeLegibility", "important");
     });
   };
 
   const captureElementAsCanvas = async (element: HTMLDivElement): Promise<HTMLCanvasElement> => {
+    // Wait for all custom fonts (Cairo, Inter) to be completely loaded in browser memory
+    if (typeof document !== "undefined" && document.fonts) {
+      await document.fonts.ready;
+    }
+
     const clone = element.cloneNode(true) as HTMLDivElement;
     clone.style.position = "absolute";
     clone.style.top = "0";
@@ -248,6 +286,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
+        letterRendering: false, // Ensures html2canvas renders Arabic text as whole cursive runs rather than letter-by-letter
         onclone: (clonedDoc: Document) => {
           patchDocumentColors(clonedDoc);
         },
