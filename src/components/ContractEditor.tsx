@@ -333,14 +333,50 @@ ${itemLines}
           .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
       }
     });
-    const colorProps = ["color", "backgroundColor", "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor"];
-    doc.querySelectorAll("*").forEach((node) => {
-      if (!(node instanceof HTMLElement)) return;
-      colorProps.forEach((prop) => {
-        const val = node.style.getPropertyValue(prop);
-        if (val && (val.includes("oklch") || val.includes("oklab") || val.includes("lab("))) {
-          node.style.setProperty(prop, toRgb(val));
+    // Remove external link stylesheets so html2canvas never encounters un-parsed oklab/oklch rules
+    doc.querySelectorAll("link[rel='stylesheet'], link[as='style']").forEach((l) => l.remove());
+  };
+
+  const bakeElementStyles = (origElement: HTMLElement, cloneElement: HTMLElement) => {
+    const toRgb = makeColorConverter(document);
+    const propsToCopy = [
+      "display", "position", "top", "right", "bottom", "left", "float", "clear",
+      "width", "height", "min-width", "min-height", "max-width", "max-height",
+      "margin-top", "margin-right", "margin-bottom", "margin-left",
+      "padding-top", "padding-right", "padding-bottom", "padding-left",
+      "box-sizing", "overflow", "overflow-x", "overflow-y", "z-index",
+      "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis",
+      "justify-content", "align-items", "align-content", "gap", "row-gap", "column-gap",
+      "grid-template-columns", "grid-template-rows", "grid-column", "grid-row", "grid-auto-flow",
+      "font-family", "font-size", "font-weight", "font-style", "line-height",
+      "text-align", "text-decoration", "letter-spacing", "white-space", "word-break", "direction",
+      "color", "background-color", "background-image", "background-position", "background-size", "background-repeat",
+      "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
+      "border-top-style", "border-right-style", "border-bottom-style", "border-left-style",
+      "border-top-color", "border-right-color", "border-bottom-color", "border-left-color",
+      "border-top-left-radius", "border-top-right-radius", "border-bottom-left-radius", "border-bottom-right-radius",
+      "box-shadow", "opacity", "object-fit"
+    ];
+
+    const origEls = [origElement, ...Array.from(origElement.querySelectorAll("*"))];
+    const cloneEls = [cloneElement, ...Array.from(cloneElement.querySelectorAll("*"))];
+
+    origEls.forEach((orig, i) => {
+      const cloneEl = cloneEls[i];
+      if (!(orig instanceof HTMLElement) || !(cloneEl instanceof HTMLElement)) return;
+      const computed = window.getComputedStyle(orig);
+
+      propsToCopy.forEach((prop) => {
+        let val = computed.getPropertyValue(prop);
+        if (!val) return;
+
+        if (val.includes("oklch") || val.includes("oklab") || val.includes("lab(")) {
+          val = val
+            .replace(/oklch\([^)]+\)/g, (m) => toRgb(m))
+            .replace(/oklab\([^)]+\)/g, (m) => toRgb(m))
+            .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
         }
+        cloneEl.style.setProperty(prop, val, "important");
       });
     });
   };
@@ -362,32 +398,7 @@ ${itemLines}
     clone.style.transform = "none";
     document.body.appendChild(clone);
 
-    // ── Definitive oklch fix ─────────────────────────────────────────────────
-    // html2canvas reads colors from BOTH inline styles AND external <link> CSS
-    // files. Tailwind v4 / Next.js serves oklch colors via external CSS files
-    // that html2canvas cannot parse.
-    // Fix: read each element's COMPUTED color (which the browser already knows
-    // how to resolve) and bake it as an explicit inline style on the clone
-    // (converting any remaining oklch→rgb via a 1×1 canvas). When html2canvas
-    // later reads the inline value it sees plain rgb() — no parsing needed.
-    const toRgb = makeColorConverter(document);
-    const colorProps = ["color", "backgroundColor", "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor"];
-    const origEls  = [element, ...Array.from(element.querySelectorAll("*"))];
-    const cloneEls = [clone,   ...Array.from(clone.querySelectorAll("*"))];
-    origEls.forEach((orig, i) => {
-      const cloneEl = cloneEls[i];
-      if (!(orig instanceof HTMLElement) || !(cloneEl instanceof HTMLElement)) return;
-      const computed = window.getComputedStyle(orig);
-      colorProps.forEach((prop) => {
-        const val = computed.getPropertyValue(prop);
-        if (!val) return;
-        const safe = (val.includes("oklch") || val.includes("oklab") || val.includes("lab("))
-          ? toRgb(val)
-          : val;
-        cloneEl.style.setProperty(prop, safe, "important");
-      });
-    });
-    // ────────────────────────────────────────────────────────────────────────
+    bakeElementStyles(element, clone);
 
     await new Promise((resolve) => setTimeout(resolve, 300));
     try {
@@ -397,7 +408,6 @@ ${itemLines}
         allowTaint: true,
         backgroundColor: "#ffffff",
         onclone: (clonedDoc: Document) => {
-          // Sanitise any remaining <style> tags too
           patchDocumentColors(clonedDoc);
         },
       };

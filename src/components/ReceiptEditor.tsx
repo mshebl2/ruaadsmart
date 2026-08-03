@@ -167,21 +167,61 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     const toRgb = makeColorConverter(doc);
     doc.querySelectorAll("style").forEach((styleEl) => {
       if (!styleEl.textContent) return;
-      if (styleEl.textContent.includes("oklch") || styleEl.textContent.includes("oklab") || styleEl.textContent.includes("lab(")) {
+      if (
+        styleEl.textContent.includes("oklch") ||
+        styleEl.textContent.includes("oklab") ||
+        styleEl.textContent.includes("lab(")
+      ) {
         styleEl.textContent = styleEl.textContent
           .replace(/oklch\([^)]+\)/g, (m) => toRgb(m))
           .replace(/oklab\([^)]+\)/g, (m) => toRgb(m))
           .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
       }
     });
-    const colorProps = ["color", "backgroundColor", "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor"];
-    doc.querySelectorAll("*").forEach((node) => {
-      if (!(node instanceof HTMLElement)) return;
-      colorProps.forEach((prop) => {
-        const val = node.style.getPropertyValue(prop);
-        if (val && (val.includes("oklch") || val.includes("oklab") || val.includes("lab("))) {
-          node.style.setProperty(prop, toRgb(val));
+    // Remove external link stylesheets so html2canvas never encounters un-parsed oklab/oklch rules
+    doc.querySelectorAll("link[rel='stylesheet'], link[as='style']").forEach((l) => l.remove());
+  };
+
+  const bakeElementStyles = (origElement: HTMLElement, cloneElement: HTMLElement) => {
+    const toRgb = makeColorConverter(document);
+    const propsToCopy = [
+      "display", "position", "top", "right", "bottom", "left", "float", "clear",
+      "width", "height", "min-width", "min-height", "max-width", "max-height",
+      "margin-top", "margin-right", "margin-bottom", "margin-left",
+      "padding-top", "padding-right", "padding-bottom", "padding-left",
+      "box-sizing", "overflow", "overflow-x", "overflow-y", "z-index",
+      "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis",
+      "justify-content", "align-items", "align-content", "gap", "row-gap", "column-gap",
+      "grid-template-columns", "grid-template-rows", "grid-column", "grid-row", "grid-auto-flow",
+      "font-family", "font-size", "font-weight", "font-style", "line-height",
+      "text-align", "text-decoration", "letter-spacing", "white-space", "word-break", "direction",
+      "color", "background-color", "background-image", "background-position", "background-size", "background-repeat",
+      "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
+      "border-top-style", "border-right-style", "border-bottom-style", "border-left-style",
+      "border-top-color", "border-right-color", "border-bottom-color", "border-left-color",
+      "border-top-left-radius", "border-top-right-radius", "border-bottom-left-radius", "border-bottom-right-radius",
+      "box-shadow", "opacity", "object-fit"
+    ];
+
+    const origEls = [origElement, ...Array.from(origElement.querySelectorAll("*"))];
+    const cloneEls = [cloneElement, ...Array.from(cloneElement.querySelectorAll("*"))];
+
+    origEls.forEach((orig, i) => {
+      const cloneEl = cloneEls[i];
+      if (!(orig instanceof HTMLElement) || !(cloneEl instanceof HTMLElement)) return;
+      const computed = window.getComputedStyle(orig);
+
+      propsToCopy.forEach((prop) => {
+        let val = computed.getPropertyValue(prop);
+        if (!val) return;
+
+        if (val.includes("oklch") || val.includes("oklab") || val.includes("lab(")) {
+          val = val
+            .replace(/oklch\([^)]+\)/g, (m) => toRgb(m))
+            .replace(/oklab\([^)]+\)/g, (m) => toRgb(m))
+            .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
         }
+        cloneEl.style.setProperty(prop, val, "important");
       });
     });
   };
@@ -198,6 +238,9 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     clone.style.zoom = "1";
     clone.style.transform = "none";
     document.body.appendChild(clone);
+
+    bakeElementStyles(element, clone);
+
     await new Promise((resolve) => setTimeout(resolve, 150));
     try {
       const options = {
