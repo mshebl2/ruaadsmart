@@ -372,27 +372,52 @@ ${itemLines}
     }
   };
 
-  // Convert any oklch/lab color to a safe fallback for html2canvas
-  const resolveUnsupportedColors = (el: HTMLElement) => {
+  // Use browser's native color parsing (via a 1×1 canvas) to convert any
+  // unsupported oklch/oklab/lab color to an rgb() value that html2canvas understands.
+  const resolveUnsupportedColors = (rootEl: HTMLElement) => {
+    const tmpCanvas = document.createElement("canvas");
+    tmpCanvas.width = 1;
+    tmpCanvas.height = 1;
+    const ctx = tmpCanvas.getContext("2d");
+
+    const toRgb = (color: string): string | null => {
+      if (!ctx || !color || color === "none" || color === "transparent") return null;
+      try {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+        if (a === 0) return "rgba(0,0,0,0)";
+        return `rgb(${r},${g},${b})`;
+      } catch {
+        return null;
+      }
+    };
+
     const colorProps = [
-      "color", "backgroundColor", "borderColor",
+      "color", "backgroundColor",
       "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor",
-      "outlineColor", "textDecorationColor", "caretColor", "fill", "stroke",
+      "outlineColor", "textDecorationColor",
     ];
-    const allEls = [el, ...Array.from(el.querySelectorAll("*"))] as HTMLElement[];
+
+    const allEls = [rootEl, ...Array.from(rootEl.querySelectorAll("*"))] as HTMLElement[];
     allEls.forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
       const computed = window.getComputedStyle(node);
       colorProps.forEach((prop) => {
         const val = computed.getPropertyValue(prop);
-        if (val && (val.includes("oklch") || val.includes("oklab") || val.includes(" lab(") || val.includes("color("))) {
-          (node.style as any)[prop] = "inherit";
+        if (
+          val &&
+          (val.includes("oklch") ||
+            val.includes("oklab") ||
+            val.includes("lab(") ||
+            val.includes("color(display-p3") ||
+            val.includes("color(srgb"))
+        ) {
+          const rgb = toRgb(val);
+          if (rgb) (node.style as any)[prop] = rgb;
         }
       });
-      const style = node.getAttribute("style") || "";
-      if (style.includes("oklch") || style.includes("oklab")) {
-        node.setAttribute("style", style.replace(/oklch\([^)]*\)/g, "#000").replace(/oklab\([^)]*\)/g, "#000"));
-      }
     });
   };
 
@@ -407,8 +432,9 @@ ${itemLines}
     clone.style.minHeight = "297mm";
     clone.style.zoom = "1";
     clone.style.transform = "none";
-    resolveUnsupportedColors(clone);
     document.body.appendChild(clone);
+    // Resolve oklch/lab colors before html2canvas reads them
+    resolveUnsupportedColors(clone);
     await new Promise((resolve) => setTimeout(resolve, 150));
     try {
       const options = {
