@@ -94,14 +94,14 @@ export async function saveQuotation(quotation: Quotation): Promise<void> {
 }
 
 export async function getQuotation(id: string): Promise<Quotation | null> {
-  const res = await fetch(`/api/quotations/${id}`);
+  const res = await fetch(`/api/quotations/${id}`, { cache: 'no-store' });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error('Failed to fetch quotation');
   return res.json();
 }
 
 export async function getAllQuotations(): Promise<Quotation[]> {
-  const res = await fetch('/api/quotations');
+  const res = await fetch('/api/quotations', { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch quotations');
   return res.json();
 }
@@ -127,14 +127,14 @@ export async function saveCertificate(certificate: Certificate): Promise<void> {
 }
 
 export async function getCertificate(id: string): Promise<Certificate | null> {
-  const res = await fetch(`/api/certificates/${id}`);
+  const res = await fetch(`/api/certificates/${id}`, { cache: 'no-store' });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error('Failed to fetch certificate');
   return res.json();
 }
 
 export async function getAllCertificates(): Promise<Certificate[]> {
-  const res = await fetch('/api/certificates');
+  const res = await fetch('/api/certificates', { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch certificates');
   return res.json();
 }
@@ -178,14 +178,14 @@ export async function saveReceipt(receipt: Receipt): Promise<void> {
 }
 
 export async function getReceipt(id: string): Promise<Receipt | null> {
-  const res = await fetch(`/api/receipts/${id}`);
+  const res = await fetch(`/api/receipts/${id}`, { cache: 'no-store' });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error('Failed to fetch receipt');
   return res.json();
 }
 
 export async function getAllReceipts(): Promise<Receipt[]> {
-  const res = await fetch('/api/receipts');
+  const res = await fetch('/api/receipts', { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch receipts');
   return res.json();
 }
@@ -204,7 +204,7 @@ export interface Settings {
 
 export async function getSettings(): Promise<Settings> {
   try {
-    const res = await fetch('/api/settings');
+    const res = await fetch('/api/settings', { cache: 'no-store' });
     if (!res.ok) return {};
     return await res.json();
   } catch (e) {
@@ -269,14 +269,14 @@ export async function saveContract(contract: Contract): Promise<void> {
 }
 
 export async function getContract(id: string): Promise<Contract | null> {
-  const res = await fetch(`/api/contracts/${id}`);
+  const res = await fetch(`/api/contracts/${id}`, { cache: 'no-store' });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error('Failed to fetch contract');
   return res.json();
 }
 
 export async function getAllContracts(): Promise<Contract[]> {
-  const res = await fetch('/api/contracts');
+  const res = await fetch('/api/contracts', { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch contracts');
   return res.json();
 }

@@ -171,7 +171,7 @@ export default function ContractEditor({ id }: ContractEditorProps) {
     
     async function loadData() {
       try {
-        if (id) {
+        if (id && id !== "new") {
           // Load existing contract
           const data = await getContract(id);
           if (data) {
@@ -281,7 +281,7 @@ ${itemLines}
   const onSubmit = async (data: Contract) => {
     setSaving(true);
     try {
-      const documentId = id || `contract-${Date.now()}`;
+      const documentId = (id && id !== "new") ? id : `contract-${Date.now()}`;
       const now = new Date().toISOString();
       const updatedDoc: Contract = {
         ...data,
@@ -290,6 +290,7 @@ ${itemLines}
         updatedAt: now
       };
       await saveContract(updatedDoc);
+      router.refresh();
       alert(language === "ar" ? "تم حفظ العقد بنجاح!" : "Contract saved successfully!");
       router.push("/");
     } catch (error) {
