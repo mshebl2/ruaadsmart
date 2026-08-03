@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -13,7 +16,11 @@ export async function GET(
     if (!quotation) {
       return NextResponse.json({ error: 'Quotation not found' }, { status: 404 });
     }
-    return NextResponse.json(quotation);
+    return NextResponse.json(quotation, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+      },
+    });
   } catch (e) {
     console.error(`Error fetching quotation ${e}:`);
     return NextResponse.json({ error: 'Failed to fetch quotation' }, { status: 500 });

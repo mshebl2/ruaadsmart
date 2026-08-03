@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const client = await clientPromise;
@@ -8,7 +11,11 @@ export async function GET() {
     const quotations = await db.collection('quotations').find({}).toArray();
     // Sort by updatedAt descending
     quotations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    return NextResponse.json(quotations);
+    return NextResponse.json(quotations, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+      },
+    });
   } catch (e) {
     console.error('Error fetching quotations:', e);
     return NextResponse.json({ error: 'Failed to fetch quotations' }, { status: 500 });

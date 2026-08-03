@@ -93,7 +93,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
 
   useEffect(() => {
     setIsMounted(true);
-    if (id) {
+    if (id && id !== "new") {
       const docId = id;
       async function loadCertificate() {
         try {
@@ -152,7 +152,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
   const onSubmit = async (data: Certificate) => {
     setSaving(true);
     try {
-      const documentId = id || `cert-${Date.now()}`;
+      const documentId = (id && id !== "new") ? id : `cert-${Date.now()}`;
       const now = new Date().toISOString();
       const updatedDoc: Certificate = {
         ...data,
@@ -161,6 +161,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
         updatedAt: now
       };
       await saveCertificate(updatedDoc);
+      router.refresh();
       alert(language === "ar" ? "تم حفظ شهادة إتمام العمل بنجاح!" : "Work Completion Certificate saved successfully!");
       router.push("/");
     } catch (error) {

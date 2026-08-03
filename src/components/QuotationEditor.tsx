@@ -126,7 +126,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   const watchedInvoices = watch("purchaseInvoices") || [];
   
   useEffect(() => {
-    if (id) {
+    if (id && id !== "new") {
       const docId = id;
       async function loadQuotation() {
         try {
@@ -202,7 +202,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   const onSubmit = async (data: Quotation) => {
     setSaving(true);
     try {
-      const documentId = id || `quote-${Date.now()}`;
+      const documentId = (id && id !== "new") ? id : `quote-${Date.now()}`;
       const now = new Date().toISOString();
       
       const processedItems = data.items.map(item => ({
@@ -226,6 +226,7 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
         updatedAt: now
       };
       await saveQuotation(updatedDoc);
+      router.refresh();
 
       // If quotation is approved, check and auto-create contract
       if (updatedDoc.status === 'approved') {

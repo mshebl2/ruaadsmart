@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -13,7 +16,11 @@ export async function GET(
     if (!certificate) {
       return NextResponse.json({ error: 'Certificate not found' }, { status: 404 });
     }
-    return NextResponse.json(certificate);
+    return NextResponse.json(certificate, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+      },
+    });
   } catch (e) {
     console.error(`Error fetching certificate ${e}:`);
     return NextResponse.json({ error: 'Failed to fetch certificate' }, { status: 500 });

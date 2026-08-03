@@ -78,7 +78,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
 
   useEffect(() => {
     setIsMounted(true);
-    if (id) {
+    if (id && id !== "new") {
       async function loadReceipt() {
         try {
           const data = await getReceipt(id!);
@@ -123,7 +123,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
   const onSubmit = async (data: Receipt) => {
     setSaving(true);
     try {
-      const documentId = id || `receipt-${Date.now()}`;
+      const documentId = (id && id !== "new") ? id : `receipt-${Date.now()}`;
       const now = new Date().toISOString();
       const updatedDoc: Receipt = {
         ...data,
@@ -133,6 +133,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
         updatedAt: now
       };
       await saveReceipt(updatedDoc);
+      router.refresh();
       alert(language === "ar" ? "تم حفظ سند القبض بنجاح!" : "Receipt saved successfully!");
       router.push("/");
     } catch (error) {
