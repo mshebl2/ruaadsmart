@@ -37,7 +37,7 @@ const DEFAULT_QUOTATION_VALUES = {
   date: new Date().toLocaleDateString("en-GB"),
   validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB"),
   preparedBy: "mostafa",
-  status: "pending",
+  status: "pending" as const,
   clientName: "",
   contactNo: "",
   email: "",
