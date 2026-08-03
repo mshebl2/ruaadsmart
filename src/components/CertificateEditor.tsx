@@ -66,6 +66,18 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     getSettings().then(setSettings).catch(console.error);
   }, []);
 
+  useEffect(() => {
+    if (isMounted && !loading) {
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      const downloadParam = new URLSearchParams(search).get("download");
+      if (downloadParam === "true") {
+        setTimeout(() => {
+          handleDownloadPDF();
+        }, 1200);
+      }
+    }
+  }, [isMounted, loading]);
+
   const previewRef = useRef<HTMLDivElement>(null);
   const clientSigRef = useRef<SignatureCanvas>(null);
   const integratorSigRef = useRef<SignatureCanvas>(null);

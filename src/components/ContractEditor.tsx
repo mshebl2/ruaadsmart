@@ -155,6 +155,18 @@ export default function ContractEditor({ id }: ContractEditorProps) {
   }, []);
 
   useEffect(() => {
+    if (isMounted && !loading) {
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      const downloadParam = new URLSearchParams(search).get("download");
+      if (downloadParam === "true") {
+        setTimeout(() => {
+          handleDownloadPDF();
+        }, 1200);
+      }
+    }
+  }, [isMounted, loading]);
+
+  useEffect(() => {
     const quoteId = searchParams.get("quoteId");
     
     async function loadData() {
@@ -353,7 +365,7 @@ ${itemLines}
       return pdf;
     } catch (error) {
       console.error("PDF generation failed:", error);
-      return null;
+      throw error;
     } finally {
       document.body.classList.remove("pdf-generating");
       setExporting(false);
@@ -385,9 +397,12 @@ ${itemLines}
       } else {
         alert(language === "ar" ? "فشل إنشاء ملف PDF. يرجى المحاولة مرة أخرى." : "Failed to generate PDF. Please try again.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert(language === "ar" ? "حدث خطأ أثناء تحميل ملف PDF." : "An error occurred while downloading the PDF.");
+      alert(language === "ar" 
+        ? `حدث خطأ أثناء تحميل ملف PDF: ${err?.message || err}` 
+        : `An error occurred while downloading the PDF: ${err?.message || err}`
+      );
     }
   };
 

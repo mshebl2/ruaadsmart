@@ -21,6 +21,7 @@ const translations: TranslationDictionary = {
   completedCerts: { en: "Completed Certificates", ar: "الشهادات المكتملة" },
   searchPlaceholder: { en: "Search by client name, number, project...", ar: "ابحث عن اسم العميل، الرقم، المشروع..." },
   quotationsTab: { en: "Quotations", ar: "عروض الأسعار" },
+  invoicesTab: { en: "Invoices", ar: "الفواتير" },
   certificatesTab: { en: "Work Certificates", ar: "شهادات إنجاز العمل" },
   clientName: { en: "Client Name", ar: "اسم العميل" },
   quoteNo: { en: "Quotation No.", ar: "رقم العرض" },

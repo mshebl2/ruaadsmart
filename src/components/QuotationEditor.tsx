@@ -96,6 +96,18 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       setIsInvoiceMode(true);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!loading) {
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      const downloadParam = new URLSearchParams(search).get("download");
+      if (downloadParam === "true") {
+        setTimeout(() => {
+          handleDownloadPDF();
+        }, 1200);
+      }
+    }
+  }, [loading]);
   
   const page1Ref = useRef<HTMLDivElement>(null);
   const page2Ref = useRef<HTMLDivElement>(null);

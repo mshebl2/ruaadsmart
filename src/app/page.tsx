@@ -22,7 +22,8 @@ import {
   LogOut,
   Settings as SettingsIcon,
   Receipt as ReceiptIcon,
-  PenTool
+  PenTool,
+  Download
 } from "lucide-react";
 import { 
   getAllQuotations, 
@@ -62,7 +63,7 @@ export default function Dashboard() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"quotations" | "certificates" | "receipts" | "contracts">("quotations");
+  const [activeTab, setActiveTab] = useState<"quotations" | "invoices" | "contracts" | "certificates" | "receipts">("quotations");
   const [settingsLogo, setSettingsLogo] = useState<string | null>(null);
 
   useEffect(() => {
@@ -467,7 +468,7 @@ ${itemLines}
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800 self-start sm:self-auto">
+          <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800 self-start sm:self-auto flex-wrap gap-1">
             <button
               onClick={() => setActiveTab("quotations")}
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
@@ -477,6 +478,16 @@ ${itemLines}
               }`}
             >
               {t("quotationsTab")} ({filteredQuotations.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("invoices")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                activeTab === "invoices" 
+                  ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 shadow-sm" 
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              {t("invoicesTab")} ({filteredQuotations.length})
             </button>
             <button
               onClick={() => setActiveTab("contracts")}
@@ -503,7 +514,7 @@ ${itemLines}
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
                 activeTab === "receipts" 
                   ? "bg-zinc-800 text-white shadow-sm" 
-                  : "text-zinc-400 hover:text-zinc-200"
+                  : "text-zinc-455 text-zinc-400 hover:text-zinc-200"
               }`}
             >
               {t("receiptsTab")} ({filteredReceipts.length})
@@ -620,6 +631,15 @@ ${itemLines}
                             </td>
                             <td className="py-4 px-6 text-center">
                               <div className="flex items-center justify-center gap-2">
+                                <a 
+                                  href={`/quotation/${quote.id}?download=true`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-blue-400 hover:text-blue-300 hover:border-blue-700/80 hover:bg-blue-950/20 transition-all"
+                                  title={language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </a>
                                 <Link 
                                   href={`/contract/new?quoteId=${quote.id}`}
                                   className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-500 hover:text-amber-400 hover:border-amber-800/80 hover:bg-amber-950/20 transition-all"
@@ -636,6 +656,124 @@ ${itemLines}
                                 </Link>
                                 <Link 
                                   href={`/quotation/${quote.id}`}
+                                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+                                  title={t("editTitle")}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Link>
+                                <button 
+                                  onClick={(e) => handleDeleteQuotation(quote.id, e)}
+                                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-red-400/80 hover:text-red-400 hover:border-red-900/50 hover:bg-red-950/10 transition-all"
+                                  title={t("deleteTitle")}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            ) : activeTab === "invoices" ? (
+              filteredQuotations.length === 0 ? (
+                <div className="text-center py-16 px-4">
+                  <ReceiptIcon className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-zinc-300">{language === "ar" ? "لم يتم العثور على فواتير" : "No Invoices Found"}</h3>
+                  <p className="text-zinc-500 text-sm mt-1 max-w-md mx-auto">
+                    {searchQuery ? (language === "ar" ? "لا توجد فواتير تطابق بحثك." : "No invoices match your search.") : (language === "ar" ? "ابدأ بإنشاء فاتورة جديدة." : "Get started by creating your first invoice.")}
+                  </p>
+                  {!searchQuery && (
+                    <Link 
+                      href="/quotation/new?view=invoice" 
+                      className="inline-flex items-center gap-2 mt-4 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-white transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> {language === "ar" ? "فاتورة جديدة" : "New Invoice"}
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse" dir={isRtl ? "rtl" : "ltr"}>
+                    <thead>
+                      <tr className="border-b border-zinc-900 bg-zinc-900/40 text-xs text-zinc-400 font-semibold tracking-wider">
+                        <th className="py-4 px-6">{t("invoiceNo")}</th>
+                        <th className="py-4 px-6">{t("clientName")}</th>
+                        <th className="py-4 px-6">{language === "ar" ? "تاريخ الفاتورة" : "Invoice Date"}</th>
+                        <th className="py-4 px-6 text-right">{t("total")}</th>
+                        <th className="py-4 px-6 text-right">{t("cost")}</th>
+                        <th className="py-4 px-6 text-right">{t("margin")}</th>
+                        <th className="py-4 px-6 text-center">{t("status")}</th>
+                        <th className="py-4 px-6 text-center">{t("actions")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-900 text-sm">
+                      {filteredQuotations.map((quote) => {
+                        const qCost = quote.items.reduce((sum, item) => sum + ((item.cost || 0) * (item.qty || 0)), 0);
+                        const qMargin = quote.total - qCost;
+                        const qMarginPercent = quote.total > 0 ? (qMargin / quote.total) * 100 : 0;
+                        return (
+                          <tr key={quote.id} className="hover:bg-zinc-900/30 transition-colors group">
+                            <td className="py-4 px-6 font-mono font-medium text-white group-hover:text-emerald-400 transition-colors">
+                              {quote.quotationNo}
+                            </td>
+                            <td className="py-4 px-6 font-medium text-zinc-200">
+                              {quote.clientName}
+                            </td>
+                            <td className="py-4 px-6 text-zinc-400">
+                              {quote.date}
+                            </td>
+                            <td className="py-4 px-6 text-right font-semibold text-zinc-200">
+                              {quote.total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                            </td>
+                            <td className="py-4 px-6 text-right text-zinc-400">
+                              {qCost.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                            </td>
+                            <td className={`py-4 px-6 text-right font-medium ${qMargin >= 0 ? "text-emerald-450" : "text-red-400"}`}>
+                              {qMargin.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                              <span className="text-[10px] block text-zinc-500 font-normal">
+                                {qMarginPercent.toFixed(1)}%
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-center" onClick={(e) => e.stopPropagation()}>
+                              {(() => {
+                                const status = quote.status || 'pending';
+                                let textClass = "text-amber-400 border-amber-500/30 bg-amber-500/5";
+                                if (status === 'approved') textClass = "text-emerald-400 border-emerald-500/30 bg-emerald-500/5";
+                                else if (status === 'executed') textClass = "text-blue-400 border-blue-500/30 bg-blue-500/5";
+                                else if (status === 'rejected') textClass = "text-rose-400 border-rose-500/30 bg-rose-500/5";
+                                else if (status === 'cancelled') textClass = "text-zinc-400 border-zinc-500/30 bg-zinc-500/5";
+
+                                return (
+                                  <select 
+                                    value={status}
+                                    onChange={(e) => handleStatusChange(quote, e.target.value as any)}
+                                    className={`px-2.5 py-1 rounded-full text-xs font-medium border outline-none cursor-pointer transition-all ${textClass}`}
+                                  >
+                                    <option value="pending" className="bg-zinc-950 text-amber-400">{t("statusPending")}</option>
+                                    <option value="approved" className="bg-zinc-950 text-emerald-400">{t("statusApproved")}</option>
+                                    <option value="executed" className="bg-zinc-950 text-blue-400">{t("statusExecuted")}</option>
+                                    <option value="rejected" className="bg-zinc-950 text-rose-400">{t("statusRejected")}</option>
+                                    <option value="cancelled" className="bg-zinc-950 text-zinc-400">{t("statusCancelled")}</option>
+                                  </select>
+                                );
+                              })()}
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <a 
+                                  href={`/quotation/${quote.id}?view=invoice&download=true`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-blue-400 hover:text-blue-300 hover:border-blue-700/80 hover:bg-blue-950/20 transition-all"
+                                  title={language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </a>
+                                <Link 
+                                  href={`/quotation/${quote.id}?view=invoice`}
                                   className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
                                   title={t("editTitle")}
                                 >
@@ -676,7 +814,7 @@ ${itemLines}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse" dir={isRtl ? "rtl" : "ltr"}>
                     <thead>
                       <tr className="border-b border-zinc-900 bg-zinc-900/40 text-xs text-zinc-400 font-semibold tracking-wider">
                         <th className="py-4 px-6">{t("projectClient")}</th>
@@ -709,6 +847,15 @@ ${itemLines}
                           </td>
                           <td className="py-4 px-6 text-center">
                             <div className="flex items-center justify-center gap-2">
+                              <a 
+                                href={`/certificate/${cert.id}?download=true`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-blue-400 hover:text-blue-300 hover:border-blue-700/80 hover:bg-blue-950/20 transition-all"
+                                title={language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
                               <Link 
                                 href={`/certificate/${cert.id}`}
                                 className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
@@ -783,6 +930,15 @@ ${itemLines}
                           </td>
                           <td className="py-4 px-6 text-center">
                             <div className="flex items-center justify-center gap-2">
+                              <a 
+                                href={`/receipt/${rec.id}?download=true`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-blue-400 hover:text-blue-300 hover:border-blue-700/80 hover:bg-blue-950/20 transition-all"
+                                title={language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
                               <Link 
                                 href={`/receipt/${rec.id}`}
                                 className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
@@ -856,6 +1012,15 @@ ${itemLines}
                           </td>
                           <td className="py-4 px-6 text-center">
                             <div className="flex items-center justify-center gap-2">
+                              <a 
+                                href={`/contract/${contract.id}?download=true`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-blue-400 hover:text-blue-300 hover:border-blue-700/80 hover:bg-blue-950/20 transition-all"
+                                title={language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
                               <Link 
                                 href={`/contract/${contract.id}`}
                                 className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
