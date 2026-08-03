@@ -817,12 +817,11 @@ ${itemLines}
                 </div>
                 <div className="text-left">
                   {settings?.logoBase64 ? (
-                    <div className="relative w-24 h-16">
-                      <Image 
+                    <div className="w-24 h-16 flex items-center justify-start">
+                      <img 
                         src={settings.logoBase64} 
                         alt="Smart Nexus Logo" 
-                        fill 
-                        className="object-contain"
+                        className="max-h-full max-w-full object-contain"
                       />
                     </div>
                   ) : (

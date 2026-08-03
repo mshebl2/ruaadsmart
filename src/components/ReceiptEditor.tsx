@@ -495,12 +495,11 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
               {/* Document Header */}
               <div className="flex items-start justify-between border-b-[2px] border-[#0F4C81] pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 bg-white">
-                    <Image 
+                  <div className="w-12 h-12 flex items-center justify-center bg-white">
+                    <img 
                       src={settings?.logoBase64 || "/logo.jpg"} 
                       alt="Smart Nexus Logo" 
-                      fill
-                      className="object-contain"
+                      className="max-h-full max-w-full object-contain"
                     />
                   </div>
                   <div>
@@ -632,22 +631,20 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   </p>
                   
                   {/* Official Stamp Overlay */}
-                  <div className="absolute bottom-2 right-12 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none z-0">
-                    <Image 
+                  <div className="absolute bottom-2 right-12 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none z-0 flex items-center justify-center">
+                    <img 
                       src={settings?.stampBase64 || "/stamp.png"} 
                       alt="Smart Nexus Stamp" 
-                      fill 
-                      className="object-contain"
+                      className="max-h-full max-w-full object-contain"
                     />
                   </div>
 
                   {formValues.integratorSignature ? (
-                    <div className="relative w-36 h-12 mx-auto mt-2 z-10">
-                      <Image 
+                    <div className="w-36 h-12 mx-auto mt-2 z-10 flex items-center justify-center">
+                      <img 
                         src={formValues.integratorSignature} 
                         alt="Receiver Signature" 
-                        fill
-                        className="object-contain"
+                        className="max-h-full max-w-full object-contain"
                       />
                     </div>
                   ) : (

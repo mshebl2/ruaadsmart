@@ -1117,12 +1117,11 @@ ${itemLines}
               {/* Document Header */}
               <div className="flex items-start justify-between border-b-[2px] border-[#0F4C81] pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-10 h-10 bg-white">
-                    <Image 
+                  <div className="w-10 h-10 flex items-center justify-center bg-white">
+                    <img 
                       src={settings?.logoBase64 || "/logo.jpg"} 
                       alt="Smart Nexus Logo" 
-                      fill
-                      className="object-contain"
+                      className="max-h-full max-w-full object-contain"
                     />
                   </div>
                   <div>
@@ -1270,12 +1269,11 @@ ${itemLines}
                   </div>
                   
                   {/* Official Stamp Overlay */}
-                  <div className="absolute bottom-1 right-6 w-16 h-16 opacity-90 mix-blend-multiply pointer-events-none">
-                    <Image 
+                  <div className="absolute bottom-1 right-6 w-16 h-16 opacity-90 mix-blend-multiply pointer-events-none flex items-center justify-center">
+                    <img 
                       src={settings?.stampBase64 || "/stamp.png"} 
                       alt="Smart Nexus Stamp" 
-                      fill 
-                      className="object-contain"
+                      className="max-h-full max-w-full object-contain"
                     />
                   </div>
                   
@@ -1355,12 +1353,11 @@ ${itemLines}
               {/* Document Header */}
               <div className="flex items-start justify-between border-b-[2px] border-zinc-200 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 bg-white">
-                    <Image 
+                  <div className="w-12 h-12 flex items-center justify-center bg-white">
+                    <img 
                       src={settings?.logoBase64 || "/logo.jpg"} 
                       alt="Smart Nexus Logo" 
-                      fill
-                      className="object-contain"
+                      className="max-h-full max-w-full object-contain"
                     />
                   </div>
                   <div>

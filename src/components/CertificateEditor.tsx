@@ -612,12 +612,11 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
             <div>
               {/* Logo Top Center */}
               <div className="flex flex-col items-center justify-center pt-2">
-                <div className="relative w-28 h-28 bg-white">
-                  <Image 
+                <div className="w-28 h-28 flex items-center justify-center bg-white">
+                  <img 
                     src={settings?.logoBase64 || "/logo.jpg"} 
                     alt="Smart Nexus Logo" 
-                    fill 
-                    className="object-contain"
+                    className="max-h-full max-w-full object-contain"
                   />
                 </div>
                 <h1 className="text-xl font-extrabold tracking-widest text-[#0F4C81] uppercase mt-4 mb-2">
@@ -692,13 +691,12 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                 <div className="w-[45%] border-t border-zinc-200 pt-3 relative">
                   <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">Company / Client Acceptance</span>
                   
-                  <div className="h-16 relative w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
+                  <div className="h-16 w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
                     {formValues.clientSignature ? (
-                      <Image 
+                      <img 
                         src={formValues.clientSignature} 
                         alt="Client Signature" 
-                        fill 
-                        className="object-contain p-1"
+                        className="max-h-full max-w-full object-contain p-1"
                       />
                     ) : (
                       <span className="text-zinc-300 italic text-[9px] pointer-events-none">Pending signature...</span>
@@ -715,13 +713,12 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                 <div className="w-[45%] border-t border-zinc-200 pt-3 relative">
                   <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">System Integrator: Smart Nexus</span>
                   
-                  <div className="h-16 relative w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden z-10" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
+                  <div className="h-16 w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden z-10" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
                     {formValues.integratorSignature ? (
-                      <Image 
+                      <img 
                         src={formValues.integratorSignature} 
                         alt="Integrator Signature" 
-                        fill 
-                        className="object-contain p-1"
+                        className="max-h-full max-w-full object-contain p-1"
                       />
                     ) : (
                       <span className="text-zinc-300 italic text-[9px] pointer-events-none">Pending signature...</span>
@@ -729,12 +726,11 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
                   </div>
                   
                   {/* Official Stamp overlay */}
-                  <div className="absolute top-2 right-12 w-24 h-24 opacity-85 mix-blend-multiply pointer-events-none z-20">
-                    <Image 
+                  <div className="absolute top-2 right-12 w-24 h-24 opacity-85 mix-blend-multiply pointer-events-none z-20 flex items-center justify-center">
+                    <img 
                       src={settings?.stampBase64 || "/stamp.png"} 
                       alt="Smart Nexus Stamp" 
-                      fill 
-                      className="object-contain"
+                      className="max-h-full max-w-full object-contain"
                     />
                   </div>
 
@@ -765,12 +761,11 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
               </div>
               
               <div className="flex justify-center mt-3 opacity-20">
-                <div className="relative w-8 h-8">
-                  <Image 
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <img 
                     src={settings?.logoBase64 || "/logo.jpg"} 
                     alt="Smart Nexus Logo Dec" 
-                    fill 
-                    className="object-contain"
+                    className="max-h-full max-w-full object-contain"
                   />
                 </div>
               </div>
