@@ -385,7 +385,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
           </head>
           <body>
             <div style="width: 210mm; margin: 0 auto;">
-              ${previewRef.current.innerHTML}
+              ${previewRef.current.outerHTML}
             </div>
           </body>
         </html>
@@ -622,7 +622,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col main-layout-container">
       {/* Editor Header */}
       <header className="bg-zinc-900 border-b border-zinc-800 py-3 px-4 sm:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 no-print sticky top-0 z-40">
         {/* Left side: Back & Title */}
@@ -720,7 +720,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
       </header>
 
       {/* Main Workspace Layout */}
-      <div className="flex-1 flex flex-col md:flex-row min-h-0 relative">
+      <div className="flex-1 flex flex-col md:flex-row min-h-0 relative workspace-split-pane">
         
         {/* Left Side: Form Editor Panel */}
         <div className={`flex-1 p-6 overflow-y-auto no-print ${previewTab === "preview" ? "hidden md:block" : "block"}`}>

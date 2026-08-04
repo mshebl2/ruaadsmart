@@ -552,7 +552,7 @@ ${itemLines}
           </head>
           <body>
             <div style="width: 210mm; margin: 0 auto;">
-              ${previewRef.current.innerHTML}
+              ${previewRef.current.outerHTML}
             </div>
           </body>
         </html>
@@ -758,7 +758,7 @@ ${itemLines}
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col main-layout-container">
       {/* Editor Header */}
       <header className="bg-zinc-900 border-b border-zinc-800 py-3 px-4 sm:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 no-print sticky top-0 z-40">
         <div className="flex items-center justify-between w-full md:w-auto">
@@ -862,7 +862,7 @@ ${itemLines}
       </header>
 
       {/* Main Workspace Split Pane */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden workspace-split-pane">
         {/* Left Side: Editor Form */}
         <div className={`flex-1 overflow-y-auto p-6 md:p-8 no-print bg-zinc-950 ${previewTab !== "edit" ? "hidden" : "block"}`}>
           <form id="contract-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
@@ -1118,13 +1118,13 @@ ${itemLines}
         </div>
 
         {/* Right Side: A4 Preview */}
-        <div className={`flex-1 overflow-y-auto bg-zinc-900 p-6 md:p-12 flex justify-center ${previewTab === "edit" ? "hidden md:flex" : "flex"}`}>
-          <div className="w-[210mm] max-w-full no-print">
+        <div className={`flex-1 overflow-y-auto bg-zinc-900 p-6 md:p-12 flex justify-center print-area ${previewTab === "edit" ? "hidden md:flex" : "flex"}`}>
+          <div className="w-[210mm] max-w-full">
             <div 
               ref={previewRef}
               id="contract-preview-page"
               dir="rtl"
-              className="w-[210mm] min-h-[297mm] bg-white text-zinc-900 p-[20mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container"
+              className="w-[210mm] min-h-[297mm] bg-white text-zinc-900 p-[20mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
             >
               {/* Decorative Corner Borders */}
               <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
@@ -1186,7 +1186,7 @@ ${itemLines}
                     <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
                       {clause.title}
                     </h3>
-                    <div className="whitespace-pre-line text-[11px] leading-relaxed text-zinc-600 pr-3 font-sans">
+                    <div className="whitespace-pre-line text-[11px] leading-relaxed text-zinc-600 pr-3 font-arabic">
                       {clause.content}
                     </div>
                   </div>

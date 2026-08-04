@@ -646,7 +646,7 @@ ${itemLines}
           </head>
           <body>
             <div style="width: 210mm; margin: 0 auto;">
-              ${page1Ref.current.innerHTML}
+              ${page1Ref.current.outerHTML}
             </div>
           </body>
         </html>
@@ -748,7 +748,7 @@ ${itemLines}
           </head>
           <body>
             <div style="width: 210mm; margin: 0 auto;">
-              ${companyPageRef.current.innerHTML}
+              ${companyPageRef.current.outerHTML}
             </div>
           </body>
         </html>
@@ -1228,7 +1228,7 @@ ${itemLines}
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col main-layout-container">
       <header className="bg-zinc-900 border-b border-zinc-800 py-3 px-4 sm:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 no-print sticky top-0 z-40">
         {/* Left side: Back & Title */}
         <div className="flex items-center justify-between w-full md:w-auto">
@@ -1359,7 +1359,7 @@ ${itemLines}
       </header>
 
       {/* Main Workspace Split Pane */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden workspace-split-pane">
         {/* Left Side: Editor Form */}
         <div className={`flex-1 overflow-y-auto p-6 md:p-8 no-print bg-zinc-950 ${previewTab !== "edit" ? "hidden" : "block"}`}>
           <form id="quotation-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
@@ -1792,13 +1792,15 @@ ${itemLines}
         </div>
 
         {/* Right Side: A4 Live Preview Sheets (Client) */}
-        <div className={`bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 print-area ${
+        <div className={`bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 ${
+          previewTab === "company-preview" ? "no-print" : "print-area"
+        } ${
           previewTab === "edit" 
             ? "hidden lg:flex lg:w-[48%] xl:w-[45%]" 
             : previewTab === "client-preview" 
               ? "flex-1 flex" 
               : "hidden"
-        } ${previewTab === "company-preview" ? "no-print" : ""}`}>
+        }`}>
           
           {/* SINGLE DYNAMIC CONTINUOUS SHEET (A4 MIN HEIGHT) */}
           <div 
@@ -2056,9 +2058,11 @@ ${itemLines}
         </div>
 
         {/* PAGE 3: COMPANY INTERNAL COSTING SHEET */}
-        <div className={`bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 print-area ${
+        <div className={`bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 ${
+          previewTab === "company-preview" ? "print-area" : "no-print"
+        } ${
           previewTab === "company-preview" ? "flex-1 flex" : "hidden"
-        } ${previewTab !== "company-preview" ? "no-print" : ""}`}>
+        }`}>
           <div 
             ref={companyPageRef}
             id="company-costing-page"

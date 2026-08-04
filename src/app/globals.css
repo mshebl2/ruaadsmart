@@ -18,6 +18,16 @@ body {
   font-family: var(--font-inter), sans-serif;
 }
 
+/* Prevent Arabic letter spacing issues */
+[dir="rtl"],
+.font-arabic,
+#contract-preview-page,
+#certificate-preview-page {
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+}
+
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -52,11 +62,15 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
-  .no-print {
+  
+  .no-print,
+  .print-area.no-print {
     display: none !important;
   }
+  
   .print-area {
     display: block !important;
     width: 210mm !important;
@@ -66,6 +80,23 @@ body {
     box-shadow: none !important;
     background: #ffffff !important;
   }
+
+  /* Reset workspace layout constraints during print */
+  .main-layout-container,
+  .workspace-split-pane {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
   .page-break {
     page-break-before: always !important;
     break-before: page !important;
