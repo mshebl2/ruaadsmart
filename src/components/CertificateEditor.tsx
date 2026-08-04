@@ -53,6 +53,7 @@ const DEFAULT_CERTIFICATE_VALUES = {
 };
 
 export default function CertificateEditor({ id }: CertificateEditorProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { t, language } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);

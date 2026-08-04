@@ -104,7 +104,7 @@ export async function GET(request: Request) {
     const customFilename = searchParams.get('filename');
     const filename = customFilename ? decodeURIComponent(customFilename) : `${type}_${id}_${version || 'client'}.pdf`;
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(Buffer.from(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
