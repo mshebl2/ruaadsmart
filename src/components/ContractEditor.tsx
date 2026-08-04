@@ -717,13 +717,13 @@ ${itemLines}
             </div>
 
             {/* Clauses Section */}
-            <div className="flex-1 space-y-2 text-[10px] text-zinc-700 leading-normal text-justify">
+            <div className="flex-1 space-y-3.5 text-[10px] text-zinc-700 leading-relaxed text-justify">
               {page1Clauses.map((clause, index) => (
-                <div key={index} className="space-y-0.5">
+                <div key={index} className="space-y-1">
                   <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
                     {clause.title}
                   </h3>
-                  <div className="whitespace-pre-line text-[9px] leading-normal text-zinc-600 pr-3 font-sans">
+                  <div className="whitespace-pre-line text-[9.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
                     {clause.content}
                   </div>
                 </div>
@@ -1264,13 +1264,13 @@ ${itemLines}
                 </div>
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-2 text-[10px] text-zinc-700 leading-normal text-justify">
+                <div className="flex-1 space-y-3.5 text-[10px] text-zinc-700 leading-relaxed text-justify">
                   {page1Clauses.map((clause, index) => (
-                    <div key={index} className="space-y-0.5">
+                    <div key={index} className="space-y-1">
                       <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
                         {clause.title}
                       </h3>
-                      <div className="whitespace-pre-line text-[9px] leading-normal text-zinc-600 pr-3 font-sans">
+                      <div className="whitespace-pre-line text-[9.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
                         {clause.content}
                       </div>
                     </div>

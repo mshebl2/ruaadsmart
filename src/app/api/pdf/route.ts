@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         params: { 
           format: 'A4', 
           printBackground: true,
-          margin: { top: '10mm', bottom: '10mm', left: '10mm', right: '10mm' },
+          margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
           waitFor: 2
         }
       }),
