@@ -308,7 +308,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
         </div>
 
         <div className="flex items-center gap-3">
-          {contract.signedAt ? (
+          {signed ? (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
               <CheckCircle2 className="w-3.5 h-3.5" />
               {language === "ar" ? "تم توقيع العقد" : "Contract Signed"}
