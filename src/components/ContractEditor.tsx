@@ -333,6 +333,14 @@ ${itemLines}
   // Sanitise <style> tags and element inline styles in a cloned document
   const patchDocumentColors = (doc: Document) => {
     const toRgb = makeColorConverter(doc);
+
+    if (!doc.querySelector("link[href*='Cairo']")) {
+      const link = doc.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap";
+      doc.head.appendChild(link);
+    }
+
     doc.querySelectorAll("style").forEach((styleEl) => {
       if (!styleEl.textContent) return;
       if (styleEl.textContent.includes("oklch") || styleEl.textContent.includes("oklab") || styleEl.textContent.includes("lab(")) {
@@ -342,8 +350,7 @@ ${itemLines}
           .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
       }
     });
-    // Remove external link stylesheets so html2canvas never encounters un-parsed oklab/oklch rules
-    doc.querySelectorAll("link[rel='stylesheet'], link[as='style']").forEach((l) => l.remove());
+    doc.querySelectorAll("link[rel='stylesheet']:not([href*='Cairo']), link[as='style']").forEach((l) => l.remove());
   };
 
   const bakeElementStyles = (origElement: HTMLElement, cloneElement: HTMLElement) => {
@@ -358,7 +365,7 @@ ${itemLines}
       "justify-content", "align-items", "align-content", "gap", "row-gap", "column-gap",
       "grid-template-columns", "grid-template-rows", "grid-column", "grid-row", "grid-auto-flow",
       "font-family", "font-size", "font-weight", "font-style", "line-height",
-      "text-align", "text-decoration", "direction",
+      "text-align", "text-decoration", "direction", "letter-spacing", "word-spacing",
       "color", "background-color", "background-image", "background-position", "background-size", "background-repeat",
       "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
       "border-top-style", "border-right-style", "border-bottom-style", "border-left-style",
@@ -378,6 +385,13 @@ ${itemLines}
       propsToCopy.forEach((prop) => {
         let val = computed.getPropertyValue(prop);
         if (!val) return;
+
+        if (prop === "font-family") {
+          val = "Cairo, 'Segoe UI', Tahoma, Arial, sans-serif";
+        }
+        if (prop === "letter-spacing") {
+          val = "0px";
+        }
 
         // Convert any oklch / oklab / lab colors to rgb
         if (val.includes("oklch") || val.includes("oklab") || val.includes("lab(")) {
