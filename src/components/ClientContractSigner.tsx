@@ -286,8 +286,8 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     );
   }
 
-  const page1Clauses = (contract.clauses || []).slice(0, 5);
-  const page2Clauses = (contract.clauses || []).slice(5);
+  const page1Clauses = (contract.clauses || []).slice(0, 4);
+  const page2Clauses = (contract.clauses || []).slice(4);
 
   return (
     <div className="min-h-screen bg-slate-100 text-zinc-900 flex flex-col" dir="rtl">

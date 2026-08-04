@@ -648,8 +648,8 @@ ${itemLines}
   }
 
   if (isPrintMode) {
-    const page1Clauses = watchedClauses.slice(0, 5);
-    const page2Clauses = watchedClauses.slice(5);
+    const page1Clauses = watchedClauses.slice(0, 4);
+    const page2Clauses = watchedClauses.slice(4);
 
     return (
       <div className="bg-white min-h-screen flex flex-col items-center justify-start p-0 m-0 w-full" style={{ direction: "ltr" }}>
@@ -818,8 +818,8 @@ ${itemLines}
     );
   }
 
-  const page1Clauses = watchedClauses.slice(0, 5);
-  const page2Clauses = watchedClauses.slice(5);
+  const page1Clauses = watchedClauses.slice(0, 4);
+  const page2Clauses = watchedClauses.slice(4);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col main-layout-container">
