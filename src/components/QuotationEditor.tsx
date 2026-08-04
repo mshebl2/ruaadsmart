@@ -485,10 +485,17 @@ ${itemLines}
 
     // Save original styles and force desktop print size temporarily
     const originalCssText = element.style.cssText;
+    element.style.setProperty("position", "fixed", "important");
+    element.style.setProperty("z-index", "99999", "important");
+    element.style.setProperty("top", "0", "important");
+    element.style.setProperty("left", "0", "important");
     element.style.setProperty("width", "210mm", "important");
     element.style.setProperty("min-width", "210mm", "important");
     element.style.setProperty("transform", "none", "important");
     element.style.setProperty("zoom", "1", "important");
+
+    // Force layout reflow
+    const _reflow = element.offsetHeight;
 
     bakeElementStyles(element, clone);
 
