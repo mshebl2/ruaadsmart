@@ -247,12 +247,21 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     clone.style.transform = "none";
     document.body.appendChild(clone);
 
+    // Save original styles and force desktop print size temporarily
+    const originalCssText = element.style.cssText;
+    element.style.setProperty("width", "210mm", "important");
+    element.style.setProperty("min-width", "210mm", "important");
+    element.style.setProperty("transform", "none", "important");
+
     bakeElementStyles(element, clone);
+
+    // Restore original styles
+    element.style.cssText = originalCssText;
 
     await new Promise((resolve) => setTimeout(resolve, 150));
     try {
       const options = {
-        scale: 2,
+        scale: 2.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
@@ -306,8 +315,13 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
       if (id === "new") {
         router.push(`/receipt/${docId}`);
       }
-      const filename = `Receipt_Voucher_${formValues.receiptNo}_${formValues.clientName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-      window.location.href = `/api/pdf?type=receipt&id=${docId}&filename=${encodeURIComponent(filename)}`;
+      const pdf = await generatePDF();
+      if (pdf) {
+        const filename = `Receipt_Voucher_${formValues.receiptNo}_${formValues.clientName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+        pdf.save(filename);
+      } else {
+        alert("Failed to generate PDF");
+      }
     } catch (error) {
       console.error("PDF download failed:", error);
       alert("Failed to download PDF");

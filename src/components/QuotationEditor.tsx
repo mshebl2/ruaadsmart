@@ -483,12 +483,21 @@ ${itemLines}
     clone.style.transform = "none";
     document.body.appendChild(clone);
 
+    // Save original styles and force desktop print size temporarily
+    const originalCssText = element.style.cssText;
+    element.style.setProperty("width", "210mm", "important");
+    element.style.setProperty("min-width", "210mm", "important");
+    element.style.setProperty("transform", "none", "important");
+
     bakeElementStyles(element, clone);
+
+    // Restore original styles
+    element.style.cssText = originalCssText;
 
     await new Promise((resolve) => setTimeout(resolve, 150));
     try {
       const options = {
-        scale: 2,
+        scale: 2.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
@@ -565,10 +574,15 @@ ${itemLines}
       if (id === "new") {
         router.push(`/quotation/${docId}`);
       }
-      const qNo = formValues.quotationNo || "Document";
-      const prefix = isInvoiceMode ? "Invoice" : "Quotation";
-      const filename = `Smart_Nexus_${prefix}_${qNo}.pdf`;
-      window.location.href = `/api/pdf?type=quotation&id=${docId}&filename=${encodeURIComponent(filename)}`;
+      const pdf = await generatePDF();
+      if (pdf) {
+        const qNo = formValues.quotationNo || "Document";
+        const prefix = isInvoiceMode ? "Invoice" : "Quotation";
+        const filename = `Smart_Nexus_${prefix}_${qNo}.pdf`;
+        pdf.save(filename);
+      } else {
+        alert("Failed to generate PDF");
+      }
     } catch (error) {
       console.error("PDF download failed:", error);
       alert("Failed to download PDF");
@@ -584,9 +598,14 @@ ${itemLines}
       if (id === "new") {
         router.push(`/quotation/${docId}`);
       }
-      const qNo = formValues.quotationNo || "Quotation";
-      const filename = `Smart_Nexus_Company_Costing_${qNo}.pdf`;
-      window.location.href = `/api/pdf?type=quotation&id=${docId}&version=company&filename=${encodeURIComponent(filename)}`;
+      const pdf = await generateCompanyPDF();
+      if (pdf) {
+        const qNo = formValues.quotationNo || "Quotation";
+        const filename = `Smart_Nexus_Company_Costing_${qNo}.pdf`;
+        pdf.save(filename);
+      } else {
+        alert("Failed to generate PDF");
+      }
     } catch (error) {
       console.error("PDF download failed:", error);
       alert("Failed to download PDF");

@@ -411,12 +411,21 @@ ${itemLines}
     clone.style.transform = "none";
     document.body.appendChild(clone);
 
+    // Save original styles and force desktop print size temporarily
+    const originalCssText = element.style.cssText;
+    element.style.setProperty("width", "210mm", "important");
+    element.style.setProperty("min-width", "210mm", "important");
+    element.style.setProperty("transform", "none", "important");
+
     bakeElementStyles(element, clone);
+
+    // Restore original styles
+    element.style.cssText = originalCssText;
 
     await new Promise((resolve) => setTimeout(resolve, 300));
     try {
       const options = {
-        scale: 2,
+        scale: 2.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
@@ -472,9 +481,14 @@ ${itemLines}
       if (id === "new") {
         router.push(`/contract/${docId}`);
       }
-      const cNo = formValues.contractNo || "Contract";
-      const filename = `Contract_${cNo}.pdf`;
-      window.location.href = `/api/pdf?type=contract&id=${docId}&filename=${encodeURIComponent(filename)}`;
+      const pdf = await generatePDF();
+      if (pdf) {
+        const cNo = formValues.contractNo || "Contract";
+        const filename = `Contract_${cNo}.pdf`;
+        pdf.save(filename);
+      } else {
+        alert("Failed to generate PDF");
+      }
     } catch (error) {
       console.error("PDF download failed:", error);
       alert("Failed to download PDF");
