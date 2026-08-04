@@ -62,6 +62,8 @@ export default function Dashboard() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [statusChanging, setStatusChanging] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"quotations" | "invoices" | "contracts" | "certificates" | "receipts">("quotations");
   const [settingsLogo, setSettingsLogo] = useState<string | null>(null);
@@ -83,6 +85,7 @@ export default function Dashboard() {
         if (settings?.logoBase64) setSettingsLogo(settings.logoBase64);
       } catch (error) {
         console.error("Failed to load documents:", error);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -123,6 +126,7 @@ export default function Dashboard() {
   };
 
   const handleStatusChange = async (quote: Quotation, newStatus: 'pending' | 'approved' | 'executed' | 'rejected' | 'cancelled') => {
+    setStatusChanging(quote.id);
     try {
       const updatedQuote = {
         ...quote,
@@ -242,9 +246,9 @@ ${itemLines}
             firstPartyName: quote.clientName,
             firstPartyPhone: quote.contactNo || "",
             firstPartyAddress: quote.locationArea || "",
-            secondPartyName: quote.companyName || "كامشيلد م.م.ح",
-            secondPartyAddress: quote.companyAddress || "37 شارع آل مكتوم, دبى",
-            secondPartyPhone: "0563063601",
+            secondPartyName: quote.companyName || "Smart Nexus FZE LLC",
+            secondPartyAddress: quote.companyAddress || "Abraj Al Mamzar, Block A F 106, Al Mamzar, United Arab Emirates",
+            secondPartyPhone: "+971 555555555",
             totalCost: quote.total,
             totalCostWords: "",
             clauses: contractClauses,
@@ -266,6 +270,9 @@ ${itemLines}
       setQuotations(prev => prev.map(q => q.id === quote.id ? { ...q, status: newStatus } : q));
     } catch (err) {
       console.error("Failed to update status:", err);
+      alert(language === "ar" ? "فشل تحديث الحالة. يرجى المحاولة مرة أخرى." : "Failed to update status. Please try again.");
+    } finally {
+      setStatusChanging(null);
     }
   };
 
@@ -526,7 +533,12 @@ ${itemLines}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 border border-zinc-900 rounded-2xl bg-zinc-900/20">
             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-            <p className="text-zinc-400 mt-2 text-sm">Loading documents...</p>
+            <p className="text-zinc-400 mt-2 text-sm">{language === "ar" ? "جاري تحميل المستندات..." : "Loading documents..."}</p>
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center py-20 border border-red-900/30 rounded-2xl bg-red-950/10">
+            <p className="text-red-400 font-medium">{language === "ar" ? "فشل تحميل البيانات. يرجى التحقق من الاتصال وإعادة التحميل." : "Failed to load data. Please check your connection and refresh."}</p>
+            <button onClick={() => window.location.reload()} className="mt-3 text-xs text-zinc-400 underline hover:text-white">{language === "ar" ? "إعادة تحميل" : "Refresh"}</button>
           </div>
         ) : (
           <div className="bg-zinc-900/20 border border-zinc-900 rounded-2xl overflow-hidden">

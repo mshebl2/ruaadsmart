@@ -33,10 +33,10 @@ interface QuotationEditorProps {
 }
 
 const DEFAULT_QUOTATION_VALUES = {
-  quotationNo: "S0015",
+  quotationNo: "",
   date: new Date().toLocaleDateString("en-GB"),
   validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB"),
-  preparedBy: "mostafa",
+  preparedBy: "",
   status: "pending" as const,
   clientName: "",
   contactNo: "",
@@ -46,20 +46,20 @@ const DEFAULT_QUOTATION_VALUES = {
   items: [
     {
       id: "item-1",
-      description: "[SMT-0015] Aqara SW-3G Smart Wall Switch 3-Gang\nWi-Fi smart switch compatible with Alexa, Google Home, and local automation hubs.",
+      description: "",
       qty: 1,
       unit: "Units",
-      unitPrice: 180,
-      cost: 100,
-      total: 180
+      unitPrice: 0,
+      cost: 0,
+      total: 0
     }
   ],
-  subtotal: 180,
+  subtotal: 0,
   discount: 0,
-  total: 180,
+  total: 0,
   paymentTerms: "Immediate Payment",
   termsConditions: "https://smartnexus.ae/terms",
-  preparedByName: "mostafa",
+  preparedByName: "",
   preparedByDate: new Date().toLocaleDateString("en-GB"),
   clientAcceptanceName: "",
   clientAcceptanceDate: "",

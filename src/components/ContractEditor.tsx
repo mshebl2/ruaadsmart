@@ -40,7 +40,7 @@ const DEFAULT_CLAUSES = [
   {
     title: "البند الثاني: التكاليف وطريقة الدفع",
     content: `1. التكلفة الإجمالية:
-تبلغ قيمة العقد الإجمالية (157,019 درهم إماراتي) شاملة توريد المعدات والتركيب والتشغيل.
+تبلغ قيمة العقد الإجمالية (................ درهم إماراتي) شاملة توريد المعدات والتركيب والتشغيل.
 2. جدول الدفع:
 - 30% مقدّم عند توقيع العقد.
 - 30% بعد توريد المعدات.
@@ -109,14 +109,14 @@ const DEFAULT_CONTRACT_VALUES = {
   date: new Date().toLocaleDateString("en-GB"),
   location: "دبى",
   title: "عقد توريد وتركيب أنظمة كاميرات مراقبة",
-  firstPartyName: "شركة نبتون للمقاولات العامة ذ.م.م شركة الشخص الواحد",
-  firstPartyPhone: "0552066602",
-  firstPartyAddress: "المجازر, شارع كورنيش البحيرة, شقة 105 الطابق السابع, الشارقة",
-  secondPartyName: "كامشيلد م.م.ح",
-  secondPartyPhone: "0563063601",
-  secondPartyAddress: "37 شارع آل مكتوم, دبى",
-  totalCost: 157019,
-  totalCostWords: "مائة وسبعة وخمسون ألفاً وتسعة عشر درهماً إماراتياً",
+  firstPartyName: "",
+  firstPartyPhone: "",
+  firstPartyAddress: "",
+  secondPartyName: "Smart Nexus FZE LLC",
+  secondPartyPhone: "+971 555555555",
+  secondPartyAddress: "Abraj Al Mamzar, Block A F 106, Al Mamzar, United Arab Emirates",
+  totalCost: 0,
+  totalCostWords: "",
   clauses: DEFAULT_CLAUSES,
   firstPartySignName: "",
   firstPartySignDate: new Date().toLocaleDateString("en-GB"),
@@ -162,11 +162,13 @@ export default function ContractEditor({ id }: ContractEditorProps) {
       const search = typeof window !== "undefined" ? window.location.search : "";
       const downloadParam = new URLSearchParams(search).get("download");
       if (downloadParam === "true") {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           handleDownloadPDF();
-        }, 1200);
+        }, 1500);
+        return () => clearTimeout(timer);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMounted, loading]);
 
   useEffect(() => {
