@@ -187,6 +187,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                 padding: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                zoom: 0.9 !important;
               }
               body, #contract-preview-wrapper, .font-arabic, [dir="rtl"], [dir="rtl"] * {
                 font-family: 'Cairo', 'Inter', sans-serif !important;
