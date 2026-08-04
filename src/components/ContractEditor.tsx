@@ -549,8 +549,9 @@ ${itemLines}
                 letter-spacing: 0 !important;
                 word-spacing: normal !important;
               }
-              #contract-preview-page {
-                zoom: 1 !important;
+              #contract-preview-wrapper,
+              #contract-preview-wrapper .pdf-page {
+                zoom: 0.9 !important;
                 width: 210mm !important;
                 min-width: 210mm !important;
                 transform: none !important;

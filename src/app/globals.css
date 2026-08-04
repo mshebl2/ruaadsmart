@@ -322,3 +322,17 @@ body {
   box-sizing: border-box !important;
 }
 
+/* Custom 90% scaling for contract print and PDF generation */
+@media print {
+  #contract-preview-wrapper,
+  #contract-preview-wrapper .pdf-page {
+    zoom: 0.9 !important;
+  }
+}
+
+.pdf-generating #contract-preview-wrapper,
+.pdf-generating #contract-preview-wrapper .pdf-page {
+  zoom: 0.9 !important;
+}
+
+
