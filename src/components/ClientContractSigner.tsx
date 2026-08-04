@@ -275,8 +275,9 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
   if (!contract) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
-        <FileText className="w-16 h-16 text-zinc-600 mb-4" />
-        <h1 className="text-xl font-bold text-white mb-2">{language === "ar" ? "العقد غير موجود" : "Contract Not Found"}</h1>
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6 text-center">
+        <FileText className="w-16 h-16 text-zinc-400 mb-4" />
+        <h1 className="text-xl font-bold text-zinc-900 mb-2">{language === "ar" ? "العقد غير موجود" : "Contract Not Found"}</h1>
         <p className="text-zinc-500 text-sm max-w-md">
           {language === "ar" 
             ? "الرابط الذي تحاول الوصول إليه غير صحيح أو تم حذف العقد." 
@@ -286,33 +287,35 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     );
   }
 
-  const page1Clauses = (contract.clauses || []).slice(0, 4);
-  const page2Clauses = (contract.clauses || []).slice(4);
+  const page1Clauses = (contract.clauses || []).slice(0, 5);
+  const page2Clauses = (contract.clauses || []).slice(5);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-slate-100 text-zinc-900 flex flex-col" dir="rtl">
       {/* Client Sign Portal Header */}
-      <header className="bg-zinc-900 border-b border-zinc-800 py-4 px-6 flex items-center justify-between no-print">
+      <header className="bg-white border-b border-zinc-200 py-3 px-4 sm:px-6 flex items-center justify-between no-print shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-600/10 rounded-lg border border-emerald-500/20 text-emerald-500">
+          <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-600">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-white">
-              {language === "ar" ? "بوابة التوقيع الإلكتروني الآمن" : "Secure E-Signature Portal"}
+            <h1 className="font-bold text-sm sm:text-base text-zinc-900">
+              {language === "ar" ? "بوابة توقيع العقد الإلكتروني" : "E-Contract Signing Portal"}
             </h1>
-            <p className="text-[10px] text-zinc-500 font-mono">ID: {contract.id}</p>
+            <p className="text-xs text-zinc-500 hidden sm:block">
+              {contract.title || (language === "ar" ? "عقد توريد وتركيب" : "Supply & Installation Contract")}
+            </p>
           </div>
         </div>
 
-        <div>
-          {signed ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <div className="flex items-center gap-3">
+          {contract.signedAt ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
               <CheckCircle2 className="w-3.5 h-3.5" />
               {language === "ar" ? "تم توقيع العقد" : "Contract Signed"}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
               <PenTool className="w-3.5 h-3.5 animate-pulse" />
               {language === "ar" ? "بانتظار توقيعك" : "Awaiting Signature"}
             </span>
@@ -324,8 +327,8 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
         {/* Right Pane: A4 Preview Container */}
-        <div className="flex-1 overflow-y-auto bg-zinc-900 p-4 md:p-8 flex justify-center print-area">
-          <div className="w-[210mm] max-w-full flex flex-col gap-6 print:gap-0">
+        <div className="flex-1 overflow-y-auto bg-slate-100 p-2 sm:p-6 md:p-8 flex justify-center print-area">
+          <div className="w-full max-w-[210mm] sm:w-[210mm] flex flex-col gap-6 print:gap-0">
             <div 
               ref={previewRef}
               id="contract-preview-wrapper"
@@ -335,7 +338,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
               <div 
                 id="contract-preview-page-1"
                 dir="rtl"
-                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 pt-[10mm] pb-[8mm] px-[12mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area print:h-[296mm]"
                 style={{ boxSizing: "border-box" }}
               >
 
@@ -412,19 +415,19 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
               <div 
                 id="contract-preview-page-2"
                 dir="rtl"
-                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 pt-[10mm] pb-[8mm] px-[12mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area print:h-[296mm]"
                 style={{ boxSizing: "border-box" }}
               >
 
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-2 text-[10px] text-zinc-700 leading-normal text-justify mb-2">
+                <div className="flex-1 space-y-3.5 text-[10.5px] text-zinc-700 leading-relaxed text-justify mb-4">
                   {page2Clauses.map((clause, index) => (
-                    <div key={index} className="space-y-0.5">
+                    <div key={index} className="space-y-1">
                       <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
                         {clause.title}
                       </h3>
-                      <div className="whitespace-pre-line text-[9px] leading-normal text-zinc-650 pr-3 font-sans">
+                      <div className="whitespace-pre-line text-[10px] leading-relaxed text-zinc-650 pr-3 font-sans">
                         {clause.content}
                       </div>
                     </div>
@@ -495,23 +498,23 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
         </div>
 
         {/* Left Pane: Interactive E-Signature Pad Sidebar */}
-        <div className="w-full lg:w-[400px] bg-zinc-950 border-t lg:border-t-0 lg:border-l border-zinc-850 p-6 flex flex-col justify-between overflow-y-auto no-print">
+        <div className="w-full lg:w-[400px] bg-white border-t lg:border-t-0 lg:border-l border-zinc-200 p-4 sm:p-6 flex flex-col justify-between overflow-y-auto no-print shadow-lg">
           <div className="space-y-6">
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <PenTool className="w-5 h-5 text-emerald-500" />
+              <h2 className="text-base font-bold text-zinc-900 flex items-center gap-2">
+                <PenTool className="w-5 h-5 text-emerald-600" />
                 {language === "ar" ? "اعتماد وتوقيع الاتفاقية" : "Sign Agreement"}
               </h2>
               <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
                 {language === "ar" 
-                  ? "يرجى مراجعة تفاصيل بنود العقد جيداً على اليمين، ثم أدخل اسمك الكامل وارسم توقيعك في الصندوق المخصص لحفظ العقد رسمياً." 
-                  : "Please review the contract clauses on the right, write your full name, and draw your signature below to execute the contract."}
+                  ? "يرجى مراجعة تفاصيل بنود العقد جيداً، ثم أدخل اسمك الكامل وارسم توقيعك في الصندوق المخصص لحفظ العقد رسمياً." 
+                  : "Please review the contract clauses, write your full name, and draw your signature below to execute the contract."}
               </p>
             </div>
 
             {/* Input Name */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-zinc-400">
+              <label className="block text-xs font-semibold text-zinc-700">
                 {language === "ar" ? "اسم الموقّع (الطرف الأول):" : "Signatory Full Name (Client):"}
               </label>
               <input 
@@ -519,42 +522,42 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                 value={signerName}
                 onChange={(e) => setSignerName(e.target.value)}
                 disabled={signed}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-emerald-600 transition-colors disabled:opacity-50"
+                className="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 outline-none focus:border-emerald-600 transition-colors disabled:opacity-50"
                 placeholder={language === "ar" ? "اكتب اسمك الكامل هنا" : "Enter your full name"}
               />
             </div>
 
             {/* Input Date */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-zinc-400">
+              <label className="block text-xs font-semibold text-zinc-700">
                 {language === "ar" ? "تاريخ التوقيع:" : "Signature Date:"}
               </label>
               <input 
                 type="text" 
                 value={signDate}
                 disabled
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-400 outline-none select-none opacity-60"
+                className="w-full bg-zinc-100 border border-zinc-200 rounded-lg px-3 py-2 text-sm text-zinc-600 outline-none select-none opacity-80"
               />
             </div>
 
             {/* Signature Draw Area */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold text-zinc-400">
+                <label className="block text-xs font-semibold text-zinc-700">
                   {language === "ar" ? "شاشة رسم التوقيع:" : "Draw Signature:"}
                 </label>
                 {!signed && signatureData && (
                   <button 
                     type="button" 
                     onClick={handleClearSignature}
-                    className="flex items-center gap-1 text-[11px] text-red-400 hover:text-red-300 font-semibold"
+                    className="flex items-center gap-1 text-[11px] text-red-600 hover:text-red-700 font-semibold"
                   >
                     <RotateCcw className="w-3 h-3" />
                     {language === "ar" ? "مسح التوقيع" : "Clear"}
                   </button>
                 )}
               </div>
-              <div className="bg-white rounded-lg overflow-hidden border border-zinc-800 p-0.5">
+              <div className="bg-zinc-50 rounded-lg overflow-hidden border border-zinc-300 p-0.5">
                 <SignatureCanvas 
                   ref={sigRef}
                   onEnd={handleSignatureEnd}
@@ -565,12 +568,12 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
 
             {/* Stamp / Logo Upload */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-zinc-400">
+              <label className="block text-xs font-semibold text-zinc-700">
                 {language === "ar" ? "ختم أو شعار العميل (اختياري):" : "Client Stamp/Logo (Optional):"}
               </label>
               {!signed ? (
                 <div className="flex flex-col gap-2">
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-zinc-800 border-dashed rounded-lg cursor-pointer hover:bg-zinc-900/40 hover:border-zinc-700 transition-colors relative overflow-hidden">
+                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-zinc-300 border-dashed rounded-lg cursor-pointer hover:bg-zinc-50 hover:border-zinc-400 transition-colors relative overflow-hidden">
                     {firstPartyStamp ? (
                       <>
                         <img 
@@ -585,18 +588,18 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                             e.stopPropagation();
                             clearStamp();
                           }}
-                          className="absolute top-1 left-1 bg-red-650/85 hover:bg-red-600 text-white rounded p-1 text-[10px] z-20 transition-colors"
+                          className="absolute top-1 left-1 bg-red-600 hover:bg-red-700 text-white rounded p-1 text-[10px] z-20 transition-colors"
                         >
                           <RotateCcw className="w-3 h-3" />
                         </button>
                       </>
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-2 pb-2">
-                        <Upload className="w-5 h-5 text-zinc-500 mb-1" />
-                        <p className="text-xs text-zinc-500">
+                        <Upload className="w-5 h-5 text-zinc-400 mb-1" />
+                        <p className="text-xs text-zinc-600">
                           {language === "ar" ? "اضغط لرفع الختم/الشعار" : "Click to upload stamp/logo"}
                         </p>
-                        <p className="text-[9px] text-zinc-600 mt-0.5">PNG, JPG (Max 2MB)</p>
+                        <p className="text-[9px] text-zinc-400 mt-0.5">PNG, JPG (Max 2MB)</p>
                       </div>
                     )}
                     <input 
@@ -609,15 +612,15 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                 </div>
               ) : (
                 firstPartyStamp ? (
-                  <div className="h-20 bg-zinc-900/60 border border-zinc-850 rounded-lg flex items-center justify-center p-2">
+                  <div className="h-20 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center p-2">
                     <img 
                       src={firstPartyStamp} 
                       alt="Uploaded Client Stamp" 
-                      className="h-full object-contain opacity-70"
+                      className="h-full object-contain opacity-80"
                     />
                   </div>
                 ) : (
-                  <p className="text-[11px] text-zinc-650 italic">
+                  <p className="text-[11px] text-zinc-400 italic">
                     {language === "ar" ? "لم يتم إرفاق ختم للعميل" : "No client stamp uploaded"}
                   </p>
                 )
@@ -630,7 +633,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
               <button
                 onClick={handleSignContract}
                 disabled={saving || !signerName.trim() || !signatureData}
-                className="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/20"
+                className="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-200 disabled:text-zinc-400 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-md"
               >
                 {saving ? (
                   <>
@@ -661,7 +664,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
             <button
               onClick={handleDownloadPDF}
               disabled={exporting}
-              className="w-full py-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-lg bg-zinc-800 hover:bg-zinc-900 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-sm"
             >
               {exporting ? (
                 <>

@@ -648,8 +648,8 @@ ${itemLines}
   }
 
   if (isPrintMode) {
-    const page1Clauses = watchedClauses.slice(0, 4);
-    const page2Clauses = watchedClauses.slice(4);
+    const page1Clauses = watchedClauses.slice(0, 5);
+    const page2Clauses = watchedClauses.slice(5);
 
     return (
       <div className="bg-white min-h-screen flex flex-col items-center justify-start p-0 m-0 w-full" style={{ direction: "ltr" }}>
@@ -818,8 +818,8 @@ ${itemLines}
     );
   }
 
-  const page1Clauses = watchedClauses.slice(0, 4);
-  const page2Clauses = watchedClauses.slice(4);
+  const page1Clauses = watchedClauses.slice(0, 5);
+  const page2Clauses = watchedClauses.slice(5);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col main-layout-container">
@@ -1198,8 +1198,8 @@ ${itemLines}
         </div>
 
         {/* Right Side: A4 Preview */}
-        <div className={`flex-1 overflow-y-auto bg-zinc-900 p-6 md:p-12 flex justify-center print-area ${previewTab === "edit" ? "hidden md:flex" : "flex"}`}>
-          <div className="w-[210mm] max-w-full flex flex-col gap-6 print:gap-0">
+        <div className={`flex-1 overflow-y-auto bg-slate-100 dark:bg-zinc-950 p-2 sm:p-6 md:p-8 flex justify-center print-area ${previewTab === "edit" ? "hidden md:flex" : "flex"}`}>
+          <div className="w-full max-w-[210mm] sm:w-[210mm] flex flex-col gap-6 print:gap-0">
             <div 
               ref={previewRef}
               id="contract-preview-wrapper"
@@ -1209,7 +1209,7 @@ ${itemLines}
               <div 
                 id="contract-preview-page-1"
                 dir="rtl"
-                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 pt-[10mm] pb-[8mm] px-[12mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area print:h-[296mm]"
                 style={{ boxSizing: "border-box" }}
               >
 
@@ -1282,19 +1282,19 @@ ${itemLines}
               <div 
                 id="contract-preview-page-2"
                 dir="rtl"
-                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area print:h-[296mm]"
                 style={{ boxSizing: "border-box" }}
               >
 
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify mb-4">
+                <div className="flex-1 space-y-3.5 text-[10.5px] text-zinc-700 leading-relaxed text-justify mb-4">
                   {page2Clauses.map((clause, index) => (
                     <div key={index} className="space-y-1">
-                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
+                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
                         {clause.title}
                       </h3>
-                      <div className="whitespace-pre-line text-[10.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
+                      <div className="whitespace-pre-line text-[10px] leading-relaxed text-zinc-600 pr-3 font-sans">
                         {clause.content}
                       </div>
                     </div>
