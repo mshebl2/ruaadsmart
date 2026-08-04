@@ -145,7 +145,7 @@ export default function ContractEditor({ id }: ContractEditorProps) {
     defaultValues: DEFAULT_CONTRACT_VALUES
   });
 
-  const { fields, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "clauses"
   });
@@ -1047,20 +1047,48 @@ ${itemLines}
               <p className="text-xs text-zinc-400">يمكنك تعديل أي بند من بنود العقد بالكامل لتناسب متطلباتك.</p>
               
               <div className="space-y-4">
-                {watchedClauses.map((clause, index) => (
-                  <div key={index} className="space-y-1.5">
-                    <label className="block text-xs font-bold text-zinc-300">{clause.title || `البند ${index + 1}`}</label>
-                    <input 
-                      type="hidden" 
-                      {...register(`clauses.${index}.title`)} 
-                    />
-                    <textarea 
-                      rows={6}
-                      {...register(`clauses.${index}.content`)} 
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-white focus:border-zinc-700 outline-none font-sans leading-relaxed"
-                    />
+                {(watchedClauses || []).map((clause, index) => (
+                  <div key={index} className="space-y-2 p-3 bg-zinc-950/40 border border-zinc-850 rounded-lg relative">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1">
+                        <label className="block text-[10px] font-semibold text-zinc-500 mb-1">{language === "ar" ? "عنوان البند" : "Clause Title"}</label>
+                        <input 
+                          type="text" 
+                          {...register(`clauses.${index}.title` as const)} 
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:border-zinc-700 outline-none font-bold"
+                          placeholder={language === "ar" ? "مثال: البند الأول: نطاق العمل" : "Clause Title"}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="mt-4 flex items-center gap-1.5 text-[10px] text-red-400 hover:text-red-300 font-semibold px-2 py-1.5 rounded bg-zinc-900 border border-zinc-800 hover:bg-zinc-850 transition-colors"
+                        title={language === "ar" ? "حذف هذا البند" : "Delete Clause"}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>{language === "ar" ? "حذف" : "Delete"}</span>
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-zinc-500 mb-1">{language === "ar" ? "محتوى وتفاصيل البند" : "Clause Content"}</label>
+                      <textarea 
+                        rows={6}
+                        {...register(`clauses.${index}.content` as const)} 
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-xs text-white focus:border-zinc-700 outline-none font-sans leading-relaxed"
+                        placeholder={language === "ar" ? "اكتب هنا تفاصيل وشروط البند..." : "Clause details and conditions..."}
+                      />
+                    </div>
                   </div>
                 ))}
+
+                <button
+                  type="button"
+                  onClick={() => append({ title: language === "ar" ? `البند ${watchedClauses.length + 1}: ` : `Clause ${watchedClauses.length + 1}: `, content: "" })}
+                  className="w-full py-2.5 rounded-lg border border-dashed border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white transition-colors flex items-center justify-center gap-1.5 text-xs font-semibold"
+                >
+                  <Plus className="w-4 h-4 text-emerald-500" />
+                  {language === "ar" ? "إضافة بند جديد للعقد" : "Add New Clause"}
+                </button>
               </div>
             </div>
 
