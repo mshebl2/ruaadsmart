@@ -242,13 +242,14 @@ body {
 }
 
 /* Tablet & Mobile Full-Width preview zoom adjust */
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
   .print-area #quotation-page-1, 
   .print-area #quotation-page-2, 
   .print-area #company-costing-page,
   #receipt-preview-page,
   #certificate-preview-page,
-  #contract-preview-page {
+  #contract-preview-page,
+  .pdf-page {
     zoom: 0.8 !important;
   }
 }
@@ -259,7 +260,8 @@ body {
   .print-area #company-costing-page,
   #receipt-preview-page,
   #certificate-preview-page,
-  #contract-preview-page {
+  #contract-preview-page,
+  .pdf-page {
     zoom: 0.6 !important;
   }
 }
@@ -270,7 +272,8 @@ body {
   .print-area #company-costing-page,
   #receipt-preview-page,
   #certificate-preview-page,
-  #contract-preview-page {
+  #contract-preview-page,
+  .pdf-page {
     zoom: 0.42 !important;
   }
 }
@@ -281,7 +284,8 @@ body {
   .print-area #company-costing-page,
   #receipt-preview-page,
   #certificate-preview-page,
-  #contract-preview-page {
+  #contract-preview-page,
+  .pdf-page {
     zoom: 0.35 !important;
   }
 }
@@ -293,7 +297,8 @@ body {
   #company-costing-page,
   #receipt-preview-page,
   #certificate-preview-page,
-  #contract-preview-page {
+  #contract-preview-page,
+  .pdf-page {
     zoom: 1 !important;
   }
 }
@@ -303,7 +308,17 @@ body {
 .pdf-generating #company-costing-page,
 .pdf-generating #receipt-preview-page,
 .pdf-generating #certificate-preview-page,
-.pdf-generating #contract-preview-page {
+.pdf-generating #contract-preview-page,
+.pdf-page {
   zoom: 1 !important;
+}
+
+.pdf-page {
+  width: 210mm !important;
+  height: 296mm !important;
+  max-height: 296mm !important;
+  page-break-after: always !important;
+  page-break-inside: avoid !important;
+  box-sizing: border-box !important;
 }
 

@@ -635,128 +635,162 @@ ${itemLines}
   }
 
   if (isPrintMode) {
+    const page1Clauses = watchedClauses.slice(0, 4);
+    const page2Clauses = watchedClauses.slice(4);
+
     return (
       <div className="bg-white min-h-screen flex flex-col items-center justify-start p-0 m-0 w-full" style={{ direction: "ltr" }}>
         <div 
           ref={previewRef}
-          id="contract-preview-page"
-          dir="rtl"
-          className="w-[210mm] min-h-[297mm] bg-white text-zinc-900 p-[20mm] relative flex flex-col font-arabic pdf-preview-container"
-          style={{ boxSizing: "border-box" }}
+          id="contract-preview-wrapper"
+          className="flex flex-col gap-4 print:gap-0"
         >
-          {/* Decorative Corner Borders */}
-          <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
+          {/* Page 1 */}
+          <div 
+            id="contract-preview-page-1"
+            dir="rtl"
+            className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] relative flex flex-col font-arabic pdf-preview-container"
+            style={{ boxSizing: "border-box" }}
+          >
+            {/* Decorative Corner Borders */}
+            <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
 
-          {/* Legal Contract Header */}
-          <div className="flex items-start justify-between border-b border-zinc-200 pb-6 mb-8">
-            <div>
-              <h1 className="text-xl font-bold text-emerald-800 leading-tight">
-                {formValues.title || "عقد توريد وتركيب"}
-              </h1>
-              <div className="flex flex-col gap-1 mt-2 text-xs text-zinc-500">
-                <div>رقم العقد: <span className="font-mono text-zinc-800 font-semibold">{formValues.contractNo}</span></div>
-                <div>التاريخ: <span className="text-zinc-800 font-semibold">{formValues.date}</span></div>
-              </div>
-            </div>
-            <div className="text-left">
-              {settings?.logoBase64 ? (
-                <div className="w-24 h-16 flex items-center justify-start">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={settings.logoBase64} 
-                    alt="Smart Nexus Logo" 
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="font-bold text-lg tracking-wider text-emerald-800">SMART NEXUS</div>
-              )}
-              <p className="text-[10px] text-zinc-400 mt-1">أنظمة التقنية المتقدمة</p>
-            </div>
-          </div>
-
-          {/* Parties Section */}
-          <div className="mb-6 space-y-1 bg-zinc-50/50 p-4 border border-zinc-100 rounded-lg">
-            <p className="text-sm font-semibold mb-3 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              {/* الطرف الأول */}
-              <div className="space-y-1 leading-relaxed border-l border-zinc-150 pl-3">
-                <p className="font-bold text-zinc-850">الطرف الأول (العميل):</p>
-                <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartyName}</span></p>
-                <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{formValues.firstPartyPhone}</span></p>
-                <p><span className="text-zinc-400">العنوان:</span> <span>{formValues.firstPartyAddress}</span></p>
-              </div>
-              {/* الطرف الثاني */}
-              <div className="space-y-1 leading-relaxed pr-3">
-                <p className="font-bold text-zinc-850">الطرف الثاني (الشركة):</p>
-                <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartyName}</span></p>
-                <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{formValues.secondPartyPhone}</span></p>
-                <p><span className="text-zinc-400">العنوان:</span> <span>{formValues.secondPartyAddress}</span></p>
-              </div>
-            </div>
-          </div>
-
-          {/* Clauses Section */}
-          <div className="flex-1 space-y-5 text-xs text-zinc-700 leading-relaxed text-justify mb-8">
-            {watchedClauses.map((clause, index) => (
-              <div key={index} className="space-y-1">
-                <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
-                  {clause.title}
-                </h3>
-                <div className="whitespace-pre-line text-[11px] leading-relaxed text-zinc-600 pr-3 font-sans">
-                  {clause.content}
+            {/* Legal Contract Header */}
+            <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-6">
+              <div>
+                <h1 className="text-lg font-bold text-emerald-800 leading-tight">
+                  {formValues.title || "عقد توريد وتركيب"}
+                </h1>
+                <div className="flex flex-col gap-1 mt-1 text-[11px] text-zinc-500">
+                  <div>رقم العقد: <span className="font-mono text-zinc-800 font-semibold">{formValues.contractNo}</span></div>
+                  <div>التاريخ: <span className="text-zinc-800 font-semibold">{formValues.date}</span></div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Signatures Footer */}
-          <div className="border-t border-zinc-200 pt-6 mt-auto">
-            <div className="grid grid-cols-2 gap-12 text-xs">
-              {/* الطرف الأول */}
-              <div className="space-y-2.5">
-                <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-1 text-center">الطرف الأول (العميل)</p>
-                <p className="text-[11px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartySignName}</span></p>
-                <p className="text-[11px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.firstPartySignDate}</span></p>
-                <div className="h-20 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
-                  {formValues.firstPartySignature ? (
+              <div className="text-left">
+                {settings?.logoBase64 ? (
+                  <div className="w-24 h-14 flex items-center justify-start">
                     <img 
-                      src={formValues.firstPartySignature} 
-                      alt="First Party Signature" 
-                      className="h-full object-contain"
+                      src={settings.logoBase64} 
+                      alt="Smart Nexus Logo" 
+                      className="max-h-full max-w-full object-contain"
                     />
-                  ) : (
-                    <span className="text-[10px] text-zinc-400">بانتظار التوقيع</span>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="font-bold text-base tracking-wider text-emerald-800">SMART NEXUS</div>
+                )}
+                <p className="text-[9px] text-zinc-400 mt-0.5">أنظمة التقنية المتقدمة</p>
               </div>
+            </div>
+
+            {/* Parties Section */}
+            <div className="mb-4 space-y-1 bg-zinc-50/50 p-3.5 border border-zinc-100 rounded-lg">
+              <p className="text-xs font-semibold mb-2.5 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
               
-              {/* الطرف الثاني */}
-              <div className="space-y-2.5">
-                <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-1 text-center">الطرف الثاني (الشركة)</p>
-                <p className="text-[11px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartySignName}</span></p>
-                <p className="text-[11px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.secondPartySignDate}</span></p>
-                <div className="h-20 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
-                  {formValues.secondPartySignature ? (
-                    <img 
-                      src={formValues.secondPartySignature} 
-                      alt="Second Party Signature" 
-                      className="h-full object-contain z-10"
-                    />
-                  ) : (
-                    <span className="text-[10px] text-zinc-400 z-10">بانتظار التوقيع</span>
-                  )}
-                  {settings?.stampBase64 && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                {/* الطرف الأول */}
+                <div className="space-y-1 leading-relaxed border-l border-zinc-150 pl-3">
+                  <p className="font-bold text-zinc-850">الطرف الأول (العميل):</p>
+                  <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartyName}</span></p>
+                  <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{formValues.firstPartyPhone}</span></p>
+                  <p><span className="text-zinc-400">العنوان:</span> <span>{formValues.firstPartyAddress}</span></p>
+                </div>
+                {/* الطرف الثاني */}
+                <div className="space-y-1 leading-relaxed pr-3">
+                  <p className="font-bold text-zinc-850">الطرف الثاني (الشركة):</p>
+                  <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartyName}</span></p>
+                  <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{formValues.secondPartyPhone}</span></p>
+                  <p><span className="text-zinc-400">العنوان:</span> <span>{formValues.secondPartyAddress}</span></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Clauses Section */}
+            <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify">
+              {page1Clauses.map((clause, index) => (
+                <div key={index} className="space-y-1">
+                  <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
+                    {clause.title}
+                  </h3>
+                  <div className="whitespace-pre-line text-[10.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
+                    {clause.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Page 2 */}
+          <div 
+            id="contract-preview-page-2"
+            dir="rtl"
+            className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] relative flex flex-col font-arabic pdf-preview-container"
+            style={{ boxSizing: "border-box" }}
+          >
+            {/* Decorative Corner Borders */}
+            <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
+
+            {/* Clauses Section */}
+            <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify mb-4">
+              {page2Clauses.map((clause, index) => (
+                <div key={index} className="space-y-1">
+                  <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
+                    {clause.title}
+                  </h3>
+                  <div className="whitespace-pre-line text-[10.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
+                    {clause.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Signatures Footer */}
+            <div className="border-t border-zinc-200 pt-4 mt-auto">
+              <div className="grid grid-cols-2 gap-12 text-xs">
+                {/* الطرف الأول */}
+                <div className="space-y-2">
+                  <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-1 text-center">الطرف الأول (العميل)</p>
+                  <p className="text-[11px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartySignName}</span></p>
+                  <p className="text-[11px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.firstPartySignDate}</span></p>
+                  <div className="h-16 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                    {formValues.firstPartySignature ? (
                       <img 
-                        src={settings.stampBase64} 
-                        alt="Company Stamp" 
-                        className="h-20 w-20 object-contain"
+                        src={formValues.firstPartySignature} 
+                        alt="First Party Signature" 
+                        className="h-full object-contain"
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <span className="text-[10px] text-zinc-400">بانتظار التوقيع</span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* الطرف الثاني */}
+                <div className="space-y-2">
+                  <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-1 text-center">الطرف الثاني (الشركة)</p>
+                  <p className="text-[11px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartySignName}</span></p>
+                  <p className="text-[11px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.secondPartySignDate}</span></p>
+                  <div className="h-16 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                    {formValues.secondPartySignature ? (
+                      <img 
+                        src={formValues.secondPartySignature} 
+                        alt="Second Party Signature" 
+                        className="h-full object-contain z-10"
+                      />
+                    ) : (
+                      <span className="text-[10px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                    )}
+                    {settings?.stampBase64 && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
+                        <img 
+                          src={settings.stampBase64} 
+                          alt="Company Stamp" 
+                          className="h-16 w-16 object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -765,6 +799,9 @@ ${itemLines}
       </div>
     );
   }
+
+  const page1Clauses = watchedClauses.slice(0, 4);
+  const page2Clauses = watchedClauses.slice(4);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col main-layout-container">
@@ -1128,125 +1165,158 @@ ${itemLines}
 
         {/* Right Side: A4 Preview */}
         <div className={`flex-1 overflow-y-auto bg-zinc-900 p-6 md:p-12 flex justify-center print-area ${previewTab === "edit" ? "hidden md:flex" : "flex"}`}>
-          <div className="w-[210mm] max-w-full">
+          <div className="w-[210mm] max-w-full flex flex-col gap-6 print:gap-0">
             <div 
               ref={previewRef}
-              id="contract-preview-page"
-              dir="rtl"
-              className="w-[210mm] min-h-[297mm] bg-white text-zinc-900 p-[20mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+              id="contract-preview-wrapper"
+              className="flex flex-col gap-6 print:gap-0"
             >
-              {/* Decorative Corner Borders */}
-              <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
+              {/* Page 1 */}
+              <div 
+                id="contract-preview-page-1"
+                dir="rtl"
+                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+                style={{ boxSizing: "border-box" }}
+              >
+                {/* Decorative Corner Borders */}
+                <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
 
-              {/* Legal Contract Header */}
-              <div className="flex items-start justify-between border-b border-zinc-200 pb-6 mb-8">
-                <div>
-                  <h1 className="text-xl font-bold text-emerald-800 leading-tight">
-                    {formValues.title || "عقد توريد وتركيب"}
-                  </h1>
-                  <div className="flex flex-col gap-1 mt-2 text-xs text-zinc-500">
-                    <div>رقم العقد: <span className="font-mono text-zinc-800 font-semibold">{formValues.contractNo}</span></div>
-                    <div>التاريخ: <span className="text-zinc-800 font-semibold">{formValues.date}</span></div>
-                  </div>
-                </div>
-                <div className="text-left">
-                  {settings?.logoBase64 ? (
-                    <div className="w-24 h-16 flex items-center justify-start">
-                      <img 
-                        src={settings.logoBase64} 
-                        alt="Smart Nexus Logo" 
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </div>
-                  ) : (
-                    <div className="font-bold text-lg tracking-wider text-emerald-800">SMART NEXUS</div>
-                  )}
-                  <p className="text-[10px] text-zinc-400 mt-1">أنظمة التقنية المتقدمة</p>
-                </div>
-              </div>
-
-              {/* Parties Section */}
-              <div className="mb-6 space-y-1 bg-zinc-50/50 p-4 border border-zinc-100 rounded-lg">
-                <p className="text-sm font-semibold mb-3 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  {/* الطرف الأول */}
-                  <div className="space-y-1 leading-relaxed border-l border-zinc-150 pl-3">
-                    <p className="font-bold text-zinc-850">الطرف الأول (العميل):</p>
-                    <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartyName}</span></p>
-                    <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{formValues.firstPartyPhone}</span></p>
-                    <p><span className="text-zinc-400">العنوان:</span> <span>{formValues.firstPartyAddress}</span></p>
-                  </div>
-                  {/* الطرف الثاني */}
-                  <div className="space-y-1 leading-relaxed pr-3">
-                    <p className="font-bold text-zinc-850">الطرف الثاني (الشركة):</p>
-                    <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartyName}</span></p>
-                    <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{formValues.secondPartyPhone}</span></p>
-                    <p><span className="text-zinc-400">العنوان:</span> <span>{formValues.secondPartyAddress}</span></p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Clauses Section */}
-              <div className="flex-1 space-y-5 text-xs text-zinc-700 leading-relaxed text-justify mb-8">
-                {watchedClauses.map((clause, index) => (
-                  <div key={index} className="space-y-1">
-                    <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
-                      {clause.title}
-                    </h3>
-                    <div className="whitespace-pre-line text-[11px] leading-relaxed text-zinc-600 pr-3 font-arabic">
-                      {clause.content}
+                {/* Legal Contract Header */}
+                <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-6">
+                  <div>
+                    <h1 className="text-lg font-bold text-emerald-800 leading-tight">
+                      {formValues.title || "عقد توريد وتركيب"}
+                    </h1>
+                    <div className="flex flex-col gap-1 mt-1 text-[11px] text-zinc-500">
+                      <div>رقم العقد: <span className="font-mono text-zinc-800 font-semibold">{formValues.contractNo}</span></div>
+                      <div>التاريخ: <span className="text-zinc-800 font-semibold">{formValues.date}</span></div>
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Signatures Footer */}
-              <div className="border-t border-zinc-200 pt-6 mt-auto">
-                <div className="grid grid-cols-2 gap-12 text-xs">
-                  {/* الطرف الأول */}
-                  <div className="space-y-2.5">
-                    <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-1 text-center">الطرف الأول (العميل)</p>
-                    <p className="text-[11px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartySignName}</span></p>
-                    <p className="text-[11px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.firstPartySignDate}</span></p>
-                    <div className="h-20 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
-                      {formValues.firstPartySignature ? (
+                  <div className="text-left">
+                    {settings?.logoBase64 ? (
+                      <div className="w-24 h-14 flex items-center justify-start">
                         <img 
-                          src={formValues.firstPartySignature} 
-                          alt="First Party Signature" 
-                          className="h-full object-contain"
+                          src={settings.logoBase64} 
+                          alt="Smart Nexus Logo" 
+                          className="max-h-full max-w-full object-contain"
                         />
-                      ) : (
-                        <span className="text-[10px] text-zinc-400">بانتظار التوقيع</span>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="font-bold text-base tracking-wider text-emerald-800">SMART NEXUS</div>
+                    )}
+                    <p className="text-[9px] text-zinc-400 mt-0.5">أنظمة التقنية المتقدمة</p>
                   </div>
+                </div>
+
+                {/* Parties Section */}
+                <div className="mb-4 space-y-1 bg-zinc-50/50 p-3.5 border border-zinc-100 rounded-lg">
+                  <p className="text-xs font-semibold mb-2.5 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
                   
-                  {/* الطرف الثاني */}
-                  <div className="space-y-2.5">
-                    <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-1 text-center">الطرف الثاني (الشركة)</p>
-                    <p className="text-[11px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartySignName}</span></p>
-                    <p className="text-[11px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.secondPartySignDate}</span></p>
-                    <div className="h-20 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
-                      {formValues.secondPartySignature ? (
-                        <img 
-                          src={formValues.secondPartySignature} 
-                          alt="Second Party Signature" 
-                          className="h-full object-contain z-10"
-                        />
-                      ) : (
-                        <span className="text-[10px] text-zinc-400 z-10">بانتظار التوقيع</span>
-                      )}
-                      {settings?.stampBase64 && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                    {/* الطرف الأول */}
+                    <div className="space-y-1 leading-relaxed border-l border-zinc-150 pl-3">
+                      <p className="font-bold text-zinc-850">الطرف الأول (العميل):</p>
+                      <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartyName}</span></p>
+                      <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{formValues.firstPartyPhone}</span></p>
+                      <p><span className="text-zinc-400">العنوان:</span> <span>{formValues.firstPartyAddress}</span></p>
+                    </div>
+                    {/* الطرف الثاني */}
+                    <div className="space-y-1 leading-relaxed pr-3">
+                      <p className="font-bold text-zinc-850">الطرف الثاني (الشركة):</p>
+                      <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartyName}</span></p>
+                      <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{formValues.secondPartyPhone}</span></p>
+                      <p><span className="text-zinc-400">العنوان:</span> <span>{formValues.secondPartyAddress}</span></p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Clauses Section */}
+                <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify">
+                  {page1Clauses.map((clause, index) => (
+                    <div key={index} className="space-y-1">
+                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
+                        {clause.title}
+                      </h3>
+                      <div className="whitespace-pre-line text-[10.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
+                        {clause.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Page 2 */}
+              <div 
+                id="contract-preview-page-2"
+                dir="rtl"
+                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+                style={{ boxSizing: "border-box" }}
+              >
+                {/* Decorative Corner Borders */}
+                <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
+
+                {/* Clauses Section */}
+                <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify mb-4">
+                  {page2Clauses.map((clause, index) => (
+                    <div key={index} className="space-y-1">
+                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
+                        {clause.title}
+                      </h3>
+                      <div className="whitespace-pre-line text-[10.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
+                        {clause.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Signatures Footer */}
+                <div className="border-t border-zinc-200 pt-4 mt-auto">
+                  <div className="grid grid-cols-2 gap-12 text-xs">
+                    {/* الطرف الأول */}
+                    <div className="space-y-2">
+                      <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-1 text-center">الطرف الأول (العميل)</p>
+                      <p className="text-[11px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartySignName}</span></p>
+                      <p className="text-[11px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.firstPartySignDate}</span></p>
+                      <div className="h-16 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                        {formValues.firstPartySignature ? (
                           <img 
-                            src={settings.stampBase64} 
-                            alt="Company Stamp" 
-                            className="h-20 w-20 object-contain"
+                            src={formValues.firstPartySignature} 
+                            alt="First Party Signature" 
+                            className="h-full object-contain"
                           />
-                        </div>
-                      )}
+                        ) : (
+                          <span className="text-[10px] text-zinc-400">بانتظار التوقيع</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* الطرف الثاني */}
+                    <div className="space-y-2">
+                      <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-1 text-center">الطرف الثاني (الشركة)</p>
+                      <p className="text-[11px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartySignName}</span></p>
+                      <p className="text-[11px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.secondPartySignDate}</span></p>
+                      <div className="h-16 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                        {formValues.secondPartySignature ? (
+                          <img 
+                            src={formValues.secondPartySignature} 
+                            alt="Second Party Signature" 
+                            className="h-full object-contain z-10"
+                          />
+                        ) : (
+                          <span className="text-[10px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                        )}
+                        {settings?.stampBase64 && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
+                            <img 
+                              src={settings.stampBase64} 
+                              alt="Company Stamp" 
+                              className="h-16 w-16 object-contain"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
