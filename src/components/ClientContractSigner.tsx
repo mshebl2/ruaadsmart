@@ -335,13 +335,13 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
               <div 
                 id="contract-preview-page-1"
                 dir="rtl"
-                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 pt-[10mm] pb-[8mm] px-[12mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
                 style={{ boxSizing: "border-box" }}
               >
 
 
                 {/* Legal Contract Header */}
-                <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-6">
+                <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-4">
                   <div>
                     <h1 className="text-lg font-bold text-emerald-800 leading-tight">
                       {contract.title || "عقد توريد وتركيب"}
@@ -372,35 +372,35 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                 </div>
 
                 {/* Parties Section */}
-                <div className="mb-4 space-y-1 bg-zinc-50/50 p-3.5 border border-zinc-100 rounded-lg">
-                  <p className="text-xs font-semibold mb-2.5 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
+                <div className="mb-4 space-y-1 bg-zinc-50 p-3 border border-zinc-200 rounded-lg">
+                  <p className="text-xs font-semibold mb-2 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
                     {/* الطرف الأول */}
-                    <div className="space-y-1 leading-relaxed border-l border-zinc-150 pl-3">
-                      <p className="font-bold text-zinc-850">الطرف الأول (العميل):</p>
-                      <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{contract.firstPartyName}</span></p>
-                      <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{contract.firstPartyPhone}</span></p>
-                      <p><span className="text-zinc-400">العنوان:</span> <span>{contract.firstPartyAddress}</span></p>
+                    <div className="space-y-1 leading-relaxed border-l border-zinc-200 pl-3">
+                      <p className="font-bold text-zinc-800">الطرف الأول (العميل):</p>
+                      <p><span className="text-zinc-500">الاسم:</span> <span className="font-semibold">{contract.firstPartyName}</span></p>
+                      <p><span className="text-zinc-500">الهاتف:</span> <span className="font-mono">{contract.firstPartyPhone}</span></p>
+                      <p><span className="text-zinc-500">العنوان:</span> <span>{contract.firstPartyAddress}</span></p>
                     </div>
                     {/* الطرف الثاني */}
                     <div className="space-y-1 leading-relaxed pr-3">
-                      <p className="font-bold text-zinc-850">الطرف الثاني (الشركة):</p>
-                      <p><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{contract.secondPartyName}</span></p>
-                      <p><span className="text-zinc-400">الهاتف:</span> <span className="font-mono">{contract.secondPartyPhone}</span></p>
-                      <p><span className="text-zinc-400">العنوان:</span> <span>{contract.secondPartyAddress}</span></p>
+                      <p className="font-bold text-zinc-800">الطرف الثاني (الشركة):</p>
+                      <p><span className="text-zinc-500">الاسم:</span> <span className="font-semibold">{contract.secondPartyName}</span></p>
+                      <p><span className="text-zinc-500">الهاتف:</span> <span className="font-mono">{contract.secondPartyPhone}</span></p>
+                      <p><span className="text-zinc-500">العنوان:</span> <span>{contract.secondPartyAddress}</span></p>
                     </div>
                   </div>
                 </div>
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify">
+                <div className="flex-1 space-y-2 text-[10px] text-zinc-700 leading-normal text-justify">
                   {page1Clauses.map((clause, index) => (
-                    <div key={index} className="space-y-1">
-                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
+                    <div key={index} className="space-y-0.5">
+                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
                         {clause.title}
                       </h3>
-                      <div className="whitespace-pre-line text-[10.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
+                      <div className="whitespace-pre-line text-[9px] leading-normal text-zinc-600 pr-3 font-sans">
                         {clause.content}
                       </div>
                     </div>
@@ -412,19 +412,19 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
               <div 
                 id="contract-preview-page-2"
                 dir="rtl"
-                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
+                className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 pt-[10mm] pb-[8mm] px-[12mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
                 style={{ boxSizing: "border-box" }}
               >
 
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify mb-4">
+                <div className="flex-1 space-y-2 text-[10px] text-zinc-700 leading-normal text-justify mb-2">
                   {page2Clauses.map((clause, index) => (
-                    <div key={index} className="space-y-1">
-                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-xs">
+                    <div key={index} className="space-y-0.5">
+                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
                         {clause.title}
                       </h3>
-                      <div className="whitespace-pre-line text-[10.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
+                      <div className="whitespace-pre-line text-[9px] leading-normal text-zinc-650 pr-3 font-sans">
                         {clause.content}
                       </div>
                     </div>
