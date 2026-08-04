@@ -399,16 +399,16 @@ ${itemLines}
     clone.style.position = "absolute";
     clone.style.top = "0";
     clone.style.left = "-9999px";
-    clone.style.width = "210mm";
-    clone.style.minWidth = "210mm";
+    clone.style.setProperty("width", "210mm", "important");
+    clone.style.setProperty("min-width", "210mm", "important");
     if (element.clientHeight > 0) {
-      clone.style.height = `${element.clientHeight}px`;
-      clone.style.minHeight = `${element.clientHeight}px`;
+      clone.style.setProperty("height", `${element.clientHeight}px`, "important");
+      clone.style.setProperty("min-height", `${element.clientHeight}px`, "important");
     } else {
-      clone.style.height = "auto";
+      clone.style.setProperty("height", "auto", "important");
     }
-    clone.style.zoom = "1";
-    clone.style.transform = "none";
+    clone.style.setProperty("zoom", "1", "important");
+    clone.style.setProperty("transform", "none", "important");
     document.body.appendChild(clone);
 
     // Save original styles and force desktop print size temporarily
@@ -416,6 +416,7 @@ ${itemLines}
     element.style.setProperty("width", "210mm", "important");
     element.style.setProperty("min-width", "210mm", "important");
     element.style.setProperty("transform", "none", "important");
+    element.style.setProperty("zoom", "1", "important");
 
     bakeElementStyles(element, clone);
 

@@ -269,12 +269,12 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     clone.style.position = "absolute";
     clone.style.top = "0";
     clone.style.left = "-9999px";
-    clone.style.width = "210mm";
-    clone.style.height = "297mm";
-    clone.style.minWidth = "210mm";
-    clone.style.minHeight = "297mm";
-    clone.style.zoom = "1";
-    clone.style.transform = "none";
+    clone.style.setProperty("width", "210mm", "important");
+    clone.style.setProperty("min-width", "210mm", "important");
+    clone.style.setProperty("height", "297mm", "important");
+    clone.style.setProperty("min-height", "297mm", "important");
+    clone.style.setProperty("zoom", "1", "important");
+    clone.style.setProperty("transform", "none", "important");
     document.body.appendChild(clone);
 
     // Save original styles and force desktop print size temporarily
@@ -282,6 +282,7 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     element.style.setProperty("width", "210mm", "important");
     element.style.setProperty("min-width", "210mm", "important");
     element.style.setProperty("transform", "none", "important");
+    element.style.setProperty("zoom", "1", "important");
 
     bakeElementStyles(element, clone);
 
