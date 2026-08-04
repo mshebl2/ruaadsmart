@@ -48,10 +48,14 @@ export async function GET(request: Request) {
       const chromiumModule = await import('@sparticuz/chromium');
       const chromium = chromiumModule.default || chromiumModule;
 
+      const path = await import('path');
+      const executablePath = await chromium.executablePath();
+      process.env.LD_LIBRARY_PATH = path.dirname(executablePath);
+
       launchOptions = {
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
+        executablePath: executablePath,
         headless: chromium.headless,
         extraPrefsRuntime: {
           'websecurity': false
