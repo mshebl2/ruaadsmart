@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { 
   Download, 
   Loader2,
@@ -11,7 +9,8 @@ import {
   ShieldCheck,
   FileText,
   PenTool,
-  Upload
+  Upload,
+  AlertCircle
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
 import html2canvas from "html2canvas";
@@ -35,12 +34,12 @@ function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>)
 }
 
 export default function ClientContractSigner({ id }: ClientContractSignerProps) {
-  const router = useRouter();
   const { language } = useLanguage();
 
   const [contract, setContract] = useState<Contract | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [signed, setSigned] = useState(false);
@@ -81,7 +80,8 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
           setSettings(settingsData);
         }
       } catch (err) {
-        console.error("Error loading contract details:", err);
+        console.error("Error loading contract:", err);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -91,8 +91,13 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
 
   useEffect(() => {
     if (signed && signatureData && sigRef.current) {
-      sigRef.current.fromDataURL(signatureData);
-      sigRef.current.off(); // Disable drawing
+      const timer = setTimeout(() => {
+        if (sigRef.current) {
+          sigRef.current.fromDataURL(signatureData);
+          sigRef.current.off();
+        }
+      }, 250);
+      return () => clearTimeout(timer);
     }
   }, [signed, signatureData]);
 
@@ -143,10 +148,11 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     setSaving(true);
     try {
       const now = new Date().toISOString();
+      const todayFormatted = new Date().toLocaleDateString("en-GB");
       const updatedContract: Contract = {
         ...contract,
         firstPartySignName: signerName,
-        firstPartySignDate: signDate,
+        firstPartySignDate: todayFormatted,
         firstPartySignature: signatureData,
         firstPartyStamp: firstPartyStamp || undefined,
         updatedAt: now
@@ -154,14 +160,14 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
 
       await saveContract(updatedContract);
       setContract(updatedContract);
+      setSignDate(todayFormatted);
       setSigned(true);
       
-      // Disable the signature canvas drawing ability
       if (sigRef.current) {
         sigRef.current.off();
       }
 
-      alert(language === "ar" ? "تم توقيع واعتماد العقد بنجاح!" : "Contract signed and approved successfully!");
+      alert(language === "ar" ? "تم توقيع واعتماد العقد بنجاح! 🎉" : "Contract signed and approved successfully!");
     } catch (error) {
       console.error("Signing failed:", error);
       alert(language === "ar" ? "فشل حفظ التوقيع، يرجى المحاولة لاحقاً" : "Failed to save signature, please try again later");
@@ -302,73 +308,111 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     await new Promise((resolve) => setTimeout(resolve, 300));
     try {
       const options = {
-        scale: 2.5,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        onclone: (clonedDoc: Document) => {
-          patchDocumentColors(clonedDoc);
-        },
-      };
-      return await html2canvas(clone, options);
-    } finally {
-      document.body.removeChild(clone);
-    }
-  };
-
   const handleDownloadPDF = async () => {
     if (!previewRef.current || !contract) return;
     setExporting(true);
-    document.body.classList.add("pdf-generating");
 
     try {
       const cNo = contract.contractNo || "Contract";
       const filename = `Contract_${cNo}`;
 
-      const canvas = await captureElementAsCanvas(previewRef.current);
-      const imgData = canvas.toDataURL("image/jpeg", 0.98);
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 5) {
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      let cssStyles = "";
+      for (let i = 0; i < document.styleSheets.length; i++) {
+        try {
+          const sheet = document.styleSheets[i];
+          for (let j = 0; j < sheet.cssRules.length; j++) {
+            cssStyles += sheet.cssRules[j].cssText + "\n";
+          }
+        } catch { /* skip */ }
       }
 
-      pdf.save(`${filename}.pdf`);
+      const fontLinks = `
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+      `;
+
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8">
+            <title>${filename}</title>
+            ${fontLinks}
+            <style>
+              ${cssStyles}
+              :root { --font-cairo: 'Cairo', sans-serif !important; }
+              body { background: white !important; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              body, * { font-family: 'Cairo', 'Inter', sans-serif !important; letter-spacing: 0 !important; }
+              .no-print, header { display: none !important; }
+              #contract-preview-wrapper .continuous-flow-page { width: 210mm !important; min-width: 210mm !important; transform: none !important; box-shadow: none !important; border: none !important; }
+            </style>
+          </head>
+          <body>
+            <div style="width:210mm;margin:0 auto;">${previewRef.current.outerHTML}</div>
+          </body>
+        </html>
+      `;
+
+      const response = await fetch('/api/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: fullHtml, filename }),
+      });
+
+      if (!response.ok) throw new Error('PDF API failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
     } catch (error) {
-      console.error("PDF download failed, falling back to window.print():", error);
+      console.error("PDF download failed:", error);
       window.print();
     } finally {
-      document.body.classList.remove("pdf-generating");
       setExporting(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
-        <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
-        <p className="text-zinc-400 mt-2 text-sm">{language === "ar" ? "جاري تحميل العقد..." : "Loading contract..."}</p>
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+        <p className="text-zinc-600 text-sm font-medium">{language === "ar" ? "جاري تحميل العقد..." : "Loading contract..."}</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6 text-center gap-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <AlertCircle className="w-12 h-12 text-red-400" />
+        </div>
+        <h1 className="text-xl font-bold text-zinc-900">{language === "ar" ? "خطأ في التحميل" : "Loading Error"}</h1>
+        <p className="text-zinc-500 text-sm max-w-md">
+          {language === "ar" ? "حدث خطأ أثناء تحميل بيانات العقد. يرجى التحقق من الاتصال." : "An error occurred while loading the contract. Please check your connection."}
+        </p>
+        <button onClick={() => window.location.reload()} className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 transition-colors">
+          {language === "ar" ? "إعادة المحاولة" : "Try Again"}
+        </button>
       </div>
     );
   }
 
   if (!contract) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6 text-center">
-        <FileText className="w-16 h-16 text-zinc-400 mb-4" />
-        <h1 className="text-xl font-bold text-zinc-900 mb-2">{language === "ar" ? "العقد غير موجود" : "Contract Not Found"}</h1>
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6 text-center gap-4">
+        <div className="p-4 bg-zinc-100 rounded-full">
+          <FileText className="w-12 h-12 text-zinc-400" />
+        </div>
+        <h1 className="text-xl font-bold text-zinc-900">{language === "ar" ? "العقد غير موجود" : "Contract Not Found"}</h1>
         <p className="text-zinc-500 text-sm max-w-md">
           {language === "ar" 
             ? "الرابط الذي تحاول الوصول إليه غير صحيح أو تم حذف العقد." 
@@ -378,33 +422,32 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     );
   }
 
-  const splitIndex = getClauseSplitIndex(contract.clauses || []);
-  const page1Clauses = (contract.clauses || []).slice(0, splitIndex);
-  const page2Clauses = (contract.clauses || []).slice(splitIndex);
-
   return (
     <div className="min-h-screen bg-slate-100 text-zinc-900 flex flex-col" dir="rtl">
-      {/* Client Sign Portal Header */}
-      <header className="bg-white border-b border-zinc-200 py-3 px-4 sm:px-6 flex items-center justify-between no-print shadow-sm">
+      {/* Sticky Header */}
+      <header className="bg-white border-b border-zinc-200 py-3 px-4 sm:px-6 flex items-center justify-between no-print shadow-sm sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-600">
+          <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-600 flex-shrink-0">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
             <h1 className="font-bold text-sm sm:text-base text-zinc-900">
               {language === "ar" ? "بوابة توقيع العقد الإلكتروني" : "E-Contract Signing Portal"}
             </h1>
-            <p className="text-xs text-zinc-500 hidden sm:block">
+            <p className="text-xs text-zinc-500 hidden sm:block truncate max-w-xs">
               {contract.title || (language === "ar" ? "عقد توريد وتركيب" : "Supply & Installation Contract")}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-zinc-100 text-zinc-600 border border-zinc-200">
+            #{contract.contractNo}
+          </span>
           {signed ? (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              {language === "ar" ? "تم توقيع العقد" : "Contract Signed"}
+              {language === "ar" ? "تم التوقيع" : "Signed"}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
@@ -416,110 +459,42 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
       </header>
 
       {/* Main Layout Area */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden client-signer-layout">
         
         {/* Right Pane: A4 Preview Container */}
-        <div className="flex-1 overflow-y-auto bg-slate-100 p-2 sm:p-6 md:p-8 flex justify-center print-area printable-area">
+        <div className="flex-1 overflow-y-auto bg-slate-100 p-2 sm:p-6 md:p-8 flex justify-center print-area printable-area client-signer-preview">
           <div className="w-full max-w-[210mm] sm:w-[210mm] flex flex-col gap-6 print:gap-0">
             <div 
               ref={previewRef}
               id="contract-preview-wrapper"
               className="flex flex-col gap-6 print:gap-0"
             >
-              {/* Page 1 */}
+              {/* Continuous Flow Contract Page */}
               <div 
-                id="contract-preview-page-1"
+                id="contract-preview-page-continuous"
                 dir="rtl"
-                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area printable-area print:h-[296mm]"
+                className="continuous-flow-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-6 sm:p-10 md:px-[14mm] md:py-[12mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area printable-area"
                 style={{ boxSizing: "border-box" }}
               >
-
-
-                {/* Legal Contract Header */}
-                <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-4">
+                {/* Header */}
+                <div className="flex items-start justify-between border-b border-zinc-200 pb-3 mb-3">
                   <div>
-                    <h1 className="text-lg font-bold text-emerald-800 leading-tight">
-                      {contract.title || "عقد توريد وتركيب"}
-                    </h1>
-                    <div className="flex flex-col gap-1 mt-1 text-[11px] text-zinc-500">
+                    <h1 className="text-base sm:text-lg font-bold text-emerald-800 leading-tight">{contract.title || "عقد توريد وتركيب"}</h1>
+                    <div className="flex flex-col gap-0.5 mt-0.5 text-[10px] text-zinc-500">
                       <div>رقم العقد: <span className="font-mono text-zinc-800 font-semibold">{contract.contractNo}</span></div>
                       <div>التاريخ: <span className="text-zinc-800 font-semibold">{contract.date}</span></div>
                     </div>
                   </div>
-                  <div className="text-left">
-                    {settings?.logoBase64 ? (
-                      <div className="w-24 h-14 flex items-center justify-start">
-                        <img 
-                          src={settings.logoBase64} 
-                          alt="Company Logo" 
-                          className="max-h-full max-w-full object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="font-bold text-base tracking-wider text-emerald-800">
-                        {contract.secondPartyName?.toUpperCase() || "SMART NEXUS"}
-                      </div>
-                    )}
-                    <p className="text-[9px] text-zinc-400 mt-0.5">
-                      {language === "ar" ? "التصميم الداخلي والخدمات الفنية" : "Interior Design & Technical Services"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Parties Section */}
-                <div className="mb-4 space-y-1 bg-zinc-50 p-3 border border-zinc-200 rounded-lg">
-                  <p className="text-xs font-semibold mb-2 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
-                    {/* الطرف الأول */}
-                    <div className="space-y-1 leading-relaxed border-l border-zinc-200 pl-3">
-                      <p className="font-bold text-zinc-800">الطرف الأول (العميل):</p>
-                      <p><span className="text-zinc-500">الاسم:</span> <span className="font-semibold">{contract.firstPartyName}</span></p>
-                      <p><span className="text-zinc-500">الهاتف:</span> <span className="font-mono">{contract.firstPartyPhone}</span></p>
-                      <p><span className="text-zinc-500">العنوان:</span> <span>{contract.firstPartyAddress}</span></p>
-                    </div>
-                    {/* الطرف الثاني */}
-                    <div className="space-y-1 leading-relaxed pr-3">
-                      <p className="font-bold text-zinc-800">الطرف الثاني (الشركة):</p>
-                      <p><span className="text-zinc-500">الاسم:</span> <span className="font-semibold">{contract.secondPartyName}</span></p>
-                      <p><span className="text-zinc-500">الهاتف:</span> <span className="font-mono">{contract.secondPartyPhone}</span></p>
-                      <p><span className="text-zinc-500">العنوان:</span> <span>{contract.secondPartyAddress}</span></p>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-3.5 text-[10px] text-zinc-700 leading-relaxed text-justify">
-                  {page1Clauses.map((clause, index) => (
-                    <div key={index} className="space-y-1">
-                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
-                        {clause.title}
-                      </h3>
-                      <div className="whitespace-pre-line text-[9.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
-                        {clause.content}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Page 2 */}
-              <div 
-                id="contract-preview-page-2"
-                dir="rtl"
-                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area printable-area print:h-[296mm]"
-                style={{ boxSizing: "border-box" }}
-              >
-
-
-                {/* Clauses Section */}
-                <div className="space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-3">
-                  {page2Clauses.map((clause, index) => (
+                <div className="space-y-2 text-[9.5px] text-zinc-700 leading-normal text-justify pr-1 mb-4">
+                  {(contract.clauses || []).map((clause, index) => (
                     <div key={index} className="space-y-0.5">
-                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[10.5px]">
+                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-1.5 py-0.5 text-[10px]">
                         {clause.title}
                       </h3>
-                      <div className="whitespace-pre-line text-[9px] leading-snug text-zinc-600 pr-3 font-sans">
+                      <div className="whitespace-pre-line text-[9px] leading-relaxed text-zinc-600 pr-2 font-sans">
                         {clause.content}
                       </div>
                     </div>
@@ -527,57 +502,41 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                 </div>
 
                 {/* Signatures Footer */}
-                <div className="border-t border-zinc-200 pt-3 mt-4">
-                  <div className="grid grid-cols-2 gap-8 text-xs">
-                    {/* الطرف الأول */}
-                    <div className="space-y-1.5">
-                      <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الأول (العميل)</p>
-                      <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{signerName}</span></p>
-                      <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{signDate}</span></p>
-                      <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
-                        {signatureData ? (
-                          <img 
-                            src={signatureData} 
-                            alt="First Party Signature" 
-                            className="h-full object-contain z-10"
-                          />
-                        ) : (
-                          <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
-                        )}
+                <div className="border-t border-zinc-200 pt-3 mt-auto keep-together">
+                  <p className="text-[9px] font-bold text-zinc-400 mb-2 text-center tracking-wider uppercase">
+                    {language === "ar" ? "التوقيعات والاعتمادات" : "Signatures & Approvals"}
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5 text-center bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
+                      <p className="font-bold text-emerald-800 text-[10px] border-b border-zinc-150 pb-0.5">الطرف الأول (العميل)</p>
+                      <div className="text-[9px] text-right space-y-0.5">
+                        <p><span className="text-zinc-400">الاسم: </span><span className="font-semibold">{signerName || "___________________"}</span></p>
+                        <p><span className="text-zinc-400">التاريخ: </span><span className="font-semibold">{signDate || "___________________"}</span></p>
+                      </div>
+                      <div className="flex gap-2 items-center justify-center mt-1">
+                        <div className="flex-1 h-12 border border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden">
+                          {signatureData ? <img src={signatureData} alt="Signature" className="h-full w-full object-contain p-1" /> : <span className="text-[8px] text-zinc-300 italic">بانتظار التوقيع</span>}
+                        </div>
                         {firstPartyStamp && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
-                            <img 
-                              src={firstPartyStamp} 
-                              alt="Client Stamp" 
-                              className="h-12 w-12 object-contain"
-                            />
+                          <div className="w-14 h-12 border border-dashed border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden p-0.5">
+                            <img src={firstPartyStamp} alt="Stamp" className="h-full object-contain opacity-75" />
                           </div>
                         )}
                       </div>
                     </div>
-                    
-                    {/* الطرف الثاني */}
-                    <div className="space-y-1.5">
-                      <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الثاني (الشركة)</p>
-                      <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{contract.secondPartySignName}</span></p>
-                      <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{contract.secondPartySignDate}</span></p>
-                      <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
-                        {contract.secondPartySignature ? (
-                          <img 
-                            src={contract.secondPartySignature} 
-                            alt="Second Party Signature" 
-                            className="h-full object-contain z-10"
-                          />
-                        ) : (
-                          <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
-                        )}
+                    <div className="space-y-1.5 text-center bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
+                      <p className="font-bold text-emerald-800 text-[10px] border-b border-zinc-150 pb-0.5">الطرف الثاني (الشركة)</p>
+                      <div className="text-[9px] text-right space-y-0.5">
+                        <p><span className="text-zinc-400">الاسم: </span><span className="font-semibold">{contract.secondPartySignName || settings?.companyName || "___________________"}</span></p>
+                        <p><span className="text-zinc-400">التاريخ: </span><span className="font-semibold">{contract.secondPartySignDate || contract.date || "___________________"}</span></p>
+                      </div>
+                      <div className="flex gap-2 items-center justify-center mt-1">
+                        <div className="flex-1 h-12 border border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden">
+                          {contract.secondPartySignature ? <img src={contract.secondPartySignature} alt="Signature" className="h-full w-full object-contain p-1" /> : <span className="text-[8px] text-zinc-300 italic">بانتظار التوقيع</span>}
+                        </div>
                         {settings?.stampBase64 && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
-                            <img 
-                              src={settings.stampBase64} 
-                              alt="Company Stamp" 
-                              className="h-12 w-12 object-contain"
-                            />
+                          <div className="w-14 h-12 border border-dashed border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden p-0.5">
+                            <img src={settings.stampBase64} alt="Stamp" className="h-full object-contain opacity-75" />
                           </div>
                         )}
                       </div>
@@ -589,190 +548,53 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
           </div>
         </div>
 
-        {/* Left Pane: Interactive E-Signature Pad Sidebar */}
-        <div className="w-full lg:w-[400px] bg-white border-t lg:border-t-0 lg:border-l border-zinc-200 p-4 sm:p-6 flex flex-col justify-between overflow-y-auto no-print shadow-lg">
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-bold text-zinc-900 flex items-center gap-2">
-                <PenTool className="w-5 h-5 text-emerald-600" />
-                {language === "ar" ? "اعتماد وتوقيع الاتفاقية" : "Sign Agreement"}
-              </h2>
-              <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                {language === "ar" 
-                  ? "يرجى مراجعة تفاصيل بنود العقد جيداً، ثم أدخل اسمك الكامل وارسم توقيعك في الصندوق المخصص لحفظ العقد رسمياً." 
-                  : "Please review the contract clauses, write your full name, and draw your signature below to execute the contract."}
-              </p>
-            </div>
-
-            {/* Input Name */}
+        {/* Sidebar */}
+        <div className="w-full lg:w-[380px] bg-white border-t lg:border-t-0 lg:border-r border-zinc-200 flex flex-col no-print shadow-xl client-signer-sidebar">
+          <div className="p-4 sm:p-5 border-b border-zinc-100 bg-zinc-50 flex-shrink-0">
+            <h2 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
+              <PenTool className="w-4 h-4 text-emerald-600" />
+              {language === "ar" ? "اعتماد وتوقيع الاتفاقية" : "Sign Agreement"}
+            </h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-zinc-700">
-                {language === "ar" ? "اسم الموقّع (الطرف الأول):" : "Signatory Full Name (Client):"}
-              </label>
-              <input 
-                type="text" 
-                value={signerName}
-                onChange={(e) => setSignerName(e.target.value)}
-                disabled={signed}
-                className="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 outline-none focus:border-emerald-600 transition-colors disabled:opacity-50"
-                placeholder={language === "ar" ? "اكتب اسمك الكامل هنا" : "Enter your full name"}
-              />
+              <label className="block text-xs font-semibold text-zinc-700">{language === "ar" ? "اسم الموقّع:" : "Signatory Full Name:"}</label>
+              <input type="text" value={signerName} onChange={(e) => setSignerName(e.target.value)} disabled={signed} className="w-full bg-zinc-50 border border-zinc-300 rounded-lg px-3 py-2 text-sm" />
             </div>
-
-            {/* Input Date */}
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-zinc-700">
-                {language === "ar" ? "تاريخ التوقيع:" : "Signature Date:"}
-              </label>
-              <input 
-                type="text" 
-                value={signDate}
-                disabled
-                className="w-full bg-zinc-100 border border-zinc-200 rounded-lg px-3 py-2 text-sm text-zinc-600 outline-none select-none opacity-80"
-              />
-            </div>
-
-            {/* Signature Draw Area */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold text-zinc-700">
-                  {language === "ar" ? "شاشة رسم التوقيع:" : "Draw Signature:"}
-                </label>
-                {!signed && signatureData && (
-                  <button 
-                    type="button" 
-                    onClick={handleClearSignature}
-                    className="flex items-center gap-1 text-[11px] text-red-600 hover:text-red-700 font-semibold"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    {language === "ar" ? "مسح التوقيع" : "Clear"}
-                  </button>
-                )}
+                <label className="block text-xs font-semibold text-zinc-700">{language === "ar" ? "التوقيع:" : "Signature:"}</label>
+                {!signed && signatureData && <button type="button" onClick={handleClearSignature} className="text-[10px] text-red-500 font-semibold">{language === "ar" ? "مسح" : "Clear"}</button>}
               </div>
-              <div className="bg-zinc-50 rounded-lg overflow-hidden border border-zinc-300 p-0.5">
-                <SignatureCanvas 
-                  ref={sigRef}
-                  onEnd={handleSignatureEnd}
-                  canvasProps={{ className: "w-full h-36" }}
-                />
+              <div className={`rounded-xl overflow-hidden border-2 ${signed ? "border-emerald-200 bg-emerald-50/30" : "border-zinc-300"}`}>
+                <SignatureCanvas ref={sigRef} onEnd={handleSignatureEnd} canvasProps={{ className: "w-full", style: { height: "140px" } }} />
               </div>
             </div>
-
-            {/* Stamp / Logo Upload */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-zinc-700">
-                {language === "ar" ? "ختم أو شعار العميل (اختياري):" : "Client Stamp/Logo (Optional):"}
-              </label>
+              <label className="block text-xs font-semibold text-zinc-700">{language === "ar" ? "ختم أو شعار العميل:" : "Client Stamp/Logo:"}</label>
               {!signed ? (
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-zinc-300 border-dashed rounded-lg cursor-pointer hover:bg-zinc-50 hover:border-zinc-400 transition-colors relative overflow-hidden">
-                    {firstPartyStamp ? (
-                      <>
-                        <img 
-                          src={firstPartyStamp} 
-                          alt="Stamp Preview" 
-                          className="h-full object-contain p-2"
-                        />
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            clearStamp();
-                          }}
-                          className="absolute top-1 left-1 bg-red-600 hover:bg-red-700 text-white rounded p-1 text-[10px] z-20 transition-colors"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                        </button>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center pt-2 pb-2">
-                        <Upload className="w-5 h-5 text-zinc-400 mb-1" />
-                        <p className="text-xs text-zinc-600">
-                          {language === "ar" ? "اضغط لرفع الختم/الشعار" : "Click to upload stamp/logo"}
-                        </p>
-                        <p className="text-[9px] text-zinc-400 mt-0.5">PNG, JPG (Max 2MB)</p>
-                      </div>
-                    )}
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleStampUpload}
-                      className="hidden" 
-                    />
-                  </label>
-                </div>
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-zinc-50">
+                  {firstPartyStamp ? <img src={firstPartyStamp} className="h-full object-contain p-2" /> : <Upload className="w-5 h-5 text-zinc-400" />}
+                  <input type="file" accept="image/*" onChange={handleStampUpload} className="hidden" />
+                </label>
               ) : (
-                firstPartyStamp ? (
-                  <div className="h-20 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center p-2">
-                    <img 
-                      src={firstPartyStamp} 
-                      alt="Uploaded Client Stamp" 
-                      className="h-full object-contain opacity-80"
-                    />
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-zinc-400 italic">
-                    {language === "ar" ? "لم يتم إرفاق ختم للعميل" : "No client stamp uploaded"}
-                  </p>
-                )
+                firstPartyStamp && <div className="h-16 bg-zinc-50 border rounded-xl flex items-center justify-center p-2"><img src={firstPartyStamp} className="h-full object-contain" /></div>
               )}
             </div>
           </div>
-
-          <div className="mt-8 space-y-3">
+          <div className="p-4 sm:p-5 border-t border-zinc-100 space-y-3 bg-white">
             {!signed ? (
-              <button
-                onClick={handleSignContract}
-                disabled={saving || !signerName.trim() || !signatureData}
-                className="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-200 disabled:text-zinc-400 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-md"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {language === "ar" ? "جاري حفظ التوقيع..." : "Saving..."}
-                  </>
-                ) : (
-                  <>
-                    <PenTool className="w-4 h-4" />
-                    {language === "ar" ? "توقيع واعتماد العقد" : "Approve & Sign Contract"}
-                  </>
-                )}
+              <button onClick={handleSignContract} disabled={saving || !signerName.trim() || !signatureData} className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold text-sm transition-all shadow-md">
+                {saving ? (language === "ar" ? "جاري الحفظ..." : "Saving...") : (language === "ar" ? "توقيع واعتماد العقد" : "Sign & Approve")}
               </button>
             ) : (
-              <div className="p-4 rounded-lg bg-emerald-950/30 border border-emerald-800/30 text-center space-y-1">
-                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                <h3 className="text-sm font-bold text-emerald-400">
-                  {language === "ar" ? "تم توقيع العقد بنجاح!" : "Contract Signed Successfully!"}
-                </h3>
-                <p className="text-[11px] text-zinc-500">
-                  {language === "ar" 
-                    ? "يمكنك الآن تحميل نسختك الرسمية بصيغة PDF." 
-                    : "You can now download your official PDF version."}
-                </p>
-              </div>
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center text-emerald-800 font-bold text-xs">{language === "ar" ? "تم التوقيع بنجاح" : "Signed Successfully"}</div>
             )}
-
-            <button
-              onClick={handleDownloadPDF}
-              disabled={exporting}
-              className="w-full py-3 rounded-lg bg-zinc-800 hover:bg-zinc-900 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-sm"
-            >
-              {exporting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {language === "ar" ? "جاري تصدير PDF..." : "Exporting..."}
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  {language === "ar" ? "تحميل نسخة العقد PDF" : "Download PDF Copy"}
-                </>
-              )}
+            <button onClick={handleDownloadPDF} disabled={exporting} className="w-full py-3 rounded-xl bg-zinc-900 text-white font-semibold text-sm transition-all shadow-sm">
+              {exporting ? (language === "ar" ? "جاري التصدير..." : "Exporting...") : (language === "ar" ? "تحميل نسخة PDF" : "Download PDF")}
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

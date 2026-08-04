@@ -139,6 +139,25 @@ body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
+  /* ── Client Signing Portal Print Fix ── */
+  .no-print {
+    display: none !important;
+  }
+  .client-signer-layout {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .client-signer-sidebar {
+    display: none !important;
+  }
+  .client-signer-preview {
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
 }
 
 /* Override Tailwind v4 custom properties that default to oklch inside PDF preview sheets */
@@ -324,14 +343,34 @@ body {
   box-sizing: border-box !important;
 }
 
+.continuous-flow-page {
+  width: 210mm !important;
+  height: auto !important;
+  min-height: 296mm !important;
+  box-sizing: border-box !important;
+  background: white !important;
+  position: relative;
+}
+
 /* Custom 90% scaling for contract print and PDF generation */
 @media print {
-  body:has(#contract-preview-wrapper) {
+  body:has(#contract-preview-wrapper),
+  body:has(.continuous-flow-page) {
     zoom: 0.9 !important;
   }
   #contract-preview-wrapper,
-  #contract-preview-wrapper .pdf-page {
+  #contract-preview-wrapper .pdf-page,
+  #contract-preview-wrapper .continuous-flow-page {
     zoom: 0.9 !important;
+  }
+  
+  .continuous-flow-page {
+    page-break-after: avoid !important;
+    page-break-inside: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 }
 
@@ -340,7 +379,8 @@ body.pdf-generating:has(#contract-preview-wrapper) {
 }
 
 .pdf-generating #contract-preview-wrapper,
-.pdf-generating #contract-preview-wrapper .pdf-page {
+.pdf-generating #contract-preview-wrapper .pdf-page,
+.pdf-generating #contract-preview-wrapper .continuous-flow-page {
   zoom: 0.9 !important;
 }
 

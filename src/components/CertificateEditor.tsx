@@ -16,7 +16,8 @@ import {
   Loader2,
   Award,
   Check,
-  RotateCcw
+  RotateCcw,
+  PenTool
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
 import { saveCertificate, getCertificate, Certificate, CertificateItem, getSettings, Settings } from "@/lib/db";
@@ -475,6 +476,16 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     }
   };
 
+  const handleCopySignLink = () => {
+    if (!id || id === "new") {
+      alert(language === "ar" ? "يرجى حفظ الشهادة أولاً لتتمكن من مشاركة رابط التوقيع" : "Please save the certificate first to copy the signature link.");
+      return;
+    }
+    const signLink = `${window.location.origin}/certificate/${id}/sign`;
+    navigator.clipboard.writeText(signLink);
+    alert(language === "ar" ? "تم نسخ رابط توقيع العميل بنجاح!" : "Client signing link copied successfully!");
+  };
+
   const formValues = watch();
 
   if (loading || !isMounted) {
@@ -711,6 +722,13 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
             >
               <Share2 className="w-4 h-4" />
             </button>
+            <button 
+              onClick={handleCopySignLink}
+              className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium transition-all"
+              title={language === "ar" ? "نسخ رابط التوقيع" : "Copy Client Sign Link"}
+            >
+              <PenTool className="w-4 h-4 text-purple-400" />
+            </button>
           </div>
         </div>
 
@@ -766,6 +784,14 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
             >
               <Share2 className="w-3.5 h-3.5" />
               {t("share")}
+            </button>
+            <button 
+              type="button"
+              onClick={handleCopySignLink}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium text-xs transition-all hover:scale-[1.02]"
+            >
+              <PenTool className="w-3.5 h-3.5 text-purple-400" />
+              {language === "ar" ? "رابط توقيع العميل" : "Client Sign Link"}
             </button>
           </div>
         </div>

@@ -40,7 +40,9 @@ import {
   getAllContracts,
   deleteContract,
   saveQuotation,
-  saveContract
+  saveContract,
+  saveReceipt,
+  saveCertificate
 } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 
@@ -135,13 +137,21 @@ export default function Dashboard() {
       };
       await saveQuotation(updatedQuote);
 
-      // If approved, trigger auto contract generation
+      // If approved, trigger auto contract, receipt, and certificate generation
       if (newStatus === 'approved') {
+        // Extract numeric suffix from quotationNo
+        const getSerialSuffix = (quoteNo: string) => {
+          const match = quoteNo.match(/\d+/);
+          return match ? match[0] : String(Math.floor(Math.random() * 90000) + 10000);
+        };
+        const suffix = getSerialSuffix(quote.quotationNo);
+
+        // 1. Auto Contract Generation
         const existingContracts = await getAllContracts();
         const alreadyHasContract = existingContracts.some(c => c.quotationId === quote.id);
         
         if (!alreadyHasContract) {
-          const randomNo = "C" + String(Math.floor(Math.random() * 90000) + 10000);
+          const contractNo = "C-" + suffix;
           const itemLines = quote.items.map(
             (item, i) => `${i + 1} - ${item.description.split('\n')[0]} (الكمية: ${item.qty} ${item.unit})`
           ).join('\n');
@@ -233,13 +243,13 @@ ${itemLines}
             },
             {
               title: "البند التاسع: الموقع والتوقيع",
-              content: `حرر هذا العقد في إمارة دبى بتاريخ ${new Date().toLocaleDateString("en-GB")} من نسعتين أصليتين، بيد كل طرف نسخة للعمل بموجبها.`
+              content: `حرر هذا العقد في إمارة دبى بتاريخ ${new Date().toLocaleDateString("en-GB")} من نسختين أصليتين، بيد كل طرف نسخة للعمل بموجبها.`
             }
           ];
 
           const newContract = {
             id: `contract-${Date.now()}`,
-            contractNo: randomNo,
+            contractNo: contractNo,
             date: new Date().toLocaleDateString("en-GB"),
             location: "دبى",
             title: generatedTitle,
@@ -265,6 +275,66 @@ ${itemLines}
           const contrs = await getAllContracts();
           setContracts(contrs);
         }
+
+        // 2. Auto Receipt / Invoice Generation
+        const existingReceipts = await getAllReceipts();
+        const alreadyHasReceipt = existingReceipts.some(r => r.receiptNo === `R-${suffix}`);
+        
+        if (!alreadyHasReceipt) {
+          const newReceipt: Receipt = {
+            id: `receipt-${Date.now()}`,
+            receiptNo: `R-${suffix}`,
+            date: new Date().toLocaleDateString("en-GB"),
+            clientName: quote.clientName,
+            amount: quote.total,
+            amountInWords: "",
+            paymentMethod: "bank",
+            receivedFor: `Payment for quotation ${quote.quotationNo} - ${quote.projectReference || ""}`,
+            receivedBy: quote.preparedBy || "Smart Nexus FZE LLC",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          await saveReceipt(newReceipt);
+          const recs = await getAllReceipts();
+          setReceipts(recs);
+        }
+
+        // 3. Auto Work Completion Certificate Generation
+        const existingCerts = await getAllCertificates();
+        const alreadyHasCert = existingCerts.some(c => c.id === `cert-${suffix}`);
+
+        if (!alreadyHasCert) {
+          const certChecklist = quote.items.map((item, index) => ({
+            id: `c-${index + 1}`,
+            system: item.description.split('\n')[0],
+            remarks: `${item.qty} ${item.unit}`,
+            done: true
+          }));
+
+          const newCertificate: Certificate = {
+            id: `cert-${suffix}`,
+            project: quote.projectReference || `Project for ${quote.clientName}`,
+            systemType: quote.items[0]?.description.split('\n')[0] || "Extra Low Voltage System",
+            statement: `This is to certify that M/S ${quote.companyName || "Smart Nexus FZE LLC"} has completed the systems supply, installation, testing, and commissioning for the project mentioned above and handed it over within the stipulated period, and also maintained the quality of work.`,
+            checklist: certChecklist,
+            warrantyText: "Warranty starts from date of this certificate.",
+            clientName: quote.clientName,
+            clientDate: new Date().toLocaleDateString("en-GB"),
+            integratorName: quote.companyName || "Smart Nexus FZE LLC",
+            integratorDate: new Date().toLocaleDateString("en-GB"),
+            address: quote.companyAddress || "Abraj Al Mamzar, Block A F 106, Al Mamzar, United Arab Emirates",
+            website: "smarteleco.com",
+            phone: "+971 555555555",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          await saveCertificate(newCertificate);
+          const certs = await getAllCertificates();
+          setCertificates(certs);
+        }
+      }
       }
 
       setQuotations(prev => prev.map(q => q.id === quote.id ? { ...q, status: newStatus } : q));

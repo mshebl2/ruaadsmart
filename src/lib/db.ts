@@ -69,6 +69,7 @@ export interface Certificate {
   warrantyText: string;
   clientName: string;
   clientSignature?: string; // base64 signature image
+  clientStamp?: string; // base64 stamp image
   clientDate: string;
   integratorName: string;
   integratorSignature?: string; // base64 signature image
@@ -198,6 +199,7 @@ export async function deleteReceipt(id: string): Promise<void> {
 }
 
 export interface Settings {
+  companyName?: string;
   logoBase64?: string;
   stampBase64?: string;
 }

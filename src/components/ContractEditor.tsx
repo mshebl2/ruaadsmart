@@ -150,7 +150,8 @@ export default function ContractEditor({ id }: ContractEditorProps) {
     name: "clauses"
   });
 
-  const watchedClauses = watch("clauses") || [];
+  const formValues = watch();
+  const watchedClauses = formValues.clauses || [];
 
   useEffect(() => {
     getSettings().then(setSettings).catch(console.error);
@@ -294,6 +295,38 @@ ${itemLines}
     };
     await saveContract(updatedDoc);
     return documentId;
+  };
+
+  const handleCopySignLink = () => {
+    if (!id || id === "new") {
+      alert(language === "ar" ? "يرجى حفظ العقد أولاً لتوليد رابط التوقيع." : "Please save the contract first to generate the sign link.");
+      return;
+    }
+    const signLink = `${window.location.origin}/contract/${id}/sign`;
+    navigator.clipboard.writeText(signLink);
+    alert(language === "ar" ? "تم نسخ رابط توقيع العميل بنجاح!" : "Client signing link copied to clipboard!");
+  };
+
+  const handleShare = () => {
+    if (!id || id === "new") {
+      alert(language === "ar" ? "يرجى حفظ العقد أولاً للمشاركة." : "Please save the contract first to share.");
+      return;
+    }
+    const viewLink = `${window.location.origin}/contract/${id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: formValues.title || "Contract",
+        text: language === "ar" ? `عقد رقم ${formValues.contractNo}` : `Contract No ${formValues.contractNo}`,
+        url: viewLink,
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(viewLink);
+      alert(language === "ar" ? "تم نسخ رابط العقد إلى الحافظة!" : "Contract link copied to clipboard!");
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const onSubmit = async (data: Contract) => {
@@ -612,73 +645,7 @@ ${itemLines}
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleShare = async () => {
-    const pdf = await generatePDF();
-    if (!pdf) {
-      alert("Could not generate PDF for sharing.");
-      return;
-    }
-    try {
-      const cNo = watch("contractNo") || "Contract";
-      const blob = pdf.output("blob");
-      const file = new File([blob], `Contract_${cNo}.pdf`, { type: "application/pdf" });
-      
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `Smart Nexus Contract ${cNo}`,
-          text: `Please find attached contract ${cNo} from Smart Nexus.`
-        });
-      } else {
-        handleDownloadPDF();
-      }
-    } catch (error) {
-      console.error("Sharing failed:", error);
-      handleDownloadPDF();
-    }
-  };
-
-  const handleCopySignLink = () => {
-    if (!id || id === "new") {
-      alert(language === "ar" ? "يرجى حفظ العقد أولاً لتتمكن من مشاركة رابط التوقيع" : "Please save the contract first to copy the signature link.");
-      return;
-    }
-    const signLink = `${window.location.origin}/contract/${id}/sign`;
-    navigator.clipboard.writeText(signLink);
-    alert(language === "ar" ? "تم نسخ رابط توقيع العميل بنجاح!" : "Client signing link copied successfully!");
-  };
-
-  const formValues = watch();
-
-  if (loading || !isMounted) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
-        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-        <p className="text-zinc-400 mt-2 text-sm">Loading contract editor...</p>
-      </div>
-    );
-  }
-
-function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>): number {
-  if (!clauses || clauses.length === 0) return 3;
-  const clause1Lines = clauses[0]?.content ? clauses[0].content.split('\n').length : 4;
-  if (clause1Lines > 8) {
-    return 2;
-  } else if (clause1Lines > 4) {
-    return 3;
-  }
-  return 4;
-}
-
   if (isPrintMode) {
-    const splitIndex = getClauseSplitIndex(watchedClauses || []);
-    const page1Clauses = watchedClauses.slice(0, splitIndex);
-    const page2Clauses = watchedClauses.slice(splitIndex);
-
     return (
       <div className="bg-white min-h-screen flex flex-col items-center justify-start p-0 m-0 w-full" style={{ direction: "ltr" }}>
         <div 
@@ -686,29 +653,27 @@ function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>)
           id="contract-preview-wrapper"
           className="flex flex-col gap-4 print:gap-0"
         >
-          {/* Page 1 */}
+          {/* Continuous Flow Page */}
           <div 
-            id="contract-preview-page-1"
+            id="contract-preview-page-continuous"
             dir="rtl"
-            className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 pt-[10mm] pb-[8mm] px-[12mm] relative flex flex-col font-arabic pdf-preview-container"
+            className="continuous-flow-page w-[210mm] bg-white text-zinc-900 pt-[10mm] pb-[8mm] px-[12mm] relative flex flex-col font-arabic pdf-preview-container"
             style={{ boxSizing: "border-box" }}
           >
-
-
             {/* Legal Contract Header */}
-            <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-4">
+            <div className="flex items-start justify-between border-b border-zinc-200 pb-3 mb-3">
               <div>
-                <h1 className="text-lg font-bold text-emerald-800 leading-tight">
+                <h1 className="text-base sm:text-lg font-bold text-emerald-800 leading-tight">
                   {formValues.title || "عقد توريد وتركيب"}
                 </h1>
-                <div className="flex flex-col gap-1 mt-1 text-[11px] text-zinc-500">
+                <div className="flex flex-col gap-0.5 mt-0.5 text-[10px] text-zinc-500">
                   <div>رقم العقد: <span className="font-mono text-zinc-800 font-semibold">{formValues.contractNo}</span></div>
                   <div>التاريخ: <span className="text-zinc-800 font-semibold">{formValues.date}</span></div>
                 </div>
               </div>
               <div className="text-left">
                 {settings?.logoBase64 ? (
-                  <div className="w-24 h-14 flex items-center justify-start">
+                  <div className="w-24 h-12 flex items-center justify-start">
                     <img 
                       src={settings.logoBase64} 
                       alt="Smart Nexus Logo" 
@@ -716,26 +681,29 @@ function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>)
                     />
                   </div>
                 ) : (
-                  <div className="font-bold text-base tracking-wider text-emerald-800">SMART NEXUS</div>
+                  <div className="font-bold text-sm tracking-wider text-emerald-800">
+                    {formValues.secondPartyName?.toUpperCase() || "SMART NEXUS"}
+                  </div>
                 )}
-                <p className="text-[9px] text-zinc-400 mt-0.5">أنظمة التقنية المتقدمة</p>
+                <p className="text-[8px] text-zinc-400 mt-0.5">
+                  {language === "ar" ? "التصميم الداخلي والخدمات الفنية" : "Interior Design & Technical Services"}
+                </p>
               </div>
             </div>
 
             {/* Parties Section */}
-            <div className="mb-4 space-y-1 bg-zinc-50 p-3 border border-zinc-200 rounded-lg">
-              <p className="text-xs font-semibold mb-2 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+            <div className="mb-3 space-y-0.5 bg-zinc-50 p-2 border border-zinc-150 rounded-lg">
+              <p className="text-[10px] font-bold text-emerald-800 mb-1">أطراف الاتفاقية:</p>
+              <div className="grid grid-cols-2 gap-4 text-[10px] leading-snug">
                 {/* الطرف الأول */}
-                <div className="space-y-1 leading-relaxed border-l border-zinc-200 pl-3">
+                <div className="space-y-0.5 border-l border-zinc-200 pl-2">
                   <p className="font-bold text-zinc-800">الطرف الأول (العميل):</p>
                   <p><span className="text-zinc-500">الاسم:</span> <span className="font-semibold">{formValues.firstPartyName}</span></p>
                   <p><span className="text-zinc-500">الهاتف:</span> <span className="font-mono">{formValues.firstPartyPhone}</span></p>
                   <p><span className="text-zinc-500">العنوان:</span> <span>{formValues.firstPartyAddress}</span></p>
                 </div>
                 {/* الطرف الثاني */}
-                <div className="space-y-1 leading-relaxed pr-3">
+                <div className="space-y-0.5 pr-2">
                   <p className="font-bold text-zinc-800">الطرف الثاني (الشركة):</p>
                   <p><span className="text-zinc-500">الاسم:</span> <span className="font-semibold">{formValues.secondPartyName}</span></p>
                   <p><span className="text-zinc-500">الهاتف:</span> <span className="font-mono">{formValues.secondPartyPhone}</span></p>
@@ -745,95 +713,66 @@ function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>)
             </div>
 
             {/* Clauses Section */}
-            <div className="flex-1 space-y-3.5 text-[10px] text-zinc-700 leading-relaxed text-justify">
-              {page1Clauses.map((clause, index) => (
-                <div key={index} className="space-y-1">
-                  <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
-                    {clause.title}
-                  </h3>
-                  <div className="whitespace-pre-line text-[9.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
-                    {clause.content}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Page 2 */}
-          <div 
-            id="contract-preview-page-2"
-            dir="rtl"
-            className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 pt-[10mm] pb-[8mm] px-[12mm] relative flex flex-col font-arabic pdf-preview-container"
-            style={{ boxSizing: "border-box" }}
-          >
-
-
-            {/* Clauses Section */}
-            <div className="space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-3">
-              {page2Clauses.map((clause, index) => (
+            <div className="space-y-2 text-[9.5px] text-zinc-700 leading-normal text-justify pr-1 mb-4">
+              {(watchedClauses || []).map((clause, index) => (
                 <div key={index} className="space-y-0.5">
-                  <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[10.5px]">
+                  <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-1.5 py-0.5 text-[10px]">
                     {clause.title}
                   </h3>
-                  <div className="whitespace-pre-line text-[9px] leading-snug text-zinc-600 pr-3 font-sans">
+                  <div className="whitespace-pre-line text-[9px] leading-relaxed text-zinc-650 pr-2 font-sans">
                     {clause.content}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Signatures Footer */}
-            <div className="border-t border-zinc-200 pt-3 mt-4">
-              <div className="grid grid-cols-2 gap-8 text-xs">
-                {/* الطرف الأول */}
-                <div className="space-y-1.5">
-                  <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الأول (العميل)</p>
-                  <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartySignName}</span></p>
-                  <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.firstPartySignDate}</span></p>
-                  <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
-                    {formValues.firstPartySignature ? (
-                      <img 
-                        src={formValues.firstPartySignature} 
-                        alt="First Party Signature" 
-                        className="h-full object-contain z-10"
-                      />
-                    ) : (
-                      <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
-                    )}
+            {/* Signatures & Stamps Footer */}
+            <div className="border-t border-zinc-200 pt-3 mt-auto keep-together">
+              <p className="text-[9px] font-bold text-zinc-400 mb-2 text-center tracking-wider uppercase">
+                {language === "ar" ? "التوقيعات والاعتمادات" : "Signatures & Approvals"}
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {/* الطرف الأول - العميل */}
+                <div className="space-y-1.5 text-center bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
+                  <p className="font-bold text-emerald-800 text-[10px] border-b border-zinc-150 pb-0.5">الطرف الأول (العميل)</p>
+                  <div className="text-[9px] text-right space-y-0.5">
+                    <p><span className="text-zinc-400">الاسم: </span><span className="font-semibold">{formValues.firstPartySignName || "___________________"}</span></p>
+                    <p><span className="text-zinc-400">التاريخ: </span><span className="font-semibold">{formValues.firstPartySignDate || "___________________"}</span></p>
+                  </div>
+                  <div className="flex gap-2 items-center justify-center mt-1">
+                    <div className="flex-1 h-12 border border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden">
+                      {formValues.firstPartySignature ? (
+                        <img src={formValues.firstPartySignature} alt="Signature" className="h-full w-full object-contain p-1" />
+                      ) : (
+                        <span className="text-[8px] text-zinc-300 italic">بانتظار التوقيع</span>
+                      )}
+                    </div>
                     {formValues.firstPartyStamp && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
-                        <img 
-                          src={formValues.firstPartyStamp} 
-                          alt="Client Stamp" 
-                          className="h-12 w-12 object-contain"
-                        />
+                      <div className="w-14 h-12 border border-dashed border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden p-0.5">
+                        <img src={formValues.firstPartyStamp} alt="Stamp" className="h-full object-contain opacity-75" />
                       </div>
                     )}
                   </div>
                 </div>
-                
-                {/* الطرف الثاني */}
-                <div className="space-y-1.5">
-                  <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الثاني (الشركة)</p>
-                  <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartySignName}</span></p>
-                  <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.secondPartySignDate}</span></p>
-                  <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
-                    {formValues.secondPartySignature ? (
-                      <img 
-                        src={formValues.secondPartySignature} 
-                        alt="Second Party Signature" 
-                        className="h-full object-contain z-10"
-                      />
-                    ) : (
-                      <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
-                    )}
+
+                {/* الطرف الثاني - الشركة */}
+                <div className="space-y-1.5 text-center bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
+                  <p className="font-bold text-emerald-800 text-[10px] border-b border-zinc-150 pb-0.5">الطرف الثاني (الشركة)</p>
+                  <div className="text-[9px] text-right space-y-0.5">
+                    <p><span className="text-zinc-400">الاسم: </span><span className="font-semibold">{formValues.secondPartySignName || settings?.companyName || "___________________"}</span></p>
+                    <p><span className="text-zinc-400">التاريخ: </span><span className="font-semibold">{formValues.secondPartySignDate || "___________________"}</span></p>
+                  </div>
+                  <div className="flex gap-2 items-center justify-center mt-1">
+                    <div className="flex-1 h-12 border border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden">
+                      {formValues.secondPartySignature ? (
+                        <img src={formValues.secondPartySignature} alt="Signature" className="h-full w-full object-contain p-1" />
+                      ) : (
+                        <span className="text-[8px] text-zinc-300 italic">بانتظار التوقيع</span>
+                      )}
+                    </div>
                     {settings?.stampBase64 && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
-                        <img 
-                          src={settings.stampBase64} 
-                          alt="Company Stamp" 
-                          className="h-12 w-12 object-contain"
-                        />
+                      <div className="w-14 h-12 border border-dashed border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden p-0.5">
+                        <img src={settings.stampBase64} alt="Stamp" className="h-full object-contain opacity-75" />
                       </div>
                     )}
                   </div>
@@ -845,10 +784,6 @@ function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>)
       </div>
     );
   }
-
-  const splitIndex = getClauseSplitIndex(watchedClauses || []);
-  const page1Clauses = watchedClauses.slice(0, splitIndex);
-  const page2Clauses = watchedClauses.slice(splitIndex);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col main-layout-container">
@@ -1234,29 +1169,27 @@ function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>)
               id="contract-preview-wrapper"
               className="flex flex-col gap-6 print:gap-0"
             >
-              {/* Page 1 */}
+              {/* Continuous Flow Page */}
               <div 
-                id="contract-preview-page-1"
+                id="contract-preview-page-continuous"
                 dir="rtl"
-                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area printable-area print:h-[296mm]"
+                className="continuous-flow-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area printable-area"
                 style={{ boxSizing: "border-box" }}
               >
-
-
                 {/* Legal Contract Header */}
-                <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-4">
+                <div className="flex items-start justify-between border-b border-zinc-200 pb-3 mb-3">
                   <div>
-                    <h1 className="text-lg font-bold text-emerald-800 leading-tight">
+                    <h1 className="text-base sm:text-lg font-bold text-emerald-800 leading-tight">
                       {formValues.title || "عقد توريد وتركيب"}
                     </h1>
-                    <div className="flex flex-col gap-1 mt-1 text-[11px] text-zinc-500">
+                    <div className="flex flex-col gap-0.5 mt-0.5 text-[10px] text-zinc-500">
                       <div>رقم العقد: <span className="font-mono text-zinc-800 font-semibold">{formValues.contractNo}</span></div>
                       <div>التاريخ: <span className="text-zinc-800 font-semibold">{formValues.date}</span></div>
                     </div>
                   </div>
                   <div className="text-left">
                     {settings?.logoBase64 ? (
-                      <div className="w-24 h-14 flex items-center justify-start">
+                      <div className="w-24 h-12 flex items-center justify-start">
                         <img 
                           src={settings.logoBase64} 
                           alt="Smart Nexus Logo" 
@@ -1264,26 +1197,29 @@ function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>)
                         />
                       </div>
                     ) : (
-                      <div className="font-bold text-base tracking-wider text-emerald-800">SMART NEXUS</div>
+                      <div className="font-bold text-sm tracking-wider text-emerald-800">
+                        {formValues.secondPartyName?.toUpperCase() || "SMART NEXUS"}
+                      </div>
                     )}
-                    <p className="text-[9px] text-zinc-400 mt-0.5">أنظمة التقنية المتقدمة</p>
+                    <p className="text-[8px] text-zinc-400 mt-0.5">
+                      {language === "ar" ? "التصميم الداخلي والخدمات الفنية" : "Interior Design & Technical Services"}
+                    </p>
                   </div>
                 </div>
 
                 {/* Parties Section */}
-                <div className="mb-4 space-y-1 bg-zinc-50 p-3 border border-zinc-200 rounded-lg">
-                  <p className="text-xs font-semibold mb-2 border-b border-zinc-200 pb-1 text-emerald-800">أطراف الاتفاقية:</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                <div className="mb-3 space-y-0.5 bg-zinc-50 p-2 border border-zinc-150 rounded-lg">
+                  <p className="text-[10px] font-bold text-emerald-800 mb-1">أطراف الاتفاقية:</p>
+                  <div className="grid grid-cols-2 gap-4 text-[10px] leading-snug">
                     {/* الطرف الأول */}
-                    <div className="space-y-1 leading-relaxed border-l border-zinc-200 pl-3">
+                    <div className="space-y-0.5 border-l border-zinc-200 pl-2">
                       <p className="font-bold text-zinc-800">الطرف الأول (العميل):</p>
                       <p><span className="text-zinc-500">الاسم:</span> <span className="font-semibold">{formValues.firstPartyName}</span></p>
                       <p><span className="text-zinc-500">الهاتف:</span> <span className="font-mono">{formValues.firstPartyPhone}</span></p>
                       <p><span className="text-zinc-500">العنوان:</span> <span>{formValues.firstPartyAddress}</span></p>
                     </div>
                     {/* الطرف الثاني */}
-                    <div className="space-y-1 leading-relaxed pr-3">
+                    <div className="space-y-0.5 pr-2">
                       <p className="font-bold text-zinc-800">الطرف الثاني (الشركة):</p>
                       <p><span className="text-zinc-500">الاسم:</span> <span className="font-semibold">{formValues.secondPartyName}</span></p>
                       <p><span className="text-zinc-500">الهاتف:</span> <span className="font-mono">{formValues.secondPartyPhone}</span></p>
@@ -1293,95 +1229,66 @@ function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>)
                 </div>
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-3.5 text-[10px] text-zinc-700 leading-relaxed text-justify">
-                  {page1Clauses.map((clause, index) => (
-                    <div key={index} className="space-y-1">
-                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[11px]">
-                        {clause.title}
-                      </h3>
-                      <div className="whitespace-pre-line text-[9.5px] leading-relaxed text-zinc-600 pr-3 font-sans">
-                        {clause.content}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Page 2 */}
-              <div 
-                id="contract-preview-page-2"
-                dir="rtl"
-                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area printable-area print:h-[296mm]"
-                style={{ boxSizing: "border-box" }}
-              >
-
-
-                {/* Clauses Section */}
-                <div className="space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-3">
-                  {page2Clauses.map((clause, index) => (
+                <div className="space-y-2 text-[9.5px] text-zinc-700 leading-normal text-justify pr-1 mb-4">
+                  {(watchedClauses || []).map((clause, index) => (
                     <div key={index} className="space-y-0.5">
-                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[10.5px]">
+                      <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-1.5 py-0.5 text-[10px]">
                         {clause.title}
                       </h3>
-                      <div className="whitespace-pre-line text-[9px] leading-snug text-zinc-600 pr-3 font-sans">
+                      <div className="whitespace-pre-line text-[9px] leading-relaxed text-zinc-650 pr-2 font-sans">
                         {clause.content}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Signatures Footer */}
-                <div className="border-t border-zinc-200 pt-3 mt-4">
-                  <div className="grid grid-cols-2 gap-8 text-xs">
-                    {/* الطرف الأول */}
-                    <div className="space-y-1.5">
-                      <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الأول (العميل)</p>
-                      <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartySignName}</span></p>
-                      <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.firstPartySignDate}</span></p>
-                      <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
-                        {formValues.firstPartySignature ? (
-                          <img 
-                            src={formValues.firstPartySignature} 
-                            alt="First Party Signature" 
-                            className="h-full object-contain z-10"
-                          />
-                        ) : (
-                          <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
-                        )}
+                {/* Signatures & Stamps Footer */}
+                <div className="border-t border-zinc-200 pt-3 mt-auto keep-together">
+                  <p className="text-[9px] font-bold text-zinc-400 mb-2 text-center tracking-wider uppercase">
+                    {language === "ar" ? "التوقيعات والاعتمادات" : "Signatures & Approvals"}
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* الطرف الأول - العميل */}
+                    <div className="space-y-1.5 text-center bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
+                      <p className="font-bold text-emerald-800 text-[10px] border-b border-zinc-150 pb-0.5">الطرف الأول (العميل)</p>
+                      <div className="text-[9px] text-right space-y-0.5">
+                        <p><span className="text-zinc-400">الاسم: </span><span className="font-semibold">{formValues.firstPartySignName || "___________________"}</span></p>
+                        <p><span className="text-zinc-400">التاريخ: </span><span className="font-semibold">{formValues.firstPartySignDate || "___________________"}</span></p>
+                      </div>
+                      <div className="flex gap-2 items-center justify-center mt-1">
+                        <div className="flex-1 h-12 border border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden">
+                          {formValues.firstPartySignature ? (
+                            <img src={formValues.firstPartySignature} alt="Signature" className="h-full w-full object-contain p-1" />
+                          ) : (
+                            <span className="text-[8px] text-zinc-300 italic">بانتظار التوقيع</span>
+                          )}
+                        </div>
                         {formValues.firstPartyStamp && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
-                            <img 
-                              src={formValues.firstPartyStamp} 
-                              alt="Client Stamp" 
-                              className="h-12 w-12 object-contain"
-                            />
+                          <div className="w-14 h-12 border border-dashed border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden p-0.5">
+                            <img src={formValues.firstPartyStamp} alt="Stamp" className="h-full object-contain opacity-75" />
                           </div>
                         )}
                       </div>
                     </div>
-                    
-                    {/* الطرف الثاني */}
-                    <div className="space-y-1.5">
-                      <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الثاني (الشركة)</p>
-                      <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartySignName}</span></p>
-                      <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.secondPartySignDate}</span></p>
-                      <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
-                        {formValues.secondPartySignature ? (
-                          <img 
-                            src={formValues.secondPartySignature} 
-                            alt="Second Party Signature" 
-                            className="h-full object-contain z-10"
-                          />
-                        ) : (
-                          <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
-                        )}
+
+                    {/* الطرف الثاني - الشركة */}
+                    <div className="space-y-1.5 text-center bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
+                      <p className="font-bold text-emerald-800 text-[10px] border-b border-zinc-150 pb-0.5">الطرف الثاني (الشركة)</p>
+                      <div className="text-[9px] text-right space-y-0.5">
+                        <p><span className="text-zinc-400">الاسم: </span><span className="font-semibold">{formValues.secondPartySignName || settings?.companyName || "___________________"}</span></p>
+                        <p><span className="text-zinc-400">التاريخ: </span><span className="font-semibold">{formValues.secondPartySignDate || "___________________"}</span></p>
+                      </div>
+                      <div className="flex gap-2 items-center justify-center mt-1">
+                        <div className="flex-1 h-12 border border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden">
+                          {formValues.secondPartySignature ? (
+                            <img src={formValues.secondPartySignature} alt="Signature" className="h-full w-full object-contain p-1" />
+                          ) : (
+                            <span className="text-[8px] text-zinc-300 italic">بانتظار التوقيع</span>
+                          )}
+                        </div>
                         {settings?.stampBase64 && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
-                            <img 
-                              src={settings.stampBase64} 
-                              alt="Company Stamp" 
-                              className="h-12 w-12 object-contain"
-                            />
+                          <div className="w-14 h-12 border border-dashed border-zinc-200 rounded-md flex items-center justify-center bg-white overflow-hidden p-0.5">
+                            <img src={settings.stampBase64} alt="Stamp" className="h-full object-contain opacity-75" />
                           </div>
                         )}
                       </div>
