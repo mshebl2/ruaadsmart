@@ -10,7 +10,8 @@ import {
   CheckCircle2,
   ShieldCheck,
   FileText,
-  PenTool
+  PenTool,
+  Upload
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
 import { saveContract, getContract, Contract, getSettings, Settings } from "@/lib/db";
@@ -34,6 +35,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
   const [signerName, setSignerName] = useState("");
   const [signDate, setSignDate] = useState("");
   const [signatureData, setSignatureData] = useState("");
+  const [firstPartyStamp, setFirstPartyStamp] = useState("");
 
   const previewRef = useRef<HTMLDivElement>(null);
   const sigRef = useRef<SignatureCanvas>(null);
@@ -49,6 +51,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
         if (contractData) {
           setContract(contractData);
           setSignerName(contractData.firstPartySignName || contractData.firstPartyName || "");
+          setFirstPartyStamp(contractData.firstPartyStamp || "");
           
           // Set signature date to today's date if not signed, else load signed date
           if (contractData.firstPartySignature) {
@@ -86,6 +89,26 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     }
   };
 
+  const handleStampUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert(language === "ar" ? "حجم الصورة كبير جداً، يرجى اختيار صورة أقل من 2 ميجابايت." : "Image size is too large. Please select an image under 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFirstPartyStamp(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearStamp = () => {
+    setFirstPartyStamp("");
+  };
+
   const handleClearSignature = () => {
     if (sigRef.current) {
       sigRef.current.clear();
@@ -112,6 +135,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
         firstPartySignName: signerName,
         firstPartySignDate: signDate,
         firstPartySignature: signatureData,
+        firstPartyStamp: firstPartyStamp || undefined,
         updatedAt: now
       };
 
@@ -424,10 +448,19 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                           <img 
                             src={signatureData} 
                             alt="First Party Signature" 
-                            className="h-full object-contain"
+                            className="h-full object-contain z-10"
                           />
                         ) : (
-                          <span className="text-[10px] text-zinc-400">بانتظار التوقيع</span>
+                          <span className="text-[10px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                        )}
+                        {firstPartyStamp && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
+                            <img 
+                              src={firstPartyStamp} 
+                              alt="Client Stamp" 
+                              className="h-16 w-16 object-contain"
+                            />
+                          </div>
                         )}
                       </div>
                     </div>
@@ -532,6 +565,67 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                   canvasProps={{ className: "w-full h-36" }}
                 />
               </div>
+            </div>
+
+            {/* Stamp / Logo Upload */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-zinc-400">
+                {language === "ar" ? "ختم أو شعار العميل (اختياري):" : "Client Stamp/Logo (Optional):"}
+              </label>
+              {!signed ? (
+                <div className="flex flex-col gap-2">
+                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-zinc-800 border-dashed rounded-lg cursor-pointer hover:bg-zinc-900/40 hover:border-zinc-700 transition-colors relative overflow-hidden">
+                    {firstPartyStamp ? (
+                      <>
+                        <img 
+                          src={firstPartyStamp} 
+                          alt="Stamp Preview" 
+                          className="h-full object-contain p-2"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            clearStamp();
+                          }}
+                          className="absolute top-1 left-1 bg-red-650/85 hover:bg-red-600 text-white rounded p-1 text-[10px] z-20 transition-colors"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center pt-2 pb-2">
+                        <Upload className="w-5 h-5 text-zinc-500 mb-1" />
+                        <p className="text-xs text-zinc-500">
+                          {language === "ar" ? "اضغط لرفع الختم/الشعار" : "Click to upload stamp/logo"}
+                        </p>
+                        <p className="text-[9px] text-zinc-600 mt-0.5">PNG, JPG (Max 2MB)</p>
+                      </div>
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleStampUpload}
+                      className="hidden" 
+                    />
+                  </label>
+                </div>
+              ) : (
+                firstPartyStamp ? (
+                  <div className="h-20 bg-zinc-900/60 border border-zinc-850 rounded-lg flex items-center justify-center p-2">
+                    <img 
+                      src={firstPartyStamp} 
+                      alt="Uploaded Client Stamp" 
+                      className="h-full object-contain opacity-70"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-zinc-650 italic">
+                    {language === "ar" ? "لم يتم إرفاق ختم للعميل" : "No client stamp uploaded"}
+                  </p>
+                )
+              )}
             </div>
           </div>
 

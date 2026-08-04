@@ -771,10 +771,19 @@ ${itemLines}
                       <img 
                         src={formValues.firstPartySignature} 
                         alt="First Party Signature" 
-                        className="h-full object-contain"
+                        className="h-full object-contain z-10"
                       />
                     ) : (
-                      <span className="text-[10px] text-zinc-400">بانتظار التوقيع</span>
+                      <span className="text-[10px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                    )}
+                    {formValues.firstPartyStamp && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
+                        <img 
+                          src={formValues.firstPartyStamp} 
+                          alt="Client Stamp" 
+                          className="h-16 w-16 object-contain"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1313,10 +1322,19 @@ ${itemLines}
                           <img 
                             src={formValues.firstPartySignature} 
                             alt="First Party Signature" 
-                            className="h-full object-contain"
+                            className="h-full object-contain z-10"
                           />
                         ) : (
-                          <span className="text-[10px] text-zinc-400">بانتظار التوقيع</span>
+                          <span className="text-[10px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                        )}
+                        {formValues.firstPartyStamp && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
+                            <img 
+                              src={formValues.firstPartyStamp} 
+                              alt="Client Stamp" 
+                              className="h-16 w-16 object-contain"
+                            />
+                          </div>
                         )}
                       </div>
                     </div>

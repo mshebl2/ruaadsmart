@@ -246,6 +246,7 @@ export interface Contract {
   totalCostWords: string;
   firstPartySignName: string;
   firstPartySignature?: string;
+  firstPartyStamp?: string;
   firstPartySignDate: string;
   secondPartySignName: string;
   secondPartySignature?: string;
