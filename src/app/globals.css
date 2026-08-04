@@ -3,6 +3,8 @@
 :root {
   --background: #09090b;
   --foreground: #fafafa;
+  --font-cairo: 'Cairo', sans-serif;
+  --font-inter: 'Inter', sans-serif;
 }
 
 @theme inline {
@@ -20,10 +22,14 @@ body {
 
 /* Prevent Arabic letter spacing issues */
 [dir="rtl"],
+[dir="rtl"] *,
 .font-arabic,
+.font-arabic *,
 #contract-preview-page,
-#certificate-preview-page {
-  letter-spacing: normal !important;
+#contract-preview-page *,
+#certificate-preview-page,
+#certificate-preview-page * {
+  letter-spacing: 0 !important;
   word-spacing: normal !important;
 }
 

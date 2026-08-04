@@ -365,6 +365,10 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
             ${fontLinks}
             <style>
               ${cssStyles}
+              :root {
+                --font-cairo: 'Cairo', sans-serif !important;
+                --font-inter: 'Inter', sans-serif !important;
+              }
               body {
                 background-color: white !important;
                 color: black !important;
@@ -372,6 +376,11 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                 padding: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+              }
+              body, #receipt-preview-page, .font-arabic, [dir="rtl"], [dir="rtl"] * {
+                font-family: 'Cairo', 'Inter', sans-serif !important;
+                letter-spacing: 0 !important;
+                word-spacing: normal !important;
               }
               #receipt-preview-page {
                 zoom: 1 !important;

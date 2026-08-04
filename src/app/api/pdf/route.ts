@@ -15,10 +15,12 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         html: html,
         apiKey: 'public', // General public key for conversions
+        waitFor: 2,
         params: { 
           format: 'A4', 
           printBackground: true,
-          margin: { top: '10mm', bottom: '10mm', left: '10mm', right: '10mm' }
+          margin: { top: '10mm', bottom: '10mm', left: '10mm', right: '10mm' },
+          waitFor: 2
         }
       }),
     });

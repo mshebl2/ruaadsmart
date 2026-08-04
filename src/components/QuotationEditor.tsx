@@ -626,6 +626,10 @@ ${itemLines}
             ${fontLinks}
             <style>
               ${cssStyles}
+              :root {
+                --font-cairo: 'Cairo', sans-serif !important;
+                --font-inter: 'Inter', sans-serif !important;
+              }
               body {
                 background-color: white !important;
                 color: black !important;
@@ -633,6 +637,11 @@ ${itemLines}
                 padding: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+              }
+              body, #quotation-page-1, #quotation-page-2, .pdf-preview-container, .font-arabic, [dir="rtl"], [dir="rtl"] * {
+                font-family: 'Cairo', 'Inter', sans-serif !important;
+                letter-spacing: 0 !important;
+                word-spacing: normal !important;
               }
               #quotation-page-1, #quotation-page-2, .pdf-preview-container {
                 zoom: 1 !important;
@@ -728,6 +737,10 @@ ${itemLines}
             ${fontLinks}
             <style>
               ${cssStyles}
+              :root {
+                --font-cairo: 'Cairo', sans-serif !important;
+                --font-inter: 'Inter', sans-serif !important;
+              }
               body {
                 background-color: white !important;
                 color: black !important;
@@ -735,6 +748,11 @@ ${itemLines}
                 padding: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+              }
+              body, #company-costing-page, .pdf-preview-container, .font-arabic, [dir="rtl"], [dir="rtl"] * {
+                font-family: 'Cairo', 'Inter', sans-serif !important;
+                letter-spacing: 0 !important;
+                word-spacing: normal !important;
               }
               #company-costing-page, .pdf-preview-container {
                 zoom: 1 !important;
