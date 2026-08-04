@@ -16,7 +16,8 @@ import {
   RotateCcw,
   Plus,
   Trash2,
-  PenTool
+  PenTool,
+  Link2
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
 import { saveContract, getContract, Contract, ContractClause, getSettings, Settings, getQuotation } from "@/lib/db";
@@ -624,6 +625,16 @@ ${itemLines}
     }
   };
 
+  const handleCopySignLink = () => {
+    if (!id || id === "new") {
+      alert(language === "ar" ? "يرجى حفظ العقد أولاً لتتمكن من مشاركة رابط التوقيع" : "Please save the contract first to copy the signature link.");
+      return;
+    }
+    const signLink = `${window.location.origin}/contract/${id}/sign`;
+    navigator.clipboard.writeText(signLink);
+    alert(language === "ar" ? "تم نسخ رابط توقيع العميل بنجاح!" : "Client signing link copied successfully!");
+  };
+
   const formValues = watch();
 
   if (loading || !isMounted) {
@@ -848,6 +859,14 @@ ${itemLines}
             >
               <Share2 className="w-4 h-4" />
             </button>
+            <button 
+              type="button"
+              onClick={handleCopySignLink}
+              className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 font-medium transition-all"
+              title={language === "ar" ? "نسخ رابط توقيع العميل" : "Copy Client Sign Link"}
+            >
+              <Link2 className="w-4 h-4 text-emerald-500" />
+            </button>
           </div>
         </div>
 
@@ -903,6 +922,14 @@ ${itemLines}
             >
               <Share2 className="w-3.5 h-3.5" />
               {t("share")}
+            </button>
+            <button 
+              type="button"
+              onClick={handleCopySignLink}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-850 border border-zinc-750 hover:bg-zinc-800 text-emerald-400 font-medium text-xs transition-all hover:scale-[1.02]"
+            >
+              <Link2 className="w-3.5 h-3.5 text-emerald-500" />
+              {language === "ar" ? "رابط توقيع العميل" : "Client Sign Link"}
             </button>
           </div>
         </div>
