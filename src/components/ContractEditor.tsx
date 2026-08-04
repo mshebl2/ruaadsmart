@@ -665,9 +665,7 @@ ${itemLines}
             className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] relative flex flex-col font-arabic pdf-preview-container"
             style={{ boxSizing: "border-box" }}
           >
-            {/* Decorative Corner Borders */}
-            <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
+
 
             {/* Legal Contract Header */}
             <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-6">
@@ -740,9 +738,7 @@ ${itemLines}
             className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] relative flex flex-col font-arabic pdf-preview-container"
             style={{ boxSizing: "border-box" }}
           >
-            {/* Decorative Corner Borders */}
-            <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
+
 
             {/* Clauses Section */}
             <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify mb-4">
@@ -1216,9 +1212,7 @@ ${itemLines}
                 className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
                 style={{ boxSizing: "border-box" }}
               >
-                {/* Decorative Corner Borders */}
-                <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
+
 
                 {/* Legal Contract Header */}
                 <div className="flex items-start justify-between border-b border-zinc-200 pb-4 mb-6">
@@ -1291,9 +1285,7 @@ ${itemLines}
                 className="pdf-page w-[210mm] h-[296mm] bg-white text-zinc-900 p-[15mm] shadow-2xl relative flex flex-col font-arabic pdf-preview-container print-area"
                 style={{ boxSizing: "border-box" }}
               >
-                {/* Decorative Corner Borders */}
-                <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-emerald-600 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-emerald-600 pointer-events-none" />
+
 
                 {/* Clauses Section */}
                 <div className="flex-1 space-y-4 text-[11px] text-zinc-700 leading-relaxed text-justify mb-4">
