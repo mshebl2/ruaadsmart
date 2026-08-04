@@ -647,9 +647,21 @@ ${itemLines}
     );
   }
 
+function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>): number {
+  if (!clauses || clauses.length === 0) return 3;
+  const clause1Lines = clauses[0]?.content ? clauses[0].content.split('\n').length : 4;
+  if (clause1Lines > 8) {
+    return 2;
+  } else if (clause1Lines > 4) {
+    return 3;
+  }
+  return 4;
+}
+
   if (isPrintMode) {
-    const page1Clauses = watchedClauses.slice(0, 4);
-    const page2Clauses = watchedClauses.slice(4);
+    const splitIndex = getClauseSplitIndex(watchedClauses || []);
+    const page1Clauses = watchedClauses.slice(0, splitIndex);
+    const page2Clauses = watchedClauses.slice(splitIndex);
 
     return (
       <div className="bg-white min-h-screen flex flex-col items-center justify-start p-0 m-0 w-full" style={{ direction: "ltr" }}>
@@ -741,7 +753,7 @@ ${itemLines}
 
 
             {/* Clauses Section */}
-            <div className="flex-1 space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-2">
+            <div className="space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-3">
               {page2Clauses.map((clause, index) => (
                 <div key={index} className="space-y-0.5">
                   <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[10.5px]">
@@ -755,14 +767,14 @@ ${itemLines}
             </div>
 
             {/* Signatures Footer */}
-            <div className="border-t border-zinc-200 pt-2 mt-auto">
+            <div className="border-t border-zinc-200 pt-3 mt-4">
               <div className="grid grid-cols-2 gap-8 text-xs">
                 {/* الطرف الأول */}
                 <div className="space-y-1.5">
                   <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الأول (العميل)</p>
                   <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartySignName}</span></p>
                   <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.firstPartySignDate}</span></p>
-                  <div className="h-12 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                  <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
                     {formValues.firstPartySignature ? (
                       <img 
                         src={formValues.firstPartySignature} 
@@ -770,7 +782,7 @@ ${itemLines}
                         className="h-full object-contain z-10"
                       />
                     ) : (
-                      <span className="text-[9px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                      <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
                     )}
                     {formValues.firstPartyStamp && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
@@ -789,7 +801,7 @@ ${itemLines}
                   <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الثاني (الشركة)</p>
                   <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartySignName}</span></p>
                   <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.secondPartySignDate}</span></p>
-                  <div className="h-12 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                  <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
                     {formValues.secondPartySignature ? (
                       <img 
                         src={formValues.secondPartySignature} 
@@ -797,7 +809,7 @@ ${itemLines}
                         className="h-full object-contain z-10"
                       />
                     ) : (
-                      <span className="text-[9px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                      <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
                     )}
                     {settings?.stampBase64 && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
@@ -818,8 +830,9 @@ ${itemLines}
     );
   }
 
-  const page1Clauses = watchedClauses.slice(0, 4);
-  const page2Clauses = watchedClauses.slice(4);
+  const splitIndex = getClauseSplitIndex(watchedClauses || []);
+  const page1Clauses = watchedClauses.slice(0, splitIndex);
+  const page2Clauses = watchedClauses.slice(splitIndex);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col main-layout-container">
@@ -1288,7 +1301,7 @@ ${itemLines}
 
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-2">
+                <div className="space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-3">
                   {page2Clauses.map((clause, index) => (
                     <div key={index} className="space-y-0.5">
                       <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[10.5px]">
@@ -1302,14 +1315,14 @@ ${itemLines}
                 </div>
 
                 {/* Signatures Footer */}
-                <div className="border-t border-zinc-200 pt-2 mt-auto">
+                <div className="border-t border-zinc-200 pt-3 mt-4">
                   <div className="grid grid-cols-2 gap-8 text-xs">
                     {/* الطرف الأول */}
                     <div className="space-y-1.5">
                       <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الأول (العميل)</p>
                       <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.firstPartySignName}</span></p>
                       <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.firstPartySignDate}</span></p>
-                      <div className="h-12 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                      <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
                         {formValues.firstPartySignature ? (
                           <img 
                             src={formValues.firstPartySignature} 
@@ -1317,7 +1330,7 @@ ${itemLines}
                             className="h-full object-contain z-10"
                           />
                         ) : (
-                          <span className="text-[9px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                          <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
                         )}
                         {formValues.firstPartyStamp && (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
@@ -1336,7 +1349,7 @@ ${itemLines}
                       <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الثاني (الشركة)</p>
                       <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{formValues.secondPartySignName}</span></p>
                       <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{formValues.secondPartySignDate}</span></p>
-                      <div className="h-12 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                      <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
                         {formValues.secondPartySignature ? (
                           <img 
                             src={formValues.secondPartySignature} 
@@ -1344,7 +1357,7 @@ ${itemLines}
                             className="h-full object-contain z-10"
                           />
                         ) : (
-                          <span className="text-[9px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                          <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
                         )}
                         {settings?.stampBase64 && (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">

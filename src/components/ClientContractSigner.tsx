@@ -14,11 +14,24 @@ import {
   Upload
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { saveContract, getContract, Contract, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 
 interface ClientContractSignerProps {
   id: string;
+}
+
+function getClauseSplitIndex(clauses: Array<{ title: string; content: string }>): number {
+  if (!clauses || clauses.length === 0) return 3;
+  const clause1Lines = clauses[0]?.content ? clauses[0].content.split('\n').length : 4;
+  if (clause1Lines > 8) {
+    return 2;
+  } else if (clause1Lines > 4) {
+    return 3;
+  }
+  return 4;
 }
 
 export default function ClientContractSigner({ id }: ClientContractSignerProps) {
@@ -157,108 +170,171 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     }
   };
 
+  // Canvas-based oklch→rgb converter for html2canvas compatibility
+  const makeColorConverter = (doc: Document) => {
+    const tmpCanvas = doc.createElement("canvas");
+    tmpCanvas.width = 1;
+    tmpCanvas.height = 1;
+    const ctx = tmpCanvas.getContext("2d");
+    return (color: string): string => {
+      if (!ctx) return "#000000";
+      try {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+        if (a === 0) return "rgba(0,0,0,0)";
+        return `rgb(${r},${g},${b})`;
+      } catch {
+        return "#000000";
+      }
+    };
+  };
+
+  const patchDocumentColors = (doc: Document) => {
+    const toRgb = makeColorConverter(doc);
+    doc.querySelectorAll("style").forEach((styleEl) => {
+      if (!styleEl.textContent) return;
+      if (styleEl.textContent.includes("oklch") || styleEl.textContent.includes("oklab") || styleEl.textContent.includes("lab(")) {
+        styleEl.textContent = styleEl.textContent
+          .replace(/oklch\([^)]+\)/g, (m) => toRgb(m))
+          .replace(/oklab\([^)]+\)/g, (m) => toRgb(m))
+          .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
+      }
+    });
+    doc.querySelectorAll("link[rel='stylesheet'], link[as='style']").forEach((l) => l.remove());
+  };
+
+  const bakeElementStyles = (origElement: HTMLElement, cloneElement: HTMLElement) => {
+    const toRgb = makeColorConverter(document);
+    const propsToCopy = [
+      "display", "position", "top", "right", "bottom", "left", "float", "clear",
+      "width", "height", "min-width", "min-height", "max-width", "max-height",
+      "margin-top", "margin-right", "margin-bottom", "margin-left",
+      "padding-top", "padding-right", "padding-bottom", "padding-left",
+      "box-sizing", "overflow", "overflow-x", "overflow-y", "z-index",
+      "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis",
+      "justify-content", "align-items", "align-content", "gap", "row-gap", "column-gap",
+      "grid-template-columns", "grid-template-rows", "grid-column", "grid-row", "grid-auto-flow",
+      "font-family", "font-size", "font-weight", "font-style", "line-height",
+      "text-align", "text-decoration", "direction",
+      "color", "background-color", "background-image", "background-position", "background-size", "background-repeat",
+      "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
+      "border-top-style", "border-right-style", "border-bottom-style", "border-left-style",
+      "border-top-left-radius", "border-top-right-radius", "border-bottom-left-radius", "border-bottom-right-radius",
+      "box-shadow", "opacity", "object-fit"
+    ];
+
+    const origEls = [origElement, ...Array.from(origElement.querySelectorAll("*"))];
+    const cloneEls = [cloneElement, ...Array.from(cloneElement.querySelectorAll("*"))];
+
+    origEls.forEach((orig, i) => {
+      const cloneEl = cloneEls[i];
+      if (!(orig instanceof HTMLElement) || !(cloneEl instanceof HTMLElement)) return;
+      const computed = window.getComputedStyle(orig);
+
+      propsToCopy.forEach((prop) => {
+        let val = computed.getPropertyValue(prop);
+        if (!val) return;
+
+        if (val.includes("oklch") || val.includes("oklab") || val.includes("lab(")) {
+          val = val
+            .replace(/oklch\([^)]+\)/g, (m) => toRgb(m))
+            .replace(/oklab\([^)]+\)/g, (m) => toRgb(m))
+            .replace(/\blab\([^)]+\)/g, (m) => toRgb(m));
+        }
+        cloneEl.style.setProperty(prop, val, "important");
+      });
+    });
+  };
+
+  const captureElementAsCanvas = async (element: HTMLDivElement): Promise<HTMLCanvasElement> => {
+    if (typeof document !== "undefined" && document.fonts) {
+      await document.fonts.ready;
+    }
+
+    const clone = element.cloneNode(true) as HTMLDivElement;
+    clone.style.position = "absolute";
+    clone.style.top = "0";
+    clone.style.left = "-9999px";
+    clone.style.setProperty("width", "210mm", "important");
+    clone.style.setProperty("min-width", "210mm", "important");
+    if (element.clientHeight > 0) {
+      clone.style.setProperty("height", `${element.clientHeight}px`, "important");
+      clone.style.setProperty("min-height", `${element.clientHeight}px`, "important");
+    } else {
+      clone.style.setProperty("height", "auto", "important");
+    }
+    clone.style.setProperty("zoom", "1", "important");
+    clone.style.setProperty("transform", "none", "important");
+    document.body.appendChild(clone);
+
+    const originalCssText = element.style.cssText;
+    element.style.setProperty("position", "fixed", "important");
+    element.style.setProperty("z-index", "99999", "important");
+    element.style.setProperty("top", "0", "important");
+    element.style.setProperty("left", "0", "important");
+    element.style.setProperty("width", "210mm", "important");
+    element.style.setProperty("min-width", "210mm", "important");
+    element.style.setProperty("transform", "none", "important");
+    element.style.setProperty("zoom", "1", "important");
+
+    bakeElementStyles(element, clone);
+
+    element.style.cssText = originalCssText;
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    try {
+      const options = {
+        scale: 2.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        onclone: (clonedDoc: Document) => {
+          patchDocumentColors(clonedDoc);
+        },
+      };
+      return await html2canvas(clone, options);
+    } finally {
+      document.body.removeChild(clone);
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!previewRef.current || !contract) return;
     setExporting(true);
+    document.body.classList.add("pdf-generating");
 
     try {
       const cNo = contract.contractNo || "Contract";
       const filename = `Contract_${cNo}`;
 
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.print();
-        setExporting(false);
-        return;
+      const canvas = await captureElementAsCanvas(previewRef.current);
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 5) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
 
-      // Gather active styles on the page
-      let cssStyles = "";
-      for (let i = 0; i < document.styleSheets.length; i++) {
-        try {
-          const sheet = document.styleSheets[i];
-          for (let j = 0; j < sheet.cssRules.length; j++) {
-            cssStyles += sheet.cssRules[j].cssText + "\n";
-          }
-        } catch (e) {
-          // Skip cross-origin styles
-        }
-      }
-
-      const fontLinks = `
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-      `;
-
-      const fullHtml = `
-        <!DOCTYPE html>
-        <html lang="ar" dir="rtl">
-          <head>
-            <meta charset="UTF-8">
-            <title>Contract</title>
-            ${fontLinks}
-            <style>
-              ${cssStyles}
-              :root {
-                --font-cairo: 'Cairo', sans-serif !important;
-                --font-inter: 'Inter', sans-serif !important;
-              }
-              body {
-                background-color: white !important;
-                color: black !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                zoom: 0.9 !important;
-              }
-              body, #contract-preview-wrapper, .font-arabic, [dir="rtl"], [dir="rtl"] * {
-                font-family: 'Cairo', 'Inter', sans-serif !important;
-                letter-spacing: 0 !important;
-                word-spacing: normal !important;
-              }
-              #contract-preview-wrapper,
-              #contract-preview-wrapper .pdf-page {
-                zoom: 0.9 !important;
-                width: 210mm !important;
-                min-width: 210mm !important;
-                transform: none !important;
-                box-shadow: none !important;
-                border: none !important;
-              }
-            </style>
-          </head>
-          <body>
-            <div style="width: 210mm; margin: 0 auto;">
-              ${previewRef.current.outerHTML}
-            </div>
-          </body>
-        </html>
-      `;
-
-      const response = await fetch('/api/pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html: fullHtml, filename }),
-      });
-
-      if (!response.ok) throw new Error('API PDF generation failed');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${filename}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
+      pdf.save(`${filename}.pdf`);
     } catch (error) {
       console.error("PDF download failed, falling back to window.print():", error);
       window.print();
     } finally {
+      document.body.classList.remove("pdf-generating");
       setExporting(false);
     }
   };
@@ -286,8 +362,9 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     );
   }
 
-  const page1Clauses = (contract.clauses || []).slice(0, 4);
-  const page2Clauses = (contract.clauses || []).slice(4);
+  const splitIndex = getClauseSplitIndex(contract.clauses || []);
+  const page1Clauses = (contract.clauses || []).slice(0, splitIndex);
+  const page2Clauses = (contract.clauses || []).slice(splitIndex);
 
   return (
     <div className="min-h-screen bg-slate-100 text-zinc-900 flex flex-col" dir="rtl">
@@ -420,7 +497,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
 
 
                 {/* Clauses Section */}
-                <div className="flex-1 space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-2">
+                <div className="space-y-2 text-[9.5px] text-zinc-700 leading-snug text-justify mb-3">
                   {page2Clauses.map((clause, index) => (
                     <div key={index} className="space-y-0.5">
                       <h3 className="font-bold text-emerald-800 border-r-2 border-emerald-600 pr-2 py-0.5 text-[10.5px]">
@@ -434,14 +511,14 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                 </div>
 
                 {/* Signatures Footer */}
-                <div className="border-t border-zinc-200 pt-2 mt-auto">
+                <div className="border-t border-zinc-200 pt-3 mt-4">
                   <div className="grid grid-cols-2 gap-8 text-xs">
                     {/* الطرف الأول */}
                     <div className="space-y-1.5">
                       <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الأول (العميل)</p>
                       <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{signerName}</span></p>
                       <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{signDate}</span></p>
-                      <div className="h-12 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                      <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
                         {signatureData ? (
                           <img 
                             src={signatureData} 
@@ -449,7 +526,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                             className="h-full object-contain z-10"
                           />
                         ) : (
-                          <span className="text-[9px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                          <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
                         )}
                         {firstPartyStamp && (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
@@ -468,7 +545,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                       <p className="font-bold text-emerald-800 border-b border-zinc-100 pb-0.5 text-center">الطرف الثاني (الشركة)</p>
                       <p className="text-[10px]"><span className="text-zinc-400">الاسم:</span> <span className="font-semibold">{contract.secondPartySignName}</span></p>
                       <p className="text-[10px]"><span className="text-zinc-400">التاريخ:</span> <span className="font-semibold">{contract.secondPartySignDate}</span></p>
-                      <div className="h-12 bg-zinc-50 border border-zinc-100 rounded flex items-center justify-center overflow-hidden p-1 relative">
+                      <div className="h-14 bg-zinc-50 border border-zinc-200 rounded-lg flex items-center justify-center overflow-hidden p-1 relative">
                         {contract.secondPartySignature ? (
                           <img 
                             src={contract.secondPartySignature} 
@@ -476,7 +553,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
                             className="h-full object-contain z-10"
                           />
                         ) : (
-                          <span className="text-[9px] text-zinc-400 z-10">بانتظار التوقيع</span>
+                          <span className="text-[9.5px] text-zinc-400 z-10">بانتظار التوقيع</span>
                         )}
                         {settings?.stampBase64 && (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 select-none">
