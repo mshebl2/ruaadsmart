@@ -308,6 +308,20 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
     await new Promise((resolve) => setTimeout(resolve, 300));
     try {
       const options = {
+        scale: 2.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        onclone: (clonedDoc: Document) => {
+          patchDocumentColors(clonedDoc);
+        },
+      };
+      return await html2canvas(clone, options);
+    } finally {
+      document.body.removeChild(clone);
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!previewRef.current || !contract) return;
     setExporting(true);

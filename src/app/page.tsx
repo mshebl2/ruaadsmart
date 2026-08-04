@@ -335,7 +335,6 @@ ${itemLines}
           setCertificates(certs);
         }
       }
-      }
 
       setQuotations(prev => prev.map(q => q.id === quote.id ? { ...q, status: newStatus } : q));
     } catch (err) {
