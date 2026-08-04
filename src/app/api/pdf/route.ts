@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import puppeteer from 'puppeteer';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+// Detect production / serverless environment
+const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
 
 export async function GET(request: Request) {
   let browser;
@@ -23,30 +25,52 @@ export async function GET(request: Request) {
     }
 
     // Determine the base URL for loading the page inside Puppeteer
-    // We default to the current host/origin requesting the PDF
     const baseUrl = origin;
     let documentUrl = `${baseUrl}/${type}/${id}?print=true`;
     if (version === 'company') {
       documentUrl += '&version=company';
     }
 
-    console.log(`Generating PDF for ${type} (${id}) at URL: ${documentUrl}`);
+    console.log(`Generating PDF for ${type} (${id}) at URL: ${documentUrl} (isProd: ${isProd})`);
 
     // Retrieve authentication session cookie to forward to Puppeteer
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('nexus_session');
 
-    // Launch headless Chromium
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-web-security',
-      ],
-    });
+    let puppeteer;
+    let launchOptions: any = {};
 
+    if (isProd) {
+      // Serverless (Vercel) Production setup
+      // Dynamically require packages to avoid bundling them in development
+      puppeteer = require('puppeteer-core');
+      const chromium = require('@sparticuz/chromium');
+
+      launchOptions = {
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+        extraPrefsRuntime: {
+          'websecurity': false
+        }
+      };
+    } else {
+      // Local Development setup
+      puppeteer = require('puppeteer');
+      launchOptions = {
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-web-security',
+        ],
+      };
+    }
+
+    // Launch the browser
+    browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
 
     // Set viewport to standard desktop screen
@@ -118,7 +142,7 @@ export async function GET(request: Request) {
     console.error('PDF generation error:', error);
     if (browser) {
       try {
-        await (browser as any).close();
+        await browser.close();
       } catch (err) {
         console.error('Error closing browser:', err);
       }
