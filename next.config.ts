@@ -4,9 +4,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  experimental: {
-    serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
-  },
+  serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
 };
 
 export default nextConfig;

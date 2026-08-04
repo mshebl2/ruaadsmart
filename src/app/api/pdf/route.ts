@@ -42,9 +42,11 @@ export async function GET(request: Request) {
 
     if (isProd) {
       // Serverless (Vercel) Production setup
-      // Dynamically require packages to avoid bundling them in development
-      puppeteer = require('puppeteer-core');
-      const chromium = require('@sparticuz/chromium');
+      // Dynamically import packages to avoid bundling them in development
+      const puppeteerModule = await import('puppeteer-core');
+      puppeteer = puppeteerModule.default || puppeteerModule;
+      const chromiumModule = await import('@sparticuz/chromium');
+      const chromium = chromiumModule.default || chromiumModule;
 
       launchOptions = {
         args: chromium.args,
@@ -57,7 +59,8 @@ export async function GET(request: Request) {
       };
     } else {
       // Local Development setup
-      puppeteer = require('puppeteer');
+      const puppeteerModule = await import('puppeteer');
+      puppeteer = puppeteerModule.default || puppeteerModule;
       launchOptions = {
         headless: true,
         args: [
