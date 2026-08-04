@@ -489,17 +489,96 @@ ${itemLines}
       if (id === "new") {
         router.push(`/contract/${docId}`);
       }
-      const pdf = await generatePDF();
-      if (pdf) {
-        const cNo = formValues.contractNo || "Contract";
-        const filename = `Contract_${cNo}.pdf`;
-        pdf.save(filename);
-      } else {
-        alert("Failed to generate PDF");
+
+      const cNo = formValues.contractNo || "Contract";
+      const filename = `Contract_${cNo}`;
+
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.print();
+        return;
       }
+
+      if (!previewRef.current) {
+        alert("Preview element not found");
+        return;
+      }
+
+      // Gather active styles on the page
+      let cssStyles = "";
+      for (let i = 0; i < document.styleSheets.length; i++) {
+        try {
+          const sheet = document.styleSheets[i];
+          for (let j = 0; j < sheet.cssRules.length; j++) {
+            cssStyles += sheet.cssRules[j].cssText + "\n";
+          }
+        } catch (e) {
+          // Skip cross-origin
+        }
+      }
+
+      const fontLinks = `
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+      `;
+
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8">
+            <title>Contract</title>
+            ${fontLinks}
+            <style>
+              ${cssStyles}
+              body {
+                background-color: white !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              #contract-preview-page {
+                zoom: 1 !important;
+                width: 210mm !important;
+                min-width: 210mm !important;
+                transform: none !important;
+                box-shadow: none !important;
+                border: none !important;
+              }
+            </style>
+          </head>
+          <body>
+            <div style="width: 210mm; margin: 0 auto;">
+              ${previewRef.current.innerHTML}
+            </div>
+          </body>
+        </html>
+      `;
+
+      const response = await fetch('/api/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: fullHtml, filename }),
+      });
+
+      if (!response.ok) throw new Error('API PDF generation failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
     } catch (error) {
-      console.error("PDF download failed:", error);
-      alert("Failed to download PDF");
+      console.error("PDF download failed, falling back to window.print():", error);
+      window.print();
     } finally {
       setExporting(false);
     }
