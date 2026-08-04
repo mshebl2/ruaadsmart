@@ -23,7 +23,7 @@ import {
   TrendingUp,
   X
 } from "lucide-react";
-import { saveQuotation, getQuotation, Quotation, QuotationItem, PurchaseInvoice, getSettings, Settings, saveContract, getAllContracts } from "@/lib/db";
+import { saveQuotation, getQuotation, getAllQuotations, Quotation, QuotationItem, PurchaseInvoice, getSettings, Settings, saveContract, getAllContracts } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -148,9 +148,31 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       }
       loadQuotation();
     } else {
-      const randomNo = "S" + String(Math.floor(Math.random() * 90000) + 10000);
-      setValue("quotationNo", randomNo);
-      setLoading(false);
+      async function generateSequentialNo() {
+        try {
+          const quotes = await getAllQuotations();
+          const prefix = "S";
+          let maxNum = 1000;
+          quotes.forEach(q => {
+            if (q.quotationNo && q.quotationNo.toUpperCase().startsWith(prefix)) {
+              const numPart = q.quotationNo.slice(prefix.length);
+              const num = parseInt(numPart, 10);
+              if (!isNaN(num) && num > maxNum) {
+                maxNum = num;
+              }
+            }
+          });
+          const nextNo = `${prefix}${maxNum + 1}`;
+          setValue("quotationNo", nextNo);
+        } catch (err) {
+          console.error("Error generating sequential quotation no:", err);
+          const randomNo = "S" + String(Math.floor(Math.random() * 90000) + 10000);
+          setValue("quotationNo", randomNo);
+        } finally {
+          setLoading(false);
+        }
+      }
+      generateSequentialNo();
     }
   }, [id, reset, setValue, router]);
 

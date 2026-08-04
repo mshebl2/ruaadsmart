@@ -20,7 +20,7 @@ import {
   Link2
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { saveContract, getContract, Contract, ContractClause, getSettings, Settings, getQuotation } from "@/lib/db";
+import { saveContract, getContract, getAllContracts, Contract, ContractClause, getSettings, Settings, getQuotation } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -250,8 +250,29 @@ ${itemLines}
             });
           }
         } else {
-          const randomNo = "C" + String(Math.floor(Math.random() * 90000) + 10000);
-          setValue("contractNo", randomNo);
+          async function generateSequentialContractNo() {
+            try {
+              const contracts = await getAllContracts();
+              let maxNum = 1000;
+              contracts.forEach(c => {
+                if (c.contractNo) {
+                  const match = c.contractNo.match(/\d+/);
+                  if (match) {
+                    const num = parseInt(match[0], 10);
+                    if (num > maxNum) {
+                      maxNum = num;
+                    }
+                  }
+                }
+              });
+              setValue("contractNo", `C-${maxNum + 1}`);
+            } catch (err) {
+              console.error("Error generating sequential contract no:", err);
+              const randomNo = "C-" + String(Math.floor(Math.random() * 9000) + 1000);
+              setValue("contractNo", randomNo);
+            }
+          }
+          generateSequentialContractNo();
         }
       } catch (err) {
         console.error("Error loading data:", err);

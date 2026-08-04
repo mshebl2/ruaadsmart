@@ -20,7 +20,7 @@ import {
   PenTool
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { saveCertificate, getCertificate, Certificate, CertificateItem, getSettings, Settings } from "@/lib/db";
+import { saveCertificate, getCertificate, getAllCertificates, Certificate, CertificateItem, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -154,7 +154,25 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
   };
 
   const saveDocHelper = async (data: Certificate): Promise<string> => {
-    const documentId = (id && id !== "new") ? id : `cert-${Date.now()}`;
+    let documentId = id || "new";
+    if (documentId === "new") {
+      try {
+        const certs = await getAllCertificates();
+        let maxNum = 1000;
+        certs.forEach(c => {
+          if (c.id && c.id.startsWith("cert-")) {
+            const numPart = c.id.slice("cert-".length);
+            const num = parseInt(numPart, 10);
+            if (!isNaN(num) && num > maxNum) {
+              maxNum = num;
+            }
+          }
+        });
+        documentId = `cert-${maxNum + 1}`;
+      } catch (err) {
+        documentId = `cert-${Date.now()}`;
+      }
+    }
     const now = new Date().toISOString();
     const updatedDoc: Certificate = {
       ...data,

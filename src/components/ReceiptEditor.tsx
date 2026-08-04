@@ -17,7 +17,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { saveReceipt, getReceipt, Receipt, getSettings, Settings } from "@/lib/db";
+import { saveReceipt, getReceipt, getAllReceipts, Receipt, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -103,9 +103,31 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
       }
       loadReceipt();
     } else {
-      const randomNo = "R" + String(Math.floor(Math.random() * 90000) + 10000);
-      setValue("receiptNo", randomNo);
-      setLoading(false);
+      async function generateSequentialReceiptNo() {
+        try {
+          const receipts = await getAllReceipts();
+          let maxNum = 1000;
+          receipts.forEach(r => {
+            if (r.receiptNo) {
+              const match = r.receiptNo.match(/\d+/);
+              if (match) {
+                const num = parseInt(match[0], 10);
+                if (num > maxNum) {
+                  maxNum = num;
+                }
+              }
+            }
+          });
+          setValue("receiptNo", `R-${maxNum + 1}`);
+        } catch (err) {
+          console.error("Error generating sequential receipt no:", err);
+          const randomNo = "R-" + String(Math.floor(Math.random() * 9000) + 1000);
+          setValue("receiptNo", randomNo);
+        } finally {
+          setLoading(false);
+        }
+      }
+      generateSequentialReceiptNo();
     }
   }, [id, reset, router, setValue]);
 
