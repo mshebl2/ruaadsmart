@@ -73,11 +73,13 @@ body {
   }
   
   .no-print,
-  .print-area.no-print {
+  .print-area.no-print,
+  .printable-area.no-print {
     display: none !important;
   }
   
-  .print-area {
+  .print-area,
+  .printable-area {
     display: block !important;
     width: 210mm !important;
     margin: 0 auto !important;

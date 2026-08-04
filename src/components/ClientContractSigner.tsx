@@ -403,7 +403,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
         {/* Right Pane: A4 Preview Container */}
-        <div className="flex-1 overflow-y-auto bg-slate-100 p-2 sm:p-6 md:p-8 flex justify-center print-area">
+        <div className="flex-1 overflow-y-auto bg-slate-100 p-2 sm:p-6 md:p-8 flex justify-center print-area printable-area">
           <div className="w-full max-w-[210mm] sm:w-[210mm] flex flex-col gap-6 print:gap-0">
             <div 
               ref={previewRef}
@@ -414,7 +414,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
               <div 
                 id="contract-preview-page-1"
                 dir="rtl"
-                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area print:h-[296mm]"
+                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area printable-area print:h-[296mm]"
                 style={{ boxSizing: "border-box" }}
               >
 
@@ -491,7 +491,7 @@ export default function ClientContractSigner({ id }: ClientContractSignerProps) 
               <div 
                 id="contract-preview-page-2"
                 dir="rtl"
-                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area print:h-[296mm]"
+                className="pdf-page w-full max-w-[210mm] sm:w-[210mm] bg-white text-zinc-900 p-4 sm:p-8 md:px-[12mm] md:pt-[10mm] md:pb-[8mm] shadow-md sm:shadow-2xl rounded-lg sm:rounded-none relative flex flex-col font-arabic pdf-preview-container print-area printable-area print:h-[296mm]"
                 style={{ boxSizing: "border-box" }}
               >
 

@@ -996,13 +996,13 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
         </div>
 
         {/* Right Side: A4 Live Preview Sheet */}
-        <div className={`flex-1 bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 print-area ${previewTab === "edit" ? "hidden sm:flex" : "flex"}`}>
+        <div className={`flex-1 bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 print-area printable-area ${previewTab === "edit" ? "hidden sm:flex" : "flex"}`}>
           
           <div 
             ref={previewRef}
             id="certificate-preview-page"
             dir="ltr"
-            className="w-[210mm] min-h-[297mm] h-auto bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-start gap-4 relative text-xs select-none text-left print-area"
+            className="w-[210mm] min-h-[297mm] h-auto bg-white text-zinc-900 shadow-2xl p-[15mm] flex flex-col justify-start gap-4 relative text-xs select-none text-left print-area printable-area"
             style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>

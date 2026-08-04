@@ -1811,7 +1811,7 @@ ${itemLines}
 
         {/* Right Side: A4 Live Preview Sheets (Client) */}
         <div className={`bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 ${
-          previewTab === "company-preview" ? "no-print" : "print-area"
+          previewTab === "company-preview" ? "no-print" : "print-area printable-area"
         } ${
           previewTab === "edit" 
             ? "hidden lg:flex lg:w-[48%] xl:w-[45%]" 
@@ -1825,7 +1825,7 @@ ${itemLines}
             ref={page1Ref}
             id="quotation-page-1"
             dir="ltr"
-            className="w-[210mm] min-h-[297mm] h-auto bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col justify-start gap-3 relative text-xs select-none text-left print-area"
+            className="w-[210mm] min-h-[297mm] h-auto bg-white text-zinc-900 shadow-2xl p-[12mm] flex flex-col justify-start gap-3 relative text-xs select-none text-left print-area printable-area"
             style={{ boxSizing: "border-box", direction: "ltr" }}
           >
             <div>
@@ -2077,7 +2077,7 @@ ${itemLines}
 
         {/* PAGE 3: COMPANY INTERNAL COSTING SHEET */}
         <div className={`bg-zinc-900 overflow-y-auto p-8 flex flex-col items-center gap-8 border-l border-zinc-800/80 ${
-          previewTab === "company-preview" ? "print-area" : "no-print"
+          previewTab === "company-preview" ? "print-area printable-area" : "no-print"
         } ${
           previewTab === "company-preview" ? "flex-1 flex" : "hidden"
         }`}>
