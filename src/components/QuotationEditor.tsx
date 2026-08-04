@@ -85,6 +85,9 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   const [isInvoiceMode, setIsInvoiceMode] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
 
+  const isPrintMode = searchParams.get("print") === "true";
+  const versionParam = searchParams.get("version");
+
   useEffect(() => {
     getSettings().then(setSettings).catch(console.error);
   }, []);
@@ -199,75 +202,72 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
     setValue("purchaseInvoices", watchedInvoices.filter((inv) => inv.id !== invoiceId));
   };
 
-  const onSubmit = async (data: Quotation) => {
-    setSaving(true);
-    try {
-      const documentId = (id && id !== "new") ? id : `quote-${Date.now()}`;
-      const now = new Date().toISOString();
-      
-      const processedItems = data.items.map(item => ({
-        ...item,
-        total: (item.qty || 0) * (item.unitPrice || 0)
-      }));
-      const calculatedSubtotal = processedItems.reduce((acc, item) => acc + item.total, 0);
+  const saveDocHelper = async (data: Quotation): Promise<string> => {
+    const documentId = (id && id !== "new") ? id : `quote-${Date.now()}`;
+    const now = new Date().toISOString();
+    
+    const processedItems = data.items.map(item => ({
+      ...item,
+      total: (item.qty || 0) * (item.unitPrice || 0)
+    }));
+    const calculatedSubtotal = processedItems.reduce((acc, item) => acc + item.total, 0);
 
-      const discountVal = Number(data.discount) || 0;
-      const discountAmount = calculatedSubtotal * (discountVal / 100);
-      const calculatedTotal = Math.max(0, calculatedSubtotal - discountAmount);
+    const discountVal = Number(data.discount) || 0;
+    const discountAmount = calculatedSubtotal * (discountVal / 100);
+    const calculatedTotal = Math.max(0, calculatedSubtotal - discountAmount);
 
-      const updatedDoc: Quotation = {
-        ...data,
-        items: processedItems,
-        id: documentId,
-        subtotal: calculatedSubtotal,
-        discount: discountVal,
-        total: calculatedTotal,
-        createdAt: data.createdAt || now,
-        updatedAt: now
-      };
-      await saveQuotation(updatedDoc);
-      router.refresh();
+    const updatedDoc: Quotation = {
+      ...data,
+      items: processedItems,
+      id: documentId,
+      subtotal: calculatedSubtotal,
+      discount: discountVal,
+      total: calculatedTotal,
+      createdAt: data.createdAt || now,
+      updatedAt: now
+    };
+    await saveQuotation(updatedDoc);
 
-      // If quotation is approved, check and auto-create contract
-      if (updatedDoc.status === 'approved') {
-        try {
-          const existingContracts = await getAllContracts();
-          const alreadyHasContract = existingContracts.some(c => c.quotationId === updatedDoc.id);
+    // If quotation is approved, check and auto-create contract
+    if (updatedDoc.status === 'approved') {
+      try {
+        const existingContracts = await getAllContracts();
+        const alreadyHasContract = existingContracts.some(c => c.quotationId === updatedDoc.id);
+        
+        if (!alreadyHasContract) {
+          const randomNo = "C" + String(Math.floor(Math.random() * 90000) + 10000);
           
-          if (!alreadyHasContract) {
-            const randomNo = "C" + String(Math.floor(Math.random() * 90000) + 10000);
-            
-            const itemLines = updatedDoc.items.map(
-              (item, i) => `${i + 1} - ${item.description.split('\n')[0]} (الكمية: ${item.qty} ${item.unit})`
-            ).join('\n');
+          const itemLines = updatedDoc.items.map(
+            (item, i) => `${i + 1} - ${item.description.split('\n')[0]} (الكمية: ${item.qty} ${item.unit})`
+          ).join('\n');
 
-            const isCctvOnly = updatedDoc.items.every(item => 
-              item.description.toLowerCase().includes('cctv') || 
-              item.description.toLowerCase().includes('camera') || 
-              item.description.includes('كاميرا')
-            );
-            const isSmartOnly = updatedDoc.items.every(item => 
-              !item.description.toLowerCase().includes('cctv') && 
-              !item.description.toLowerCase().includes('camera') && 
-              !item.description.includes('كاميرا')
-            );
-            
-            let generatedTitle = "عقد توريد وتركيب أنظمة كاميرات مراقبة والبيت الذكي";
-            if (isCctvOnly) generatedTitle = "عقد توريد وتركيب أنظمة كاميرات مراقبة";
-            else if (isSmartOnly) generatedTitle = "عقد توريد وتركيب أنظمة البيت الذكي (Smart Home)";
+          const isCctvOnly = updatedDoc.items.every(item => 
+            item.description.toLowerCase().includes('cctv') || 
+            item.description.toLowerCase().includes('camera') || 
+            item.description.includes('كاميرا')
+          );
+          const isSmartOnly = updatedDoc.items.every(item => 
+            !item.description.toLowerCase().includes('cctv') && 
+            !item.description.toLowerCase().includes('camera') && 
+            !item.description.includes('كاميرا')
+          );
+          
+          let generatedTitle = "عقد توريد وتركيب أنظمة كاميرات مراقبة والبيت الذكي";
+          if (isCctvOnly) generatedTitle = "عقد توريد وتركيب أنظمة كاميرات مراقبة";
+          else if (isSmartOnly) generatedTitle = "عقد توريد وتركيب أنظمة البيت الذكي (Smart Home)";
 
-            const contractClauses = [
-              {
-                title: "البند الأول: نطاق العمل والخدمات",
-                content: `1 - يتعهد الطرف الثاني بتوريد وتركيب وتشغيل نظام متكامل في موقع الطرف الأول وفقًا لعرض السعر رقم (${updatedDoc.quotationNo}) والبنود المذكورة أدناه:
+          const contractClauses = [
+            {
+              title: "البند الأول: نطاق العمل والخدمات",
+              content: `1 - يتعهد الطرف الثاني بتوريد وتركيب وتشغيل نظام متكامل في موقع الطرف الأول وفقًا لعرض السعر رقم (${updatedDoc.quotationNo}) والبنود المذكورة أدناه:
 ${itemLines}
 2 - يقوم الطرف الثاني بتدريب الطرف الأول أو من يرشحه على كيفية تشغيل النظام وإعداداته.
 3 - يقوم الطرف الثانى بضبط زوايا الرؤية، إعدادات التشغيل، وكشف الحركة والبرمجة بما يتوافق مع متطلبات العميل.
 4 - يقوم الطرف الثانى بتوصيل وتهيئة الأجهزة بالشبكة الداخلية أو الإنترنت وضمان التشغيل الكامل للنظام.`
-              },
-              {
-                title: "البند الثاني: التكاليف وطريقة الدفع",
-                content: `1. التكلفة الإجمالية:
+            },
+            {
+              title: "البند الثاني: التكاليف وطريقة الدفع",
+              content: `1. التكلفة الإجمالية:
 تبلغ قيمة العقد الإجمالية (${updatedDoc.total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} درهم إماراتي) شاملة توريد المعدات والتركيب والتشغيل.
 2. جدول الدفع:
 - 30% مقدّم عند توقيع العقد.
@@ -276,28 +276,28 @@ ${itemLines}
 - 10% عند تجربة النظام والتشغيل بنجاح.
 3. الضرائب والرسوم:
 يتحمل الطرف الأول أية ضرائب أو رسوم حكومية أو بلدية تتعلق بتنفيذ العقد.`
-              },
-              {
-                title: "البند الثالث: الضمان والصيانة",
-                content: `1. مدة الضمان:
+            },
+            {
+              title: "البند الثالث: الضمان والصيانة",
+              content: `1. مدة الضمان:
 يضمن الطرف الثاني المعدات لمدة 3 سنوات من تاريخ التسليم النهائي.
 2. شروط الضمان:
 يشمل الضمان إصلاح أو استبدال أي قطعة بها عيب مصنعي دون أي تكلفة إضافية.
 3. خدمات ما بعد البيع:
 يقدم الطرف الثاني خدمات الصيانة الدورية عند الطلب، مقابل رسوم يتم الاتفاق عليها لاحقًا (إن وجدت).`
-              },
-              {
-                title: "البند الرابع: مدة العقد",
-                content: `1. مدة التنفيذ:
+            },
+            {
+              title: "البند الرابع: مدة العقد",
+              content: `1. مدة التنفيذ:
 مدة تنفيذ الأعمال هي 4 شهور تبدأ من تاريخ استلام الدفعة المقدمة أو أمر المباشرة بالعمل.
 2. مدة الضمان:
 تسري فترة الضمان بعد التسليم النهائي.
 3. التجديد:
 يجوز للطرفين تجديد العقد بناءً على اتفاق خطي بينهما.`
-              },
-              {
-                title: "البند الخامس: التزامات الأطراف",
-                content: `التزامات الشركة (الطرف الثاني):
+            },
+            {
+              title: "البند الخامس: التزامات الأطراف",
+              content: `التزامات الشركة (الطرف الثاني):
 - توريد معدات جديدة وأصلية مطابقة للمواصفات.
 - تنفيذ التركيب من خلال فنيين مختصين.
 - تسليم النظام بعد التشغيل الكامل والتأكد من كفاءة الأداء.
@@ -307,62 +307,69 @@ ${itemLines}
 - تهيئة موقع التركيب وتوفير مصادر الكهرباء والإنترنت.
 - تسهيل دخول الفنيين إلى الموقع في أوقات العمل.
 - الالتزام بسداد الدفعات في المواعيد المحددة.`
-              },
-              {
-                title: "البند السادس: شروط الإنهاء",
-                content: `1. يحق لأي طرف إنهاء العقد إذا أخل الطرف الآخر بأي من التزاماته بعد إشعاره خطيًا ومنحه مهلة (7) أيام لتصحيح الوضع.
+            },
+            {
+              title: "البند السادس: شروط الإنهاء",
+              content: `1. يحق لأي طرف إنهاء العقد إذا أخل الطرف الآخر بأي من التزاماته بعد إشعاره خطيًا ومنحه مهلة (7) أيام لتصحيح الوضع.
 2. في حال الإلغاء قبل بدء التنفيذ، يتم خصم التكاليف الفعلية التي تكبدها الطرف الثاني.
 3. في حال الإنهاء بعد التنفيذ، لا يحق للطرف الأول استرداد المبالغ المدفوعة عن الأعمال المنجزة.`
-              },
-              {
-                title: "البند السابع: المسؤولية وخصوصية البيانات",
-                content: `1. حدود المسؤولية:
+            },
+            {
+              title: "البند السابع: المسؤولية وخصوصية البيانات",
+              content: `1. حدود المسؤولية:
 لا يتحمل الطرف الثاني أي مسؤولية عن سوء استخدام النظام من قبل العميل أو أطراف أخرى.
 2. خصوصية البيانات:
 يتعهد الطرف الثاني بالمحافظة على سرية جميع التسجيلات والبيانات، وعدم الاطلاع عليها أو نسخها أو مشاركتها إلا بإذن خطي من الطرف الأول.`
-              },
-              {
-                title: "البند الثامن: القانون الواجب التطبيق وحل النزاعات",
-                content: `يخضع هذا العقد لأحكام القوانين السارية في دولة الإمارات العربية المتحدة.
+            },
+            {
+              title: "البند الثامن: القانون الواجب التطبيق وحل النزاعات",
+              content: `يخضع هذا العقد لأحكام القوانين السارية في دولة الإمارات العربية المتحدة.
 فى حال نشوء أي نزاع، يتم حله وديًا، وإذا تعذر ذلك، يُحال إلى الجهات القضائية المختصة في الدولة.`
-              },
-              {
-                title: "البند التاسع: الموقع والتوقيع",
-                content: `حرر هذا العقد في إمارة دبى بتاريخ ${new Date().toLocaleDateString("en-GB")} من نسعتين أصليتين، بيد كل طرف نسخة للعمل بموجبها.`
-              }
-            ];
+            },
+            {
+              title: "البند التاسع: الموقع والتوقيع",
+              content: `حرر هذا العقد في إمارة دبى بتاريخ ${new Date().toLocaleDateString("en-GB")} من نسعتين أصليتين، بيد كل طرف نسخة للعمل بموجبها.`
+            }
+          ];
 
-            const newContract = {
-              id: `contract-${Date.now()}`,
-              contractNo: randomNo,
-              date: new Date().toLocaleDateString("en-GB"),
-              location: "دبى",
-              title: generatedTitle,
-              firstPartyName: updatedDoc.clientName,
-              firstPartyPhone: updatedDoc.contactNo || "",
-              firstPartyAddress: updatedDoc.locationArea || "",
-              secondPartyName: updatedDoc.companyName || "كامشيلد م.م.ح",
-              secondPartyAddress: updatedDoc.companyAddress || "37 شارع آل مكتوم, دبى",
-              secondPartyPhone: "0563063601",
-              totalCost: updatedDoc.total,
-              totalCostWords: "",
-              clauses: contractClauses,
-              firstPartySignName: "",
-              firstPartySignDate: new Date().toLocaleDateString("en-GB"),
-              secondPartySignName: "",
-              secondPartySignDate: new Date().toLocaleDateString("en-GB"),
-              createdAt: now,
-              updatedAt: now,
-              quotationId: updatedDoc.id
-            };
+          const newContract = {
+            id: `contract-${Date.now()}`,
+            contractNo: randomNo,
+            date: new Date().toLocaleDateString("en-GB"),
+            location: "دبى",
+            title: generatedTitle,
+            firstPartyName: updatedDoc.clientName,
+            firstPartyPhone: updatedDoc.contactNo || "",
+            firstPartyAddress: updatedDoc.locationArea || "",
+            secondPartyName: updatedDoc.companyName || "كامشيلد م.م.ح",
+            secondPartyAddress: updatedDoc.companyAddress || "37 شارع آل مكتوم, دبى",
+            secondPartyPhone: "0563063601",
+            totalCost: updatedDoc.total,
+            totalCostWords: "",
+            clauses: contractClauses,
+            firstPartySignName: "",
+            firstPartySignDate: new Date().toLocaleDateString("en-GB"),
+            secondPartySignName: "",
+            secondPartySignDate: new Date().toLocaleDateString("en-GB"),
+            createdAt: now,
+            updatedAt: now,
+            quotationId: updatedDoc.id
+          };
 
-            await saveContract(newContract);
-          }
-        } catch (contractErr) {
-          console.error("Failed to auto-generate contract:", contractErr);
+          await saveContract(newContract);
         }
+      } catch (contractErr) {
+        console.error("Failed to auto-generate contract:", contractErr);
       }
+    }
+    return documentId;
+  };
 
+  const onSubmit = async (data: Quotation) => {
+    setSaving(true);
+    try {
+      await saveDocHelper(data);
+      router.refresh();
       alert(language === "ar" ? "تم حفظ عرض السعر بنجاح!" : "Quotation saved successfully!");
       router.push("/");
     } catch (error) {
@@ -552,49 +559,39 @@ ${itemLines}
   };
 
   const handleDownloadPDF = async () => {
-    const pdf = await generatePDF();
-    if (pdf) {
-      const qNo = watch("quotationNo") || "Document";
-      const prefix = isInvoiceMode ? "Invoice" : "Quotation";
-      const fileName = `Smart_Nexus_${prefix}_${qNo}.pdf`;
-      const isStandalone = typeof window !== 'undefined' && (
-        window.matchMedia('(display-mode: standalone)').matches || 
-        (window.navigator as any).standalone
-      );
-      
-      if (isStandalone) {
-        const blob = pdf.output("blob");
-        const url = URL.createObjectURL(blob);
-        const newWindow = window.open(url, "_blank");
-        if (!newWindow) {
-          window.location.href = url;
-        }
-      } else {
-        pdf.save(fileName);
+    setExporting(true);
+    try {
+      const docId = await saveDocHelper(formValues);
+      if (id === "new") {
+        router.push(`/quotation/${docId}`);
       }
+      const qNo = formValues.quotationNo || "Document";
+      const prefix = isInvoiceMode ? "Invoice" : "Quotation";
+      const filename = `Smart_Nexus_${prefix}_${qNo}.pdf`;
+      window.location.href = `/api/pdf?type=quotation&id=${docId}&filename=${encodeURIComponent(filename)}`;
+    } catch (error) {
+      console.error("PDF download failed:", error);
+      alert("Failed to download PDF");
+    } finally {
+      setExporting(false);
     }
   };
 
   const handleDownloadCompanyPDF = async () => {
-    const pdf = await generateCompanyPDF();
-    if (pdf) {
-      const qNo = watch("quotationNo") || "Quotation";
-      const fileName = `Smart_Nexus_Company_Costing_${qNo}.pdf`;
-      const isStandalone = typeof window !== 'undefined' && (
-        window.matchMedia('(display-mode: standalone)').matches || 
-        (window.navigator as any).standalone
-      );
-      
-      if (isStandalone) {
-        const blob = pdf.output("blob");
-        const url = URL.createObjectURL(blob);
-        const newWindow = window.open(url, "_blank");
-        if (!newWindow) {
-          window.location.href = url;
-        }
-      } else {
-        pdf.save(fileName);
+    setExporting(true);
+    try {
+      const docId = await saveDocHelper(formValues);
+      if (id === "new") {
+        router.push(`/quotation/${docId}`);
       }
+      const qNo = formValues.quotationNo || "Quotation";
+      const filename = `Smart_Nexus_Company_Costing_${qNo}.pdf`;
+      window.location.href = `/api/pdf?type=quotation&id=${docId}&version=company&filename=${encodeURIComponent(filename)}`;
+    } catch (error) {
+      console.error("PDF download failed:", error);
+      alert("Failed to download PDF");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -637,6 +634,410 @@ ${itemLines}
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
         <p className="text-zinc-400 mt-2 text-sm">Loading quotation editor...</p>
+      </div>
+    );
+  }
+
+  if (isPrintMode) {
+    const showCompany = versionParam === 'company';
+    return (
+      <div className="bg-white min-h-screen flex flex-col items-center justify-start p-0 m-0 w-full" style={{ direction: "ltr" }}>
+        {showCompany ? (
+          <div 
+            ref={companyPageRef}
+            id="company-costing-page"
+            dir="ltr"
+            className="w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm] bg-white text-zinc-900 p-[15mm] flex flex-col gap-6 relative text-xs select-none text-left"
+            style={{ boxSizing: "border-box", direction: "ltr" }}
+          >
+            <div>
+              {/* Document Header */}
+              <div className="flex items-start justify-between border-b-[2px] border-zinc-200 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 flex items-center justify-center bg-white">
+                    <img 
+                      src={settings?.logoBase64 || "/logo.jpg"} 
+                      alt="Smart Nexus Logo" 
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-[#0F4C81] font-sans m-0 leading-tight">SMART NEXUS</h2>
+                    <p className="text-[9px] text-zinc-500 m-0 tracking-wider">INTERNAL COSTING & PROFIT SHEET</p>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className="bg-zinc-800 text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
+                    INTERNAL USE ONLY
+                  </div>
+                  <p className="text-[9px] text-red-500 font-bold mt-1 m-0">سند التكاليف والأرباح الداخلية للشركة</p>
+                </div>
+              </div>
+
+              {/* Quotation Identity Info */}
+              <div className="grid grid-cols-4 border border-zinc-200 mt-4 text-[10px]">
+                <div className="bg-zinc-50 p-2 font-bold border-r border-b border-zinc-200 text-[#0F4C81]">Quotation No.</div>
+                <div className="p-2 border-r border-b border-zinc-200 font-mono font-bold text-zinc-700">{formValues.quotationNo}</div>
+                <div className="bg-zinc-50 p-2 font-bold border-r border-b border-zinc-200 text-[#0F4C81]">Date</div>
+                <div className="p-2 border-b border-zinc-200 text-zinc-700">{formValues.date}</div>
+
+                <div className="bg-zinc-50 p-2 font-bold border-r border-zinc-200 text-[#0F4C81]">Client Name</div>
+                <div className="p-2 border-r border-zinc-200 text-zinc-800 font-semibold col-span-3">{formValues.clientName || "-"}</div>
+              </div>
+
+              {/* Cost & Profit Margin Analysis Card */}
+              <div className="mt-4 grid grid-cols-3 gap-4 border border-zinc-200 rounded-lg p-4" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                <div className="text-center p-2 border-r border-zinc-200">
+                  <span className="font-bold text-zinc-500 block uppercase text-[8px] mb-1">Total Client Price (Revenue)</span>
+                  <span className="text-zinc-900 font-extrabold text-sm font-mono">{totalRevenue.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED</span>
+                  {watchedDiscount > 0 && (
+                    <span className="block text-[7px] text-zinc-400 font-bold mt-0.5">(Discount: {watchedDiscount}% / -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED)</span>
+                  )}
+                </div>
+                <div className="text-center p-2 border-r border-zinc-200">
+                  <span className="font-bold text-zinc-500 block uppercase text-[8px] mb-1">Total Cost Price</span>
+                  <span className="text-zinc-900 font-extrabold text-sm font-mono">{totalCost.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED</span>
+                </div>
+                <div className="text-center p-2">
+                  <span className="font-bold text-zinc-500 block uppercase text-[8px] mb-1">Expected Profit Margin</span>
+                  <span className={`font-extrabold text-sm font-mono ${profitMargin >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                    {profitMargin.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED <br/>
+                    <span className="text-[10px] opacity-80">({marginPercentage.toFixed(1)}%)</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Cost Breakdown Table */}
+              <div className="mt-4">
+                <p className="font-bold text-zinc-800 mb-2 text-[10px] uppercase tracking-wider">Cost breakdown per line item:</p>
+                <table className="w-full border border-zinc-200 text-[9px] text-left border-collapse">
+                  <thead>
+                    <tr className="bg-zinc-800 text-white font-bold text-[9px]">
+                      <th className="p-2 w-8 text-center border-r border-zinc-700 font-bold">#</th>
+                      <th className="p-2 border-r border-zinc-700 font-bold">Description</th>
+                      <th className="p-2 w-12 text-center border-r border-zinc-700 font-bold">Qty</th>
+                      <th className="p-2 w-20 text-right border-r border-zinc-700 font-bold">Unit Cost (AED)</th>
+                      <th className="p-2 w-20 text-right border-r border-zinc-700 font-bold">Total Cost (AED)</th>
+                      <th className="p-2 w-20 text-right border-r border-zinc-700 font-bold">Unit Price (AED)</th>
+                      <th className="p-2 w-20 text-right border-r border-zinc-700 font-bold">Total Price (AED)</th>
+                      <th className="p-2 w-20 text-right font-bold">Profit Margin</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formValues.items.map((item, idx) => {
+                      const itemCost = (item.cost || 0) * (item.qty || 0);
+                      const itemRevenue = (item.unitPrice || 0) * (item.qty || 0);
+                      const itemProfit = itemRevenue - itemCost;
+                      const itemProfitPercent = itemRevenue > 0 ? (itemProfit / itemRevenue) * 100 : 0;
+                      
+                      return (
+                        <tr key={item.id || idx} className="border-b border-zinc-200 hover:bg-zinc-50/25">
+                          <td className="p-2 text-center border-r border-zinc-200 font-semibold text-zinc-500">{idx + 1}</td>
+                          <td className="p-2 border-r border-zinc-200 text-zinc-800 leading-normal truncate max-w-[150px]">
+                            {item.description ? item.description.split("\n")[0] : "-"}
+                          </td>
+                          <td className="p-2 text-center border-r border-zinc-200 text-zinc-700">{item.qty || 0}</td>
+                          <td className="p-2 text-right border-r border-zinc-200 text-zinc-600 font-mono">{(item.cost || 0).toLocaleString()}</td>
+                          <td className="p-2 text-right border-r border-zinc-200 text-zinc-700 font-mono">{itemCost.toLocaleString()}</td>
+                          <td className="p-2 text-right border-r border-zinc-200 text-zinc-600 font-mono">{(item.unitPrice || 0).toLocaleString()}</td>
+                          <td className="p-2 text-right border-r border-zinc-200 text-zinc-700 font-mono">{itemRevenue.toLocaleString()}</td>
+                          <td className={`p-2 text-right font-bold font-mono ${itemProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            {itemProfit.toLocaleString()} <span className="text-[8px] font-normal">({itemProfitPercent.toFixed(0)}%)</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Attached Invoices */}
+              {watchedInvoices.length > 0 && (
+                <div className="mt-4">
+                  <p className="font-bold text-zinc-800 mb-2 text-[10px] uppercase tracking-wider">Attached Purchase Invoices / فواتير الشراء المرفقة:</p>
+                  <table className="w-full border border-zinc-200 text-[9px] text-left border-collapse">
+                    <thead>
+                      <tr className="bg-zinc-100 text-zinc-700 font-bold">
+                        <th className="p-2 border-r border-zinc-200 font-bold">Invoice File Name</th>
+                        <th className="p-2 border-r border-zinc-200 text-center font-bold">Type</th>
+                        <th className="p-2 text-center font-bold">Uploaded At</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {watchedInvoices.map((inv) => (
+                        <tr key={inv.id} className="border-b border-zinc-200">
+                          <td className="p-2 border-r border-zinc-200 font-medium text-zinc-800">{inv.name}</td>
+                          <td className="p-2 border-r border-zinc-200 text-center text-zinc-500">{inv.fileType.split("/")[1]?.toUpperCase() || "PDF"}</td>
+                          <td className="p-2 text-center text-zinc-500">{inv.uploadedAt}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Verification Footer Statement */}
+            <div className="border-t border-zinc-200 pt-4 text-center mt-auto">
+              <p className="italic text-zinc-400 text-[8px] m-0">
+                Confidential Document. For internal accounting and profit audit purposes only.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div 
+            ref={page1Ref}
+            id="quotation-page-1"
+            dir="ltr"
+            className="w-[210mm] min-h-[297mm] h-auto bg-white text-zinc-900 p-[12mm] flex flex-col justify-start gap-3 relative text-xs select-none text-left print-area"
+            style={{ boxSizing: "border-box", direction: "ltr" }}
+          >
+            <div>
+              {/* Document Header */}
+              <div className="flex items-start justify-between border-b-[2px] border-[#0F4C81] pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center bg-white">
+                    <img 
+                      src={settings?.logoBase64 || "/logo.jpg"} 
+                      alt="Smart Nexus Logo" 
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-[#0F4C81] font-sans m-0 leading-tight">SMART NEXUS</h2>
+                    <p className="text-[8px] text-zinc-500 m-0 tracking-wider">Smart Nexus FZE LLC</p>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className={`text-white px-3 py-1 rounded font-bold text-xs tracking-wider inline-block ${isInvoiceMode ? "bg-emerald-600" : "bg-[#0F4C81]"}`}>
+                    {isInvoiceMode ? t("invoiceTitle") : "QUOTATION"}
+                  </div>
+                  <p className="text-[8px] text-zinc-500 mt-0.5 m-0">Smart Home & Automation Systems</p>
+                </div>
+              </div>
+
+              {/* Metadata Grid Table */}
+              <table className="w-full border border-zinc-200 mt-2 text-[9px] border-collapse" style={{ tableLayout: "fixed" }}>
+                <tbody>
+                  <tr className="border-b border-zinc-200">
+                    <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>{isInvoiceMode ? t("invoiceNo") : "Quotation No."}</td>
+                    <td className="p-1.5 border-r border-zinc-200 font-mono font-bold text-zinc-700" style={{ width: "25%" }}>{formValues.quotationNo}</td>
+                    <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>{isInvoiceMode ? "Invoice Date" : "Date"}</td>
+                    <td className="p-1.5 text-zinc-700" style={{ width: "25%" }}>{formValues.date}</td>
+                  </tr>
+                  <tr>
+                    <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>{isInvoiceMode ? "Due Date" : "Valid Until"}</td>
+                    <td className="p-1.5 border-r border-zinc-200 text-zinc-700" style={{ width: "25%" }}>{formValues.validUntil}</td>
+                    <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Prepared By</td>
+                    <td className="p-1.5 text-zinc-700" style={{ width: "25%" }}>{formValues.preparedBy}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Client Info Grid Table */}
+              <div className="mt-2">
+                <div className={`font-bold px-2 py-0.5 text-[9px] tracking-wider rounded-t border-t border-l border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.1)" : "rgba(15, 76, 129, 0.1)" }}>
+                  CLIENT INFORMATION
+                </div>
+                <table className="w-full border border-zinc-200 text-[9px] border-collapse" style={{ tableLayout: "fixed" }}>
+                  <tbody>
+                    <tr className="border-b border-zinc-200">
+                      <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Client Name</td>
+                      <td colSpan={3} className="p-1.5 font-semibold text-zinc-800" style={{ width: "75%" }}>{formValues.clientName || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-200">
+                      <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Email</td>
+                      <td className="p-1.5 border-r border-zinc-200 text-zinc-700" style={{ width: "25%" }}>{formValues.email || "-"}</td>
+                      <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Contact No.</td>
+                      <td className="p-1.5 text-zinc-700" style={{ width: "25%" }}>{formValues.contactNo || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Project Reference</td>
+                      <td className="p-1.5 border-r border-zinc-200 text-zinc-700 break-words" style={{ width: "25%" }}>{formValues.projectReference || "-"}</td>
+                      <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Location / Area</td>
+                      <td className="p-1.5 text-zinc-700 break-words" style={{ width: "25%" }}>{formValues.locationArea || "-"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Items Table */}
+              <div className="mt-2">
+                <table className="w-full border border-zinc-200 text-[8.5px] text-left border-collapse" style={{ tableLayout: "fixed", width: "100%" }}>
+                  <colgroup>
+                    <col style={{ width: "5%" }} />
+                    <col style={{ width: "55%" }} />
+                    <col style={{ width: "10%" }} />
+                    <col style={{ width: "15%" }} />
+                    <col style={{ width: "15%" }} />
+                  </colgroup>
+                  <thead>
+                    <tr className={`text-white font-bold text-[8.5px] ${isInvoiceMode ? "bg-emerald-600" : "bg-[#0F4C81]"}`}>
+                      <th className={`p-1 text-center border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "5%" }}>#</th>
+                      <th className={`p-1 border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "55%" }}>Description / Scope of Work</th>
+                      <th className={`p-1 text-center border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "10%" }}>Qty</th>
+                      <th className={`p-1 text-right border-r ${isInvoiceMode ? "border-[#047857]" : "border-[#0e4372]"}`} style={{ width: "15%" }}>Unit Price (AED)</th>
+                      <th className="p-1 text-right" style={{ width: "15%" }}>Total (AED)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formValues.items.map((item, idx) => (
+                      <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50/40">
+                        <td className="p-1 text-center border-r border-zinc-200 font-semibold text-zinc-500">{idx + 1}</td>
+                        <td className="p-1 border-r border-zinc-200 text-zinc-800 leading-tight whitespace-pre-line font-medium break-words">
+                          {item.description || "No description"}
+                        </td>
+                        <td className="p-1 text-center border-r border-zinc-200 text-zinc-700">
+                          {item.qty ? Number(item.qty).toFixed(2) : "0.00"} {item.unit || "Units"}
+                        </td>
+                        <td className="p-1 text-right border-r border-zinc-200 text-zinc-700 font-mono">
+                          {item.unitPrice ? Number(item.unitPrice).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"}
+                        </td>
+                        <td className="p-1 text-right text-zinc-900 font-bold font-mono">
+                          {((item.qty || 0) * (item.unitPrice || 0)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* Subtotal, Discount, TOTAL Rows */}
+                    <tr className="totals-block font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                      <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                      <td className={`p-1 text-right border-r border-zinc-200 font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>Subtotal:</td>
+                      <td className="p-1 text-right font-mono font-bold text-zinc-800">
+                        {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                      </td>
+                    </tr>
+                    {watchedDiscount > 0 && (
+                      <tr className="totals-block font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
+                        <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                        <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
+                        <td className="p-1 text-right font-mono font-bold text-red-650">
+                          -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                        </td>
+                      </tr>
+                    )}
+                    <tr className="totals-block font-bold text-zinc-900" style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.05)" : "rgba(15, 76, 129, 0.05)" }}>
+                      <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                      <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>TOTAL:</td>
+                      <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                        {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Terms and Conditions Section */}
+              <div className="terms-block mt-2 border border-zinc-200 rounded">
+                <div className={`px-2 py-0.5 font-bold text-[9px] border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: "rgba(250, 250, 250, 0.8)" }}>
+                  TERMS & CONDITIONS
+                </div>
+                <table className="w-full border-collapse text-[8.5px]" style={{ tableLayout: "fixed", width: "100%" }}>
+                  <colgroup>
+                    <col style={{ width: "50%" }} />
+                    <col style={{ width: "50%" }} />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td className="p-1.5 border-r border-zinc-200 align-top">
+                        <span className="font-bold text-zinc-500">Payment terms: </span>
+                        <span className="text-zinc-800 font-semibold">{formValues.paymentTerms || "Immediate Payment"}</span>
+                      </td>
+                      <td className="p-1.5 align-top">
+                        <span className="font-bold text-zinc-500">Terms & Conditions: </span>
+                        <a href={formValues.termsConditions} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline text-[8.5px]">
+                          {formValues.termsConditions}
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Signature Blocks */}
+              <table className="signature-block w-full mt-2 border border-zinc-200 text-[8.5px] border-collapse relative" style={{ tableLayout: "fixed", width: "100%" }}>
+                <colgroup>
+                  <col style={{ width: "50%" }} />
+                  <col style={{ width: "50%" }} />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <td className="w-[50%] p-2 border-r border-zinc-200 min-h-[75px] relative align-top" style={{ verticalAlign: "top" }}>
+                      <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                        Prepared & Approved By (Smart Nexus)
+                      </div>
+                      
+                      {/* Official Stamp Overlay */}
+                      <div className="absolute bottom-1 right-6 w-16 h-16 opacity-90 mix-blend-multiply pointer-events-none flex items-center justify-center">
+                        <img 
+                          src={settings?.stampBase64 || "/stamp.png"} 
+                          alt="Smart Nexus Stamp" 
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      
+                      <div className="pt-4 text-zinc-700 space-y-0.5 relative z-10">
+                        <div><span className="font-bold text-zinc-400">Name:</span> {formValues.preparedByName || "mostafa"}</div>
+                        <div><span className="font-bold text-zinc-400">Date:</span> {formValues.preparedByDate}</div>
+                      </div>
+                    </td>
+
+                    <td className="w-[50%] p-2 min-h-[75px] align-top" style={{ verticalAlign: "top" }}>
+                      <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                        Client Acceptance
+                      </div>
+                      
+                      <div className="border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-6 mb-1" />
+                      <div className="text-zinc-700 space-y-0.5 pt-1">
+                        <div><span className="font-bold text-zinc-400">Name:</span> {formValues.clientAcceptanceName || "..................................................."}</div>
+                        <div><span className="font-bold text-zinc-400">Date:</span> {formValues.clientAcceptanceDate || "..................................................."}</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Company & Bank Details */}
+              <div className="bank-details-block border border-zinc-200 mt-2 text-[8.5px] rounded overflow-hidden">
+                <div className={`font-bold px-2 py-0.5 border-b border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.1)" : "rgba(15, 76, 129, 0.1)" }}>
+                  COMPANY & BANK DETAILS
+                </div>
+                <div className="flex w-full border-b border-zinc-150">
+                  <div className="w-[50%] p-1 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Company Name</span>
+                    <span className="text-zinc-800 font-semibold text-[8.5px] leading-tight">{formValues.companyName || "Smart Nexus FZE LLC"}</span>
+                  </div>
+                  <div className="w-[50%] p-1">
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Bank Name & BIC</span>
+                    <span className="text-zinc-800 font-semibold text-[8.5px] leading-tight">{formValues.bankName || "Wio Bank"} - {formValues.bankBic || "WIOBAEADXXX"}</span>
+                  </div>
+                </div>
+                <div className="flex w-full border-b border-zinc-150">
+                  <div className="w-[50%] p-1 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Company Address</span>
+                    <span className="text-zinc-800 font-medium text-[8.5px] leading-tight">{formValues.companyAddress || "Abraj Al Mamzar , Block A F 106 , Al Mamzar , United Arab Emirates"}</span>
+                  </div>
+                  <div className="w-[50%] p-1">
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">IBAN</span>
+                    <span className="text-zinc-900 font-mono font-bold text-[8.5px] tracking-wider leading-tight">{formValues.bankIban || "AE590860000009974815140"}</span>
+                  </div>
+                </div>
+                <div className="flex w-full">
+                  <div className="w-[50%] p-1 border-r border-zinc-200">
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Email</span>
+                    <a href={`mailto:${formValues.companyEmail || "info@smartnexus.ae"}`} className="text-blue-600 font-semibold text-[8.5px] leading-tight">{formValues.companyEmail || "info@smartnexus.ae"}</a>
+                  </div>
+                  <div className="w-[50%] p-1">
+                    <span className="font-bold text-zinc-400 block uppercase text-[7.5px] mb-0.5">Bank Address</span>
+                    <span className="text-zinc-800 font-medium text-[8.5px] leading-tight">{formValues.bankAddress || "Etihad Airways Centre 5th Floor, Abu Dhabi, UAE"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

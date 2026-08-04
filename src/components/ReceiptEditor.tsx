@@ -51,6 +51,8 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
   const [settings, setSettings] = useState<Settings | null>(null);
 
+  const isPrintMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('print') === 'true';
+
   useEffect(() => {
     getSettings().then(setSettings).catch(console.error);
   }, []);
@@ -283,25 +285,34 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     }
   };
 
+  const saveCurrentDocument = async (): Promise<string> => {
+    const documentId = (id && id !== "new") ? id : `receipt-${Date.now()}`;
+    const now = new Date().toISOString();
+    const updatedDoc: Receipt = {
+      ...formValues,
+      amount: Number(formValues.amount) || 0,
+      id: documentId,
+      createdAt: formValues.createdAt || now,
+      updatedAt: now
+    };
+    await saveReceipt(updatedDoc);
+    return documentId;
+  };
+
   const handleDownloadPDF = async () => {
-    const pdf = await generatePDF();
-    if (pdf) {
-      const fileName = `Receipt_Voucher_${formValues.receiptNo}_${formValues.clientName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-      const isStandalone = typeof window !== 'undefined' && (
-        window.matchMedia('(display-mode: standalone)').matches || 
-        (window.navigator as any).standalone
-      );
-      
-      if (isStandalone) {
-        const blob = pdf.output("blob");
-        const url = URL.createObjectURL(blob);
-        const newWindow = window.open(url, "_blank");
-        if (!newWindow) {
-          window.location.href = url;
-        }
-      } else {
-        pdf.save(fileName);
+    setExporting(true);
+    try {
+      const docId = await saveCurrentDocument();
+      if (id === "new") {
+        router.push(`/receipt/${docId}`);
       }
+      const filename = `Receipt_Voucher_${formValues.receiptNo}_${formValues.clientName.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      window.location.href = `/api/pdf?type=receipt&id=${docId}&filename=${encodeURIComponent(filename)}`;
+    } catch (error) {
+      console.error("PDF download failed:", error);
+      alert("Failed to download PDF");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -314,6 +325,197 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
         <p className="text-zinc-400 mt-2 text-sm">{language === "ar" ? "جاري تحميل سند الاستلام..." : "Loading receipt editor..."}</p>
+      </div>
+    );
+  }
+
+  if (isPrintMode) {
+    return (
+      <div className="bg-white min-h-screen flex flex-col items-center justify-start p-0 m-0 w-full" style={{ direction: "ltr" }}>
+        <div 
+          ref={previewRef}
+          id="receipt-preview-page"
+          dir="ltr"
+          className="w-[210mm] min-h-[297mm] h-auto bg-white text-zinc-900 p-[12mm] flex flex-col justify-start gap-4 relative text-xs select-none text-left"
+          style={{ boxSizing: "border-box" }}
+        >
+          <div>
+            {/* Document Header */}
+            <div className="flex items-start justify-between border-b-[2px] border-[#0F4C81] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 flex items-center justify-center bg-white">
+                  <img 
+                    src={settings?.logoBase64 || "/logo.jpg"} 
+                    alt="Smart Nexus Logo" 
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-[#0F4C81] font-sans m-0 leading-tight">SMART NEXUS</h2>
+                  <p className="text-[9px] text-zinc-500 m-0 tracking-wider">Smart Nexus FZE LLC</p>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <div className="bg-[#0F4C81] text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
+                  RECEIPT VOUCHER
+                </div>
+                <p className="text-[10px] text-[#0F4C81] font-bold mt-1 m-0">سند قبض استلام مبالغ</p>
+              </div>
+            </div>
+
+            {/* Receipt Metadata */}
+            <table className="w-full border border-zinc-200 mt-4 text-[10px] border-collapse" style={{ tableLayout: "fixed" }}>
+              <tbody>
+                <tr className="border-b border-zinc-200">
+                  <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                    <div className="flex justify-between">
+                      <span>Receipt No.</span>
+                      <span className="font-arabic">رقم السند</span>
+                    </div>
+                  </td>
+                  <td className="p-2.5 border-r border-zinc-200 font-mono font-bold text-zinc-800" style={{ width: "25%" }}>{formValues.receiptNo}</td>
+                  <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                    <div className="flex justify-between">
+                      <span>Date</span>
+                      <span className="font-arabic">التاريخ</span>
+                    </div>
+                  </td>
+                  <td className="p-2.5 text-zinc-700 font-semibold" style={{ width: "25%" }}>{formValues.date}</td>
+                </tr>
+                <tr>
+                  <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                    <div className="flex justify-between">
+                      <span>Amount</span>
+                      <span className="font-arabic">المبلغ</span>
+                    </div>
+                  </td>
+                  <td className="p-2.5 border-r border-zinc-200 text-[#0F4C81] font-bold font-mono text-sm" style={{ backgroundColor: "rgba(239, 246, 255, 0.2)", width: "25%" }}>
+                    {formValues.amount ? Number(formValues.amount).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"} AED
+                  </td>
+                  <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                    <div className="flex justify-between">
+                      <span>Method</span>
+                      <span className="font-arabic">طريقة الدفع</span>
+                    </div>
+                  </td>
+                  <td className="p-2.5 text-zinc-700 capitalize font-bold" style={{ width: "25%" }}>
+                    {formValues.paymentMethod === "cash" && (language === "ar" ? "نقداً" : "Cash")}
+                    {formValues.paymentMethod === "bank" && (language === "ar" ? "تحويل بنكي" : `Bank: ${formValues.bankName || ""}`)}
+                    {formValues.paymentMethod === "cheque" && (language === "ar" ? `شيك: ${formValues.chequeNo || ""}` : `Cheque: ${formValues.chequeNo || ""}`)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Core Receipt content (Legal text style) */}
+            <div className="mt-4 border border-zinc-200 rounded-lg p-4 space-y-4 text-zinc-800 leading-relaxed text-justify text-[10px]">
+              <div>
+                <span className="font-bold text-[#0F4C81] inline-block w-36">
+                  Received From:
+                </span>
+                <span className="text-zinc-900 font-bold border-b border-zinc-300 pb-0.5 inline-block min-w-[280px]">
+                  {formValues.clientName || "______________________________________"}
+                </span>
+                <span className="font-arabic font-bold text-zinc-500 float-right">استلمنا من</span>
+              </div>
+
+              <div>
+                <span className="font-bold text-[#0F4C81] inline-block w-36">
+                  The Sum of:
+                </span>
+                <span className="text-zinc-800 font-bold border-b border-zinc-300 pb-0.5 inline-block min-w-[280px]">
+                  {formValues.amountInWords || "______________________________________"}
+                </span>
+                <span className="font-arabic font-bold text-zinc-500 float-right">مبلغ وقدره</span>
+              </div>
+
+              {formValues.paymentMethod !== "cash" && (
+                <div>
+                  <span className="font-bold text-[#0F4C81] inline-block w-36">
+                    {formValues.paymentMethod === "cheque" ? "Cheque No. & Bank:" : "Bank / Reference:"}
+                  </span>
+                  <span className="text-zinc-700 font-semibold border-b border-zinc-300 pb-0.5 inline-block min-w-[280px]">
+                    {formValues.paymentMethod === "cheque" ? (
+                      `${formValues.chequeNo || ""} - ${formValues.bankName || ""} (${formValues.chequeDate || ""})`
+                    ) : (
+                      formValues.bankName || "________________________"
+                    )}
+                  </span>
+                  <span className="font-arabic font-bold text-zinc-500 float-right">
+                    {formValues.paymentMethod === "cheque" ? "شيك رقم / بنك" : "تحويل بنكي / بنك"}
+                  </span>
+                </div>
+              )}
+
+              <div>
+                <span className="font-bold text-[#0F4C81] inline-block w-36">
+                  Being Payment for:
+                </span>
+                <span className="text-zinc-700 font-medium border-b border-zinc-300 pb-0.5 inline-block min-w-[280px] whitespace-normal">
+                  {formValues.receivedFor || "______________________________________"}
+                </span>
+                <span className="font-arabic font-bold text-zinc-500 float-right">وذلك عن قيمة</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Section: Signatures & Address info */}
+          <div>
+            {/* Signatures block */}
+            <div className="flex w-full justify-between gap-4 border border-zinc-200 rounded-lg p-3.5" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+              <div className="w-[48%] text-center flex flex-col justify-between min-h-[90px]">
+                <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider">
+                  Client Signature / Seal <br/>
+                  <span className="font-arabic text-zinc-400">توقيع / ختم العميل</span>
+                </p>
+                <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4" />
+              </div>
+              
+              <div className="w-[48%] text-center flex flex-col justify-between min-h-[90px] relative">
+                <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider relative z-10">
+                  Authorized Receiver Signature <br/>
+                  <span className="font-arabic text-zinc-400">توقيع / ختم المستلم المصرح له</span>
+                </p>
+                
+                {/* Official Stamp Overlay */}
+                <div className="absolute bottom-2 right-12 w-20 h-20 opacity-90 mix-blend-multiply pointer-events-none z-0 flex items-center justify-center">
+                  <img 
+                    src={settings?.stampBase64 || "/stamp.png"} 
+                    alt="Smart Nexus Stamp" 
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+
+                {formValues.integratorSignature ? (
+                  <div className="w-36 h-12 mx-auto mt-2 z-10 flex items-center justify-center">
+                    <img 
+                      src={formValues.integratorSignature} 
+                      alt="Receiver Signature" 
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4 z-10" />
+                )}
+                <p className="text-[9px] text-[#0F4C81] font-bold mt-1 relative z-10">{formValues.receivedBy || "Smart Nexus"}</p>
+              </div>
+            </div>
+
+            {/* Receipt Footer Contact */}
+            <div className="mt-4 border-t border-zinc-200 pt-3 text-center text-zinc-500 text-[8px] flex justify-between leading-normal">
+              <div>
+                <span className="font-bold">Address:</span> Abraj Al Mamzar, Block A F 106, Dubai, UAE
+              </div>
+              <div>
+                <span className="font-bold">Website:</span> smartnexus.ae
+              </div>
+              <div>
+                <span className="font-bold">Phone:</span> 00971551616298
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

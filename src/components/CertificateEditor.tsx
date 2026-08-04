@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -53,7 +53,7 @@ const DEFAULT_CERTIFICATE_VALUES = {
 };
 
 export default function CertificateEditor({ id }: CertificateEditorProps) {
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, language } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -61,6 +61,8 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
   const [exporting, setExporting] = useState(false);
   const [previewTab, setPreviewTab] = useState<"edit" | "preview">("edit");
   const [settings, setSettings] = useState<Settings | null>(null);
+
+  const isPrintMode = searchParams.get("print") === "true";
 
   useEffect(() => {
     getSettings().then(setSettings).catch(console.error);
@@ -149,18 +151,23 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
     }
   };
 
+  const saveDocHelper = async (data: Certificate): Promise<string> => {
+    const documentId = (id && id !== "new") ? id : `cert-${Date.now()}`;
+    const now = new Date().toISOString();
+    const updatedDoc: Certificate = {
+      ...data,
+      id: documentId,
+      createdAt: data.createdAt || now,
+      updatedAt: now
+    };
+    await saveCertificate(updatedDoc);
+    return documentId;
+  };
+
   const onSubmit = async (data: Certificate) => {
     setSaving(true);
     try {
-      const documentId = (id && id !== "new") ? id : `cert-${Date.now()}`;
-      const now = new Date().toISOString();
-      const updatedDoc: Certificate = {
-        ...data,
-        id: documentId,
-        createdAt: data.createdAt || now,
-        updatedAt: now
-      };
-      await saveCertificate(updatedDoc);
+      await saveDocHelper(data);
       router.refresh();
       alert(language === "ar" ? "تم حفظ شهادة إتمام العمل بنجاح!" : "Work Completion Certificate saved successfully!");
       router.push("/");
@@ -309,25 +316,20 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
   };
 
   const handleDownloadPDF = async () => {
-    const pdf = await generatePDF();
-    if (pdf) {
-      const proj = watch("project") || "Certificate";
-      const fileName = `Work_Completion_Certificate_${proj.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-      const isStandalone = typeof window !== 'undefined' && (
-        window.matchMedia('(display-mode: standalone)').matches || 
-        (window.navigator as any).standalone
-      );
-      
-      if (isStandalone) {
-        const blob = pdf.output("blob");
-        const url = URL.createObjectURL(blob);
-        const newWindow = window.open(url, "_blank");
-        if (!newWindow) {
-          window.location.href = url;
-        }
-      } else {
-        pdf.save(fileName);
+    setExporting(true);
+    try {
+      const docId = await saveDocHelper(formValues);
+      if (id === "new") {
+        router.push(`/certificate/${docId}`);
       }
+      const proj = formValues.project || "Certificate";
+      const filename = `Work_Completion_Certificate_${proj.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      window.location.href = `/api/pdf?type=certificate&id=${docId}&filename=${encodeURIComponent(filename)}`;
+    } catch (error) {
+      console.error("PDF download failed:", error);
+      alert("Failed to download PDF");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -369,6 +371,186 @@ export default function CertificateEditor({ id }: CertificateEditorProps) {
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
         <p className="text-zinc-400 mt-2 text-sm">Loading certificate editor...</p>
+      </div>
+    );
+  }
+
+  if (isPrintMode) {
+    return (
+      <div className="bg-white min-h-screen flex flex-col items-center justify-start p-0 m-0 w-full" style={{ direction: "ltr" }}>
+        <div 
+          ref={previewRef}
+          id="certificate-preview-page"
+          dir="ltr"
+          className="w-[210mm] min-h-[297mm] h-auto bg-white text-zinc-900 p-[15mm] flex flex-col justify-start gap-4 relative text-xs select-none text-left print-area"
+          style={{ boxSizing: "border-box", direction: "ltr" }}
+        >
+          <div>
+            {/* Logo Top Center */}
+            <div className="flex flex-col items-center justify-center pt-2">
+              <div className="w-28 h-28 flex items-center justify-center bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={settings?.logoBase64 || "/logo.jpg"} 
+                  alt="Smart Nexus Logo" 
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+              <h1 className="text-xl font-extrabold tracking-widest text-[#0F4C81] uppercase mt-4 mb-2">
+                Work Completion Certificate
+              </h1>
+              <div className="h-0.5 w-16 rounded" style={{ backgroundColor: "rgba(15, 76, 129, 0.8)" }} />
+            </div>
+
+            {/* Project & Tech Block */}
+            <div className="mt-8 space-y-3.5 text-zinc-800 leading-relaxed font-medium">
+              <div>
+                <span className="font-bold text-zinc-500 inline-block w-24">Project:</span>
+                <span className="text-zinc-900 font-semibold border-b border-zinc-200 pb-0.5 inline-block min-w-[200px]">
+                  {formValues.project || "Mr. Mohamed Villa 1 Al Aweer - Sharjah"}
+                </span>
+              </div>
+              <div>
+                <span className="font-bold text-zinc-500 inline-block w-24">System:</span>
+                <span className="text-zinc-900 font-semibold border-b border-zinc-200 pb-0.5 inline-block min-w-[200px]">
+                  {formValues.systemType || "Extra Low Voltage & Wireless Home Automation & Network"}
+                </span>
+              </div>
+              
+              <p className="mt-6 text-zinc-700 leading-relaxed text-justify">
+                {formValues.statement}
+              </p>
+            </div>
+
+            {/* Table of Handover Systems */}
+            <div className="mt-8">
+              <p className="font-bold text-zinc-800 mb-3 text-[10px]">
+                The EXTRA LOW POWER systems are handed over as follows:
+              </p>
+              
+              <table className="w-full border border-zinc-300 text-[10px] text-left border-collapse rounded overflow-hidden" style={{ tableLayout: "fixed" }}>
+                <thead>
+                  <tr className="bg-zinc-50 border-b border-zinc-300 font-bold text-zinc-700 text-[9px] uppercase tracking-wider">
+                    <th className="p-3 border-r border-zinc-300" style={{ width: "35%" }}>System</th>
+                    <th className="p-3 border-r border-zinc-300" style={{ width: "50%" }}>Remarks</th>
+                    <th className="p-3 text-center" style={{ width: "15%" }}>Done</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formValues.checklist.map((item) => (
+                    <tr key={item.id} className="border-b border-zinc-200">
+                      <td className="p-2.5 border-r border-zinc-200 font-bold text-[#0F4C81] break-words" style={{ width: "35%" }}>{item.system || "Unnamed System"}</td>
+                      <td className="p-2.5 border-r border-zinc-200 font-medium text-zinc-600 break-words" style={{ width: "50%" }}>{item.remarks || "-"}</td>
+                      <td className="p-2.5 text-center font-bold text-green-600 text-sm" style={{ width: "15%" }}>
+                        {item.done ? (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-50 text-green-600 border border-green-200">✓</span>
+                        ) : (
+                          <span className="text-zinc-300">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Warranty text */}
+            <p className="mt-6 font-bold text-zinc-900 border-l-2 border-[#0F4C81] pl-2 py-0.5">
+              {formValues.warrantyText || "Warranty starts from date of this certificate."}
+            </p>
+          </div>
+
+          {/* Bottom Signature Blocks & Footer */}
+          <div>
+            <div className="flex justify-between mt-8 gap-12 text-[10px] relative">
+              
+              {/* Left signature: client */}
+              <div className="w-[45%] border-t border-zinc-200 pt-3 relative">
+                <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">Company / Client Acceptance</span>
+                
+                <div className="h-16 w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
+                  {formValues.clientSignature ? (
+                    <img 
+                      src={formValues.clientSignature} 
+                      alt="Client Signature" 
+                      className="max-h-full max-w-full object-contain p-1"
+                    />
+                  ) : (
+                    <span className="text-zinc-300 italic text-[9px] pointer-events-none">Pending signature...</span>
+                  )}
+                </div>
+
+                <div className="mt-2 text-zinc-700 space-y-0.5">
+                  <div><span className="font-semibold text-zinc-500">Name:</span> {formValues.clientName || "_________________"}</div>
+                  <div><span className="font-semibold text-zinc-500">Date:</span> {formValues.clientDate || "_________________"}</div>
+                </div>
+              </div>
+
+              {/* Right signature: integrator */}
+              <div className="w-[45%] border-t border-zinc-200 pt-3 relative">
+                <span className="font-bold text-zinc-400 block uppercase text-[8px] tracking-wider mb-2">System Integrator: Smart Nexus</span>
+                
+                <div className="h-16 w-full border border-zinc-100 rounded flex items-center justify-center overflow-hidden z-10" style={{ backgroundColor: "rgba(250, 250, 250, 0.3)" }}>
+                  {formValues.integratorSignature ? (
+                    <img 
+                      src={formValues.integratorSignature} 
+                      alt="Integrator Signature" 
+                      className="max-h-full max-w-full object-contain p-1"
+                    />
+                  ) : (
+                    <span className="text-zinc-300 italic text-[9px] pointer-events-none">Pending signature...</span>
+                  )}
+                </div>
+                
+                {/* Official Stamp overlay */}
+                {settings?.stampBase64 && (
+                  <div className="absolute top-2 right-12 w-24 h-24 opacity-85 mix-blend-multiply pointer-events-none z-20 flex items-center justify-center">
+                    <img 
+                      src={settings.stampBase64} 
+                      alt="Smart Nexus Stamp" 
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                )}
+
+                <div className="mt-2 text-zinc-700 space-y-0.5 relative z-10">
+                  <div><span className="font-semibold text-zinc-500">Name:</span> {formValues.integratorName || "Smart Nexus"}</div>
+                  <div><span className="font-semibold text-zinc-500">Date:</span> {formValues.integratorDate || "_________________"}</div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom footer with details */}
+            <div className="border-t border-zinc-200 mt-12 pt-4 flex items-center justify-between text-[8px] text-zinc-500 uppercase tracking-wider font-semibold">
+              <div>
+                <span className="text-zinc-400 block">Address</span>
+                <span className="text-zinc-700">{formValues.address}</span>
+              </div>
+              <div className="text-center">
+                <span className="text-zinc-400 block">Website</span>
+                <a href={`https://${formValues.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 lowecase font-bold font-sans">
+                  {formValues.website}
+                </a>
+              </div>
+              <div className="text-right">
+                <span className="text-zinc-400 block">Phone</span>
+                <span className="text-zinc-700">{formValues.phone}</span>
+              </div>
+            </div>
+            
+            <div className="flex justify-center mt-3 opacity-20">
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img 
+                  src={settings?.logoBase64 || "/logo.jpg"} 
+                  alt="Smart Nexus Logo Dec" 
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     );
   }
