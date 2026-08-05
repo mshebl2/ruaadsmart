@@ -15,7 +15,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { getAllOfficialLetters, OfficialLetter, getSettings, Settings } from "@/lib/db";
+import { getAllOfficialLetters, getOfficialLetter, OfficialLetter, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -87,7 +87,7 @@ export default function OfficialLetterEditor({ id }: OfficialLetterEditorProps) 
     if (id && id !== "new") {
       async function loadLetter() {
         try {
-          const data = await getLetter(id!);
+          const data = await getOfficialLetter(id!);
           if (data) {
             reset(data);
             setTimeout(() => {
