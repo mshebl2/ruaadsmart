@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { saveQuotation, getQuotation, getAllQuotations, Quotation, QuotationItem, PurchaseInvoice, getSettings, Settings, saveContract, getAllContracts } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
+import { generateZatcaTLV } from "@/lib/zatca";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -38,6 +39,8 @@ const DEFAULT_QUOTATION_VALUES = {
   validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB"),
   preparedBy: "",
   status: "pending" as const,
+  invoiceType: "standard" as const,
+  clientTaxNumber: "",
   clientName: "",
   contactNo: "",
   email: "",
@@ -180,11 +183,17 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
   const watchedDiscount = Number(watch("discount")) || 0;
   const subtotal = watchedItems.reduce((acc, item) => acc + (item.qty || 0) * (item.unitPrice || 0), 0);
   const discountAmount = subtotal * (watchedDiscount / 100);
-  const total = Math.max(0, subtotal - discountAmount);
+  const beforeTaxTotal = Math.max(0, subtotal - discountAmount);
+
+  // ZATCA VAT Calculations (15% by default or from settings)
+  const isTaxInvoice = isInvoiceMode && watch("invoiceType") === "tax";
+  const taxRate = isTaxInvoice ? Number(settings?.taxRate ?? 15) : 0;
+  const taxAmount = isTaxInvoice ? beforeTaxTotal * (taxRate / 100) : 0;
+  const total = beforeTaxTotal + taxAmount;
 
   // Calculate internal cost and margins
   const totalCost = watchedItems.reduce((acc, item) => acc + ((item.cost || 0) * (item.qty || 0)), 0);
-  const totalRevenue = total;
+  const totalRevenue = beforeTaxTotal; // Revenue excluding VAT
   const profitMargin = totalRevenue - totalCost;
   const marginPercentage = totalRevenue > 0 ? (profitMargin / totalRevenue) * 100 : 0;
 
@@ -236,7 +245,12 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
 
     const discountVal = Number(data.discount) || 0;
     const discountAmount = calculatedSubtotal * (discountVal / 100);
-    const calculatedTotal = Math.max(0, calculatedSubtotal - discountAmount);
+    const beforeTaxTotal = Math.max(0, calculatedSubtotal - discountAmount);
+
+    const isTax = isInvoiceMode && data.invoiceType === "tax";
+    const currentTaxRate = isTax ? Number(settings?.taxRate ?? 15) : 0;
+    const currentTaxAmount = isTax ? beforeTaxTotal * (currentTaxRate / 100) : 0;
+    const calculatedTotal = beforeTaxTotal + currentTaxAmount;
 
     const updatedDoc: Quotation = {
       ...data,
@@ -245,6 +259,8 @@ export default function QuotationEditor({ id }: QuotationEditorProps) {
       subtotal: calculatedSubtotal,
       discount: discountVal,
       total: calculatedTotal,
+      invoiceType: data.invoiceType || "standard",
+      clientTaxNumber: data.clientTaxNumber || "",
       createdAt: data.createdAt || now,
       updatedAt: now
     };
@@ -1037,9 +1053,9 @@ ${itemLines}
                 
                 <div className="text-right">
                   <div className={`text-white px-3 py-1 rounded font-bold text-xs tracking-wider inline-block ${isInvoiceMode ? "bg-emerald-600" : "bg-[#0F4C81]"}`}>
-                    {isInvoiceMode ? t("invoiceTitle") : "QUOTATION"}
+                    {isInvoiceMode ? (isTaxInvoice ? (language === "ar" ? "فاتورة ضريبية مبسطة" : "SIMPLIFIED TAX INVOICE") : (language === "ar" ? "فاتورة" : "INVOICE")) : "QUOTATION"}
                   </div>
-                  <p className="text-[8px] text-zinc-500 mt-0.5 m-0">Smart Home & Automation Systems</p>
+                  <p className="text-[8px] text-zinc-500 mt-0.5 m-0">{isTaxInvoice ? (language === "ar" ? "هيئة الزكاة والضريبة والجمارك" : "ZATCA Compliant") : "Smart Home & Automation Systems"}</p>
                 </div>
               </div>
 
@@ -1072,6 +1088,12 @@ ${itemLines}
                       <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Client Name</td>
                       <td colSpan={3} className="p-1.5 font-semibold text-zinc-800" style={{ width: "75%" }}>{formValues.clientName || "-"}</td>
                     </tr>
+                    {isTaxInvoice && (
+                      <tr className="border-b border-zinc-200">
+                        <td className="bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 text-emerald-700" style={{ width: "25%" }}>Client VAT No.</td>
+                        <td colSpan={3} className="p-1.5 font-mono font-bold text-zinc-800" style={{ width: "75%" }}>{formValues.clientTaxNumber || "N/A"}</td>
+                      </tr>
+                    )}
                     <tr className="border-b border-zinc-200">
                       <td className={`bg-zinc-50 p-1.5 font-bold border-r border-zinc-200 ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`} style={{ width: "25%" }}>Email</td>
                       <td className="p-1.5 border-r border-zinc-200 text-zinc-700" style={{ width: "25%" }}>{formValues.email || "-"}</td>
@@ -1126,10 +1148,12 @@ ${itemLines}
                       </tr>
                     ))}
 
-                    {/* Subtotal, Discount, TOTAL Rows */}
+                    {/* Subtotal, Discount, VAT, TOTAL Rows */}
                     <tr className="totals-block font-bold text-zinc-700 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
                       <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                      <td className={`p-1 text-right border-r border-zinc-200 font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>Subtotal:</td>
+                      <td className={`p-1 text-right border-r border-zinc-200 font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                        {isTaxInvoice ? (language === "ar" ? "المجموع الفرعي (غير شامل الضريبة):" : "Subtotal (Excl. VAT):") : "Subtotal:"}
+                      </td>
                       <td className="p-1 text-right font-mono font-bold text-zinc-800">
                         {subtotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                       </td>
@@ -1137,15 +1161,41 @@ ${itemLines}
                     {watchedDiscount > 0 && (
                       <tr className="totals-block font-bold text-zinc-650 border-t border-zinc-200" style={{ backgroundColor: "rgba(254, 242, 242, 0.5)" }}>
                         <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                        <td className="p-1 text-right border-r border-zinc-200 text-red-650">Discount ({watchedDiscount}%):</td>
+                        <td className="p-1 text-right border-r border-zinc-200 text-red-650">
+                          {language === "ar" ? `الخصم (${watchedDiscount}%):` : `Discount (${watchedDiscount}%):`}
+                        </td>
                         <td className="p-1 text-right font-mono font-bold text-red-650">
                           -{(subtotal * (watchedDiscount / 100)).toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                         </td>
                       </tr>
                     )}
+                    {isTaxInvoice && (
+                      <>
+                        <tr className="totals-block font-bold text-zinc-750 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                          <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                          <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81] font-bold">
+                            {language === "ar" ? "الوعاء الضريبي:" : "Taxable Amount:"}
+                          </td>
+                          <td className="p-1 text-right font-mono font-bold text-zinc-800">
+                            {beforeTaxTotal.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                          </td>
+                        </tr>
+                        <tr className="totals-block font-bold text-zinc-750 border-t border-zinc-200" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
+                          <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
+                          <td className="p-1 text-right border-r border-zinc-200 text-[#0F4C81] font-bold">
+                            {language === "ar" ? `ضريبة القيمة المضافة (${taxRate}%):` : `VAT (${taxRate}%):`}
+                          </td>
+                          <td className="p-1 text-right font-mono font-bold text-zinc-800">
+                            {taxAmount.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
+                          </td>
+                        </tr>
+                      </>
+                    )}
                     <tr className="totals-block font-bold text-zinc-900" style={{ backgroundColor: isInvoiceMode ? "rgba(16, 185, 129, 0.05)" : "rgba(15, 76, 129, 0.05)" }}>
                       <td colSpan={3} className="p-1 border-r border-zinc-200">&nbsp;</td>
-                      <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>TOTAL:</td>
+                      <td className={`p-1 text-right border-r border-zinc-200 text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
+                        {isTaxInvoice ? (language === "ar" ? "الإجمالي شامل الضريبة:" : "TOTAL (Incl. VAT):") : "TOTAL:"}
+                      </td>
                       <td className={`p-1 text-right font-mono text-[10px] font-bold ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
                         {total.toLocaleString("en-AE", { minimumFractionDigits: 2 })} AED
                       </td>
@@ -1184,14 +1234,15 @@ ${itemLines}
               {/* Signature Blocks */}
               <table className="signature-block w-full mt-2 border border-zinc-200 text-[8.5px] border-collapse relative" style={{ tableLayout: "fixed", width: "100%" }}>
                 <colgroup>
-                  <col style={{ width: "50%" }} />
-                  <col style={{ width: "50%" }} />
+                  <col style={{ width: isTaxInvoice ? "40%" : "50%" }} />
+                  {isTaxInvoice && <col style={{ width: "20%" }} />}
+                  <col style={{ width: isTaxInvoice ? "40%" : "50%" }} />
                 </colgroup>
                 <tbody>
                   <tr>
-                    <td className="w-[50%] p-2 border-r border-zinc-200 min-h-[75px] relative align-top" style={{ verticalAlign: "top" }}>
+                    <td className="p-2 border-r border-zinc-200 min-h-[75px] relative align-top" style={{ verticalAlign: "top" }}>
                       <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
-                        Prepared & Approved By (Smart Nexus)
+                        Prepared & Approved By ({formValues.companyName || "Smart Nexus"})
                       </div>
                       
                       {/* Official Stamp Overlay */}
@@ -1209,7 +1260,30 @@ ${itemLines}
                       </div>
                     </td>
 
-                    <td className="w-[50%] p-2 min-h-[75px] align-top" style={{ verticalAlign: "top" }}>
+                    {isTaxInvoice && (
+                      <td className="p-2 border-r border-zinc-200 min-h-[75px] align-top text-center" style={{ verticalAlign: "top" }}>
+                        <div className="flex flex-col items-center justify-center h-full gap-1 pt-1">
+                          {(() => {
+                            const qrData = generateZatcaTLV(
+                              formValues.companyName || settings?.companyName || "Smart Nexus FZE LLC",
+                              settings?.taxNumber || "300000000000003",
+                              new Date().toISOString(),
+                              total.toFixed(2),
+                              taxAmount.toFixed(2)
+                            );
+                            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`;
+                            return (
+                              <>
+                                <img src={qrUrl} alt="ZATCA QR Code" className="w-14 h-14 border border-zinc-200 p-0.5 bg-white" />
+                                <span className="text-[6px] text-zinc-400 font-sans tracking-tight">ZATCA QR Code</span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </td>
+                    )}
+
+                    <td className="p-2 min-h-[75px] align-top" style={{ verticalAlign: "top" }}>
                       <div className={`font-bold border-b border-zinc-100 pb-0.5 uppercase tracking-wider ${isInvoiceMode ? "text-emerald-700" : "text-[#0F4C81]"}`}>
                         Client Acceptance
                       </div>
@@ -1458,9 +1532,36 @@ ${itemLines}
               </div>
             </div>
 
-            {/* Client Info Card */}
+             {/* Client Info Card */}
             <div className="bg-zinc-900/60 border border-zinc-850 p-5 rounded-xl space-y-4">
               <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider border-b border-zinc-800 pb-2">{t("clientInfo")}</h2>
+              
+              {isInvoiceMode && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-3 border-b border-zinc-800/50">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{language === "ar" ? "نوع الفاتورة" : "Invoice Type"}</label>
+                    <select
+                      {...register("invoiceType")}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none text-left"
+                    >
+                      <option value="standard">{language === "ar" ? "فاتورة عادية" : "Standard Plain Invoice"}</option>
+                      <option value="tax">{language === "ar" ? "فاتورة ضريبية مبسطة" : "Simplified Tax Invoice"}</option>
+                    </select>
+                  </div>
+                  {formValues.invoiceType === "tax" && (
+                    <div>
+                      <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{language === "ar" ? "الرقم الضريبي للعميل" : "Client Tax Number"}</label>
+                      <input 
+                        type="text" 
+                        {...register("clientTaxNumber")} 
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none"
+                        placeholder="e.g. 3xxxxxxxxxxxxxx"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{t("clientName")}</label>

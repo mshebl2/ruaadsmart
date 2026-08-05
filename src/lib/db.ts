@@ -49,6 +49,8 @@ export interface Quotation {
   companyEmail: string;
   purchaseInvoices?: PurchaseInvoice[];
   status?: 'pending' | 'approved' | 'executed' | 'rejected' | 'cancelled';
+  invoiceType?: 'standard' | 'tax';
+  clientTaxNumber?: string;
   createdAt: string;
   updatedAt: string;
 }
