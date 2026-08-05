@@ -308,7 +308,7 @@ export interface OfficialLetter {
   letterNo: string;
   date: string;
   addressedTo: string;
-  titleType: string;
+  letterType: string;
   customTitle?: string;
   content: string;
   senderName: string;
