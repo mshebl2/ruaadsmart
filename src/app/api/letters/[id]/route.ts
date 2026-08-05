@@ -6,12 +6,13 @@ export const revalidate = 0;
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await clientPromise;
     const db = client.db();
-    const letter = await db.collection('letters').findOne({ id: params.id });
+    const letter = await db.collection('letters').findOne({ id });
     if (!letter) {
       return NextResponse.json({ error: 'Letter not found' }, { status: 404 });
     }
@@ -28,12 +29,13 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await clientPromise;
     const db = client.db();
-    const result = await db.collection('letters').deleteOne({ id: params.id });
+    const result = await db.collection('letters').deleteOne({ id });
     return NextResponse.json({ success: true, result });
   } catch (e) {
     console.error('Error deleting letter:', e);
