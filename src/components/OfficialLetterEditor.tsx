@@ -192,7 +192,7 @@ export default function OfficialLetterEditor({ id }: OfficialLetterEditorProps) 
         router.push(`/letter/${docId}`);
       }
       
-      const titleText = formValues.letterType === "custom" ? formValues.customTitle : (LETTER_TYPES.find(t => t.value === formValues.letterType)?.labelEn || "Letter");
+      const titleText = (formValues.letterType === "custom" ? formValues.customTitle : (LETTER_TYPES.find(t => t.value === formValues.letterType)?.labelEn)) || "Letter";
       const filename = `Official_Letter_${formValues.letterNo || "Document"}_${titleText.replace(/[^a-zA-Z0-9]/g, "_")}`;
 
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
