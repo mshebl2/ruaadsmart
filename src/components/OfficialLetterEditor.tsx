@@ -180,7 +180,7 @@ export default function OfficialLetterEditor({ id }: OfficialLetterEditorProps) 
       createdAt: formValues.createdAt || now,
       updatedAt: now
     };
-    await saveLetter(updatedDoc);
+    await saveOfficialLetter(updatedDoc);
     return documentId;
   };
 
