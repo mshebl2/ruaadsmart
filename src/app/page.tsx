@@ -1194,7 +1194,15 @@ ${itemLines}
                     </thead>
                     <tbody className="divide-y divide-zinc-900 text-sm">
                       {filteredLetters.map((letter) => {
-                        const letterTypeObj = LETTER_TYPES.find(t => t.value === letter.letterType);
+                        const LETTER_TYPES_LIST = [
+                          { value: "experience", labelAr: "شهادة خبرة", labelEn: "Experience Certificate" },
+                          { value: "authorization", labelAr: "تفويض رسمي", labelEn: "Official Authorization" },
+                          { value: "salary", labelAr: "شهادة راتب", labelEn: "Salary Certificate" },
+                          { value: "general", labelAr: "خطاب لمن يهمه الأمر", labelEn: "To Whom It May Concern" },
+                          { value: "claim", labelAr: "مطالبة مالية", labelEn: "Financial Claim" },
+                          { value: "custom", labelAr: "عنوان مخصص", labelEn: "Custom Title" },
+                        ];
+                        const letterTypeObj = LETTER_TYPES_LIST.find(t => t.value === letter.letterType);
                         const displayType = language === "ar" ? letterTypeObj?.labelAr : letterTypeObj?.labelEn;
                         
                         return (
