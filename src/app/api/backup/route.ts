@@ -9,6 +9,8 @@ export async function GET() {
     const quotations = await db.collection('quotations').find({}).toArray();
     const certificates = await db.collection('certificates').find({}).toArray();
     const receipts = await db.collection('receipts').find({}).toArray();
+    const contracts = await db.collection('contracts').find({}).toArray();
+    const letters = await db.collection('letters').find({}).toArray();
     const settings = await db.collection('settings').findOne({ id: 'global_settings' });
 
     const backupData = {
@@ -17,6 +19,8 @@ export async function GET() {
       quotations,
       certificates,
       receipts,
+      contracts,
+      letters,
       settings: settings || {}
     };
 
@@ -72,6 +76,28 @@ export async function POST(request: Request) {
           const doc = { ...item };
           delete doc._id;
           await db.collection('receipts').replaceOne({ id: item.id }, doc, { upsert: true });
+        }
+      }
+    }
+
+    // Restore contracts if present
+    if (Array.isArray(backupData.contracts)) {
+      for (const item of backupData.contracts) {
+        if (item.id) {
+          const doc = { ...item };
+          delete doc._id;
+          await db.collection('contracts').replaceOne({ id: item.id }, doc, { upsert: true });
+        }
+      }
+    }
+
+    // Restore letters if present
+    if (Array.isArray(backupData.letters)) {
+      for (const item of backupData.letters) {
+        if (item.id) {
+          const doc = { ...item };
+          delete doc._id;
+          await db.collection('letters').replaceOne({ id: item.id }, doc, { upsert: true });
         }
       }
     }

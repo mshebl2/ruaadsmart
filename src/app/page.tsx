@@ -42,7 +42,10 @@ import {
   saveQuotation,
   saveContract,
   saveReceipt,
-  saveCertificate
+  saveCertificate,
+  getAllLetters,
+  deleteLetter,
+  OfficialLetter
 } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 
@@ -63,28 +66,31 @@ export default function Dashboard() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [letters, setLetters] = useState<OfficialLetter[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [statusChanging, setStatusChanging] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"quotations" | "invoices" | "contracts" | "certificates" | "receipts">("quotations");
+  const [activeTab, setActiveTab] = useState<"quotations" | "invoices" | "contracts" | "certificates" | "receipts" | "letters">("quotations");
   const [settingsLogo, setSettingsLogo] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [quotes, certs, recs, contrs, settings] = await Promise.all([
+        const [quotes, certs, recs, contrs, settingsVal, lettersVal] = await Promise.all([
           getAllQuotations(),
           getAllCertificates(),
           getAllReceipts(),
           getAllContracts(),
-          getSettings()
+          getSettings(),
+          getAllLetters()
         ]);
         setQuotations(quotes);
         setCertificates(certs);
         setReceipts(recs);
         setContracts(contrs);
-        if (settings?.logoBase64) setSettingsLogo(settings.logoBase64);
+        setLetters(lettersVal || []);
+        if (settingsVal?.logoBase64) setSettingsLogo(settingsVal.logoBase64);
       } catch (error) {
         console.error("Failed to load documents:", error);
         setLoadError(true);
@@ -124,6 +130,14 @@ export default function Dashboard() {
     if (confirm(language === "ar" ? "هل أنت متأكد من حذف هذا العقد؟" : "Are you sure you want to delete this contract?")) {
       await deleteContract(id);
       setContracts(contracts.filter((c) => c.id !== id));
+    }
+  };
+
+  const handleDeleteLetter = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (confirm(language === "ar" ? "هل أنت متأكد من حذف هذا الخطاب الرسمي؟" : "Are you sure you want to delete this official letter?")) {
+      await deleteLetter(id);
+      setLetters(letters.filter((l) => l.id !== id));
     }
   };
 
@@ -390,6 +404,13 @@ ${itemLines}
     c.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const filteredLetters = letters.filter((l) => 
+    l.addressedTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.letterNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (l.customTitle && l.customTitle.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    l.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 pb-12">
       {/* Premium Header Grid */}
@@ -471,6 +492,13 @@ ${itemLines}
             >
               <Plus className="w-4.5 h-4.5" />
               {t("newReceipt")}
+            </Link>
+            <Link 
+              href="/letter/new"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium text-xs transition-all duration-300 hover:scale-[1.02]"
+            >
+              <Plus className="w-4.5 h-4.5" />
+              {language === "ar" ? "خطاب رسمي جديد" : "New Letter"}
             </Link>
           </div>
         </div>
@@ -594,6 +622,16 @@ ${itemLines}
               }`}
             >
               {t("receiptsTab")} ({filteredReceipts.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("letters")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                activeTab === "letters" 
+                  ? "bg-zinc-800 text-white shadow-sm" 
+                  : "text-zinc-455 text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              {language === "ar" ? "الخطابات الرسمية" : "Official Letters"} ({filteredLetters.length})
             </button>
           </div>
         </div>
@@ -1120,6 +1158,89 @@ ${itemLines}
                           </td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            ) : (
+              // Letters Tab
+              filteredLetters.length === 0 ? (
+                <div className="text-center py-16 px-4">
+                  <FileText className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-zinc-300">{language === "ar" ? "لم يتم العثور على خطابات رسمية" : "No Letters Found"}</h3>
+                  <p className="text-zinc-500 text-sm mt-1 max-w-md mx-auto">
+                    {searchQuery ? "No letters match your search query." : "Create professional official letters and certificates."}
+                  </p>
+                  {!searchQuery && (
+                    <Link 
+                      href="/letter/new" 
+                      className="inline-flex items-center gap-2 mt-4 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-white transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> {language === "ar" ? "خطاب رسمي جديد" : "New Letter"}
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse" dir={isRtl ? "rtl" : "ltr"}>
+                    <thead>
+                      <tr className="border-b border-zinc-900 bg-zinc-900/40 text-xs text-zinc-400 font-semibold tracking-wider">
+                        <th className="py-4 px-6">{language === "ar" ? "رقم الخطاب" : "Letter No."}</th>
+                        <th className="py-4 px-6">{language === "ar" ? "نوع الخطاب" : "Letter Type"}</th>
+                        <th className="py-4 px-6">{language === "ar" ? "موجه إلى" : "Addressed To"}</th>
+                        <th className="py-4 px-6">{t("date")}</th>
+                        <th className="py-4 px-6 text-center">{t("actions")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-900 text-sm">
+                      {filteredLetters.map((letter) => {
+                        const letterTypeObj = LETTER_TYPES.find(t => t.value === letter.letterType);
+                        const displayType = language === "ar" ? letterTypeObj?.labelAr : letterTypeObj?.labelEn;
+                        
+                        return (
+                          <tr key={letter.id} className="hover:bg-zinc-900/30 transition-colors group">
+                            <td className="py-4 px-6 font-mono font-medium text-white group-hover:text-blue-400 transition-colors">
+                              {letter.letterNo}
+                            </td>
+                            <td className="py-4 px-6 text-zinc-200">
+                              {displayType}
+                            </td>
+                            <td className="py-4 px-6 text-zinc-300">
+                              {letter.addressedTo}
+                            </td>
+                            <td className="py-4 px-6 text-zinc-400">
+                              {letter.date}
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <a 
+                                  href={`/letter/${letter.id}?download=true`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-blue-400 hover:text-blue-300 hover:border-blue-700/80 hover:bg-blue-950/20 transition-all"
+                                  title={language === "ar" ? "تنزيل PDF" : "Download PDF"}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </a>
+                                <Link 
+                                  href={`/letter/${letter.id}`}
+                                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+                                  title={t("editTitle")}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Link>
+                                <button 
+                                  onClick={(e) => handleDeleteLetter(letter.id, e)}
+                                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-red-400/80 hover:text-red-400 hover:border-red-900/50 hover:bg-red-950/10 transition-all"
+                                  title={t("deleteTitle")}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

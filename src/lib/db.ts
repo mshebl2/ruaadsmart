@@ -163,6 +163,14 @@ export interface Receipt {
   integratorSignature?: string;
   createdAt: string;
   updatedAt: string;
+  // Tax Invoice Fields
+  invoiceType?: "standard" | "tax";
+  taxRate?: number;
+  taxAmount?: number;
+  subtotal?: number;
+  clientTaxNumber?: string;
+  zatcaQrCode?: string; // Base64 encoded TLV
+  uuid?: string;        // UUIDv4 for tamper resistance
 }
 
 // Receipt Operations
@@ -202,6 +210,9 @@ export interface Settings {
   companyName?: string;
   logoBase64?: string;
   stampBase64?: string;
+  taxRate?: number;    // e.g. 15 or 5
+  taxNumber?: string;  // e.g. 300000000000003
+  currency?: string;   // e.g. "SAR", "AED", "USD", "EGP"
 }
 
 export async function getSettings(): Promise<Settings> {
@@ -289,4 +300,52 @@ export async function deleteContract(id: string): Promise<void> {
     method: 'DELETE',
   });
   if (!res.ok) throw new Error('Failed to delete contract');
+}
+
+// Official Letters Operations
+export interface OfficialLetter {
+  id: string;
+  letterNo: string;
+  date: string;
+  addressedTo: string;
+  titleType: string;
+  customTitle?: string;
+  content: string;
+  senderName: string;
+  signatureBase64?: string;
+  stampBase64?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function saveOfficialLetter(letter: OfficialLetter): Promise<void> {
+  const res = await fetch('/api/letters', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(letter),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to save official letter');
+  }
+}
+
+export async function getOfficialLetter(id: string): Promise<OfficialLetter | null> {
+  const res = await fetch(`/api/letters/${id}`, { cache: 'no-store' });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('Failed to fetch official letter');
+  return res.json();
+}
+
+export async function getAllOfficialLetters(): Promise<OfficialLetter[]> {
+  const res = await fetch('/api/letters', { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch official letters');
+  return res.json();
+}
+
+export async function deleteOfficialLetter(id: string): Promise<void> {
+  const res = await fetch(`/api/letters/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete official letter');
 }

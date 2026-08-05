@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
 import { saveReceipt, getReceipt, getAllReceipts, Receipt, getSettings, Settings } from "@/lib/db";
+import { generateZatcaTLV } from "@/lib/zatca";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -39,6 +40,13 @@ const DEFAULT_RECEIPT_VALUES = {
   receivedFor: "Advance payment for smart home supply & installation",
   receivedBy: "Smart Nexus",
   integratorSignature: "",
+  invoiceType: "standard" as const,
+  clientTaxNumber: "",
+  taxRate: 15,
+  taxAmount: 0,
+  subtotal: 0,
+  zatcaQrCode: "",
+  uuid: "",
 };
 
 export default function ReceiptEditor({ id }: ReceiptEditorProps) {
@@ -149,20 +157,62 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
     try {
       const documentId = (id && id !== "new") ? id : `receipt-${Date.now()}`;
       const now = new Date().toISOString();
+
+      let finalTaxRate = 0;
+      let finalTaxAmount = 0;
+      let finalSubtotal = Number(data.amount) || 0;
+      let finalZatcaQr = "";
+
+      if (data.invoiceType === "tax") {
+        finalTaxRate = Number(settings?.taxRate ?? 15);
+        finalTaxAmount = (Number(data.amount) || 0) - ((Number(data.amount) || 0) / (1 + finalTaxRate / 100));
+        finalSubtotal = (Number(data.amount) || 0) - finalTaxAmount;
+        
+        const companyName = settings?.companyName || (language === "ar" ? "رؤاد الذكية" : "Smart Nexus");
+        const companyTaxNo = settings?.taxNumber || "300000000000003";
+        const dateStr = data.date || new Date().toLocaleDateString("en-GB");
+        
+        let parsedDateIso = now;
+        try {
+          const parts = dateStr.split("/");
+          if (parts.length === 3) {
+            parsedDateIso = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]), 12, 0, 0).toISOString();
+          } else {
+            parsedDateIso = new Date(dateStr).toISOString();
+          }
+        } catch (e) {
+          parsedDateIso = now;
+        }
+
+        finalZatcaQr = generateZatcaTLV(
+          companyName,
+          companyTaxNo,
+          parsedDateIso,
+          (Number(data.amount) || 0).toFixed(2),
+          finalTaxAmount.toFixed(2)
+        );
+      }
+
       const updatedDoc: Receipt = {
         ...data,
         amount: Number(data.amount) || 0,
         id: documentId,
+        invoiceType: data.invoiceType || "standard",
+        taxRate: finalTaxRate,
+        taxAmount: Number(finalTaxAmount.toFixed(2)),
+        subtotal: Number(finalSubtotal.toFixed(2)),
+        zatcaQrCode: finalZatcaQr,
+        uuid: data.uuid || crypto.randomUUID(),
         createdAt: data.createdAt || now,
         updatedAt: now
       };
       await saveReceipt(updatedDoc);
       router.refresh();
-      alert(language === "ar" ? "تم حفظ سند القبض بنجاح!" : "Receipt saved successfully!");
+      alert(language === "ar" ? "تم حفظ المستند بنجاح!" : "Document saved successfully!");
       router.push("/");
     } catch (error) {
       console.error("Error saving receipt:", error);
-      alert(language === "ar" ? "فشل حفظ السند." : "Failed to save receipt.");
+      alert(language === "ar" ? "فشل حفظ المستند." : "Failed to save document.");
     } finally {
       setSaving(false);
     }
@@ -760,9 +810,30 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
             {/* Section: Receipt Identity */}
             <div className="bg-zinc-900/30 border border-zinc-900 rounded-2xl p-5 space-y-4">
               <h3 className="text-sm font-bold text-zinc-300 border-b border-zinc-800 pb-2 flex items-center gap-2">
-                {t("receiptDetails")}
+                {language === "ar" ? "تفاصيل المستند" : "Document Details"}
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{language === "ar" ? "نوع الفاتورة" : "Invoice Type"}</label>
+                  <select
+                    {...register("invoiceType")}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none text-left"
+                  >
+                    <option value="standard">{language === "ar" ? "سند قبض عادي" : "Standard Voucher/Receipt"}</option>
+                    <option value="tax">{language === "ar" ? "فاتورة ضريبية مبسطة" : "Tax Invoice"}</option>
+                  </select>
+                </div>
+                {formValues.invoiceType === "tax" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{language === "ar" ? "الرقم الضريبي للعميل" : "Client Tax Number"}</label>
+                    <input 
+                      type="text" 
+                      {...register("clientTaxNumber")} 
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-zinc-700 outline-none"
+                      placeholder="e.g. 3xxxxxxxxxxxxxx"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 mb-1.5">{t("receiptNo")}</label>
                   <input 
@@ -944,16 +1015,31 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                     />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-[#0F4C81] font-sans m-0 leading-tight">SMART NEXUS</h2>
-                    <p className="text-[9px] text-zinc-500 m-0 tracking-wider">Smart Nexus FZE LLC</p>
+                    <h2 className="text-base font-bold text-[#0F4C81] font-sans m-0 leading-tight">
+                      {settings?.companyName || (language === "ar" ? "رؤاد الذكية" : "SMART NEXUS")}
+                    </h2>
+                    <p className="text-[9px] text-zinc-500 m-0 tracking-wider">
+                      {settings?.taxNumber ? `${language === "ar" ? "الرقم الضريبي" : "TRN"}: ${settings.taxNumber}` : "Smart Nexus FZE LLC"}
+                    </p>
                   </div>
                 </div>
                 
                 <div className="text-right">
-                  <div className="bg-[#0F4C81] text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
-                    RECEIPT VOUCHER
-                  </div>
-                  <p className="text-[10px] text-[#0F4C81] font-bold mt-1 m-0">سند قبض استلام مبالغ</p>
+                  {formValues.invoiceType === "tax" ? (
+                    <>
+                      <div className="bg-[#0F4C81] text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
+                        TAX INVOICE
+                      </div>
+                      <p className="text-[10px] text-[#0F4C81] font-bold mt-1 m-0">فاتورة ضريبية مبسطة</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-[#0F4C81] text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
+                        RECEIPT VOUCHER
+                      </div>
+                      <p className="text-[10px] text-[#0F4C81] font-bold mt-1 m-0">سند قبض استلام مبالغ</p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -963,8 +1049,8 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   <tr className="border-b border-zinc-200">
                     <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
                       <div className="flex justify-between">
-                        <span>Receipt No.</span>
-                        <span className="font-arabic">رقم السند</span>
+                        <span>Invoice / Receipt No.</span>
+                        <span className="font-arabic">رقم الفاتورة / السند</span>
                       </div>
                     </td>
                     <td className="p-2.5 border-r border-zinc-200 font-mono font-bold text-zinc-800" style={{ width: "25%" }}>{formValues.receiptNo}</td>
@@ -976,19 +1062,37 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                     </td>
                     <td className="p-2.5 text-zinc-700 font-semibold" style={{ width: "25%" }}>{formValues.date}</td>
                   </tr>
+                  {formValues.invoiceType === "tax" && (
+                    <tr className="border-b border-zinc-200">
+                      <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                        <div className="flex justify-between">
+                          <span>Client TRN</span>
+                          <span className="font-arabic">الرقم الضريبي للعميل</span>
+                        </div>
+                      </td>
+                      <td className="p-2.5 border-r border-zinc-200 font-mono font-semibold text-zinc-700" style={{ width: "25%" }}>{formValues.clientTaxNumber || "N/A"}</td>
+                      <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
+                        <div className="flex justify-between">
+                          <span>Tax Rate</span>
+                          <span className="font-arabic">نسبة الضريبة</span>
+                        </div>
+                      </td>
+                      <td className="p-2.5 text-zinc-700 font-semibold" style={{ width: "25%" }}>{settings?.taxRate ?? 15}%</td>
+                    </tr>
+                  )}
                   <tr>
                     <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
                       <div className="flex justify-between">
                         <span>Amount</span>
-                        <span className="font-arabic">المبلغ</span>
+                        <span className="font-arabic">المبلغ الإجمالي</span>
                       </div>
                     </td>
                     <td className="p-2.5 border-r border-zinc-200 text-[#0F4C81] font-bold font-mono text-sm" style={{ backgroundColor: "rgba(239, 246, 255, 0.2)", width: "25%" }}>
-                      {formValues.amount ? Number(formValues.amount).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"} AED
+                      {formValues.amount ? Number(formValues.amount).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"} {settings?.currency || "AED"}
                     </td>
                     <td className="bg-zinc-50 p-2.5 font-bold border-r border-zinc-200 text-[#0F4C81]" style={{ width: "25%" }}>
                       <div className="flex justify-between">
-                        <span>Method</span>
+                        <span>Payment Method</span>
                         <span className="font-arabic">طريقة الدفع</span>
                       </div>
                     </td>
@@ -1042,22 +1146,36 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                 )}
 
                 <div>
-                  <span className="font-bold text-[#0F4C81] inline-block w-36">
-                    Being Payment for:
-                  </span>
-                  <span className="text-zinc-700 font-medium border-b border-zinc-300 pb-0.5 inline-block min-w-[280px] whitespace-normal">
-                    {formValues.receivedFor || "______________________________________"}
-                  </span>
-                  <span className="font-arabic font-bold text-zinc-500 float-right">وذلك عن قيمة</span>
+                 {/* VAT Breakdown Table (only for Tax Invoices) */}
+              {formValues.invoiceType === "tax" && (
+                <div className="mt-4 border border-zinc-200 rounded-lg p-3 bg-zinc-50/50 space-y-1.5 text-[10px]">
+                  <div className="flex justify-between font-semibold text-zinc-700">
+                    <span>Subtotal (Excl. VAT) / المجموع الفرعي (غير شامل الضريبة)</span>
+                    <span className="font-mono">
+                      {(Number(formValues.amount) ? (Number(formValues.amount) / (1 + Number(settings?.taxRate ?? 15) / 100)) : 0).toLocaleString("en-AE", { minimumFractionDigits: 2 })} {settings?.currency || "AED"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-zinc-600 border-t border-zinc-200/50 pt-1.5">
+                    <span>VAT Amount ({settings?.taxRate ?? 15}%) / مبلغ ضريبة القيمة المضافة</span>
+                    <span className="font-mono">
+                      {(Number(formValues.amount) ? (Number(formValues.amount) - (Number(formValues.amount) / (1 + Number(settings?.taxRate ?? 15) / 100))) : 0).toLocaleString("en-AE", { minimumFractionDigits: 2 })} {settings?.currency || "AED"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-bold text-[#0F4C81] border-t border-zinc-200 pt-1.5 text-xs">
+                    <span>Total (Incl. VAT) / المجموع الإجمالي (شامل الضريبة)</span>
+                    <span className="font-mono">
+                      {Number(formValues.amount) ? Number(formValues.amount).toLocaleString("en-AE", { minimumFractionDigits: 2 }) : "0.00"} {settings?.currency || "AED"}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Bottom Section: Signatures & Address info */}
             <div>
               {/* Signatures block */}
               <div className="flex w-full justify-between gap-4 border border-zinc-200 rounded-lg p-3.5" style={{ backgroundColor: "rgba(250, 250, 250, 0.5)" }}>
-                <div className="w-[48%] text-center flex flex-col justify-between min-h-[90px]">
+                <div className="w-[32%] text-center flex flex-col justify-between min-h-[90px]">
                   <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider">
                     Client Signature / Seal <br/>
                     <span className="font-arabic text-zinc-400">توقيع / ختم العميل</span>
@@ -1065,7 +1183,48 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                   <div className="h-10 border-b border-dashed border-zinc-300 w-2/3 mx-auto mt-4" />
                 </div>
                 
-                <div className="w-[48%] text-center flex flex-col justify-between min-h-[90px] relative">
+                {/* ZATCA QR Code in center (only for Tax Invoices) */}
+                {formValues.invoiceType === "tax" && (
+                  <div className="w-[32%] flex flex-col items-center justify-center min-h-[90px]">
+                    {(() => {
+                      const rate = Number(settings?.taxRate ?? 15);
+                      const totalVal = Number(formValues.amount) || 0;
+                      const taxVal = totalVal - (totalVal / (1 + rate / 100));
+                      const companyName = settings?.companyName || (language === "ar" ? "رؤاد الذكية" : "Smart Nexus");
+                      const companyTaxNo = settings?.taxNumber || "300000000000003";
+                      const dateStr = formValues.date || new Date().toLocaleDateString("en-GB");
+                      
+                      let parsedDateIso = new Date().toISOString();
+                      try {
+                        const parts = dateStr.split("/");
+                        if (parts.length === 3) {
+                          parsedDateIso = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]), 12, 0, 0).toISOString();
+                        } else {
+                          parsedDateIso = new Date(dateStr).toISOString();
+                        }
+                      } catch (e) {}
+
+                      const qrBase64 = generateZatcaTLV(
+                        companyName,
+                        companyTaxNo,
+                        parsedDateIso,
+                        totalVal.toFixed(2),
+                        taxVal.toFixed(2)
+                      );
+                      
+                      if (!qrBase64) return null;
+                      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent(qrBase64)}`;
+                      return (
+                        <div className="flex flex-col items-center gap-1">
+                          <img src={qrUrl} alt="ZATCA QR Code" className="w-20 h-20 border border-zinc-200 p-0.5" />
+                          <span className="text-[7px] text-zinc-400 font-sans tracking-tight">ZATCA QR Code</span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                <div className={`${formValues.invoiceType === "tax" ? "w-[32%]" : "w-[48%]"} text-center flex flex-col justify-between min-h-[90px] relative`}>
                   <p className="font-bold text-zinc-500 uppercase text-[9px] tracking-wider relative z-10">
                     Authorized Receiver Signature <br/>
                     <span className="font-arabic text-zinc-400">توقيع / ختم المستلم المصرح له</span>
@@ -1079,7 +1238,7 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                       className="max-h-full max-w-full object-contain"
                     />
                   </div>
-
+ 
                   {formValues.integratorSignature ? (
                     <div className="w-36 h-12 mx-auto mt-2 z-10 flex items-center justify-center">
                       <img 

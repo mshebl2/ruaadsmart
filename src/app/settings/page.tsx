@@ -15,6 +15,9 @@ export default function SettingsPage() {
   const [restoring, setRestoring] = useState(false);
   const [logoBase64, setLogoBase64] = useState<string>("");
   const [stampBase64, setStampBase64] = useState<string>("");
+  const [taxRate, setTaxRate] = useState<number>(15);
+  const [taxNumber, setTaxNumber] = useState<string>("");
+  const [currency, setCurrency] = useState<string>("SAR");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -23,6 +26,9 @@ export default function SettingsPage() {
         const settings = await getSettings();
         if (settings.logoBase64) setLogoBase64(settings.logoBase64);
         if (settings.stampBase64) setStampBase64(settings.stampBase64);
+        if (settings.taxRate !== undefined) setTaxRate(settings.taxRate);
+        if (settings.taxNumber) setTaxNumber(settings.taxNumber);
+        if (settings.currency) setCurrency(settings.currency);
       } catch (e) {
         console.error("Failed to load settings:", e);
       } finally {
@@ -61,6 +67,9 @@ export default function SettingsPage() {
       await saveSettings({
         logoBase64,
         stampBase64,
+        taxRate: Number(taxRate) || 0,
+        taxNumber,
+        currency,
       });
       setMessage({ type: "success", text: isRtl ? "تم حفظ الإعدادات بنجاح!" : "Settings saved successfully!" });
     } catch (e) {
@@ -223,6 +232,60 @@ export default function SettingsPage() {
                 )}
               </div>
               <p className="text-xs text-zinc-500">{isRtl ? "الحجم الموصى به: 300x300 بكسل (PNG خلفية شفافة)" : "Recommended size: 300x300px (PNG transparent)"}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tax & Financial Settings */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-sm">
+          <h2 className="text-xl font-bold mb-6 flex items-center">
+            {isRtl ? "الإعدادات الضريبية والمالية" : "Tax & Financial Settings"}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">
+                {isRtl ? "الرقم الضريبي للمؤسسة" : "Company Tax Number"}
+              </label>
+              <input
+                type="text"
+                value={taxNumber}
+                onChange={(e) => setTaxNumber(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500"
+                placeholder="e.g. 300000000000003"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">
+                {isRtl ? "نسبة الضريبة (%)" : "Tax Rate (%)"}
+              </label>
+              <input
+                type="number"
+                value={taxRate}
+                onChange={(e) => setTaxRate(Number(e.target.value))}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500"
+                placeholder="15"
+                min="0"
+                max="100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">
+                {isRtl ? "العملة الافتراضية" : "Default Currency"}
+              </label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 text-left"
+              >
+                <option value="SAR">{isRtl ? "ريال سعودي (SAR)" : "Saudi Riyal (SAR)"}</option>
+                <option value="AED">{isRtl ? "درهم إماراتي (AED)" : "UAE Dirham (AED)"}</option>
+                <option value="USD">{isRtl ? "دولار أمريكي (USD)" : "US Dollar (USD)"}</option>
+                <option value="EGP">{isRtl ? "جنيه مصري (EGP)" : "Egyptian Pound (EGP)"}</option>
+                <option value="QAR">{isRtl ? "ريال قطري (QAR)" : "Qatari Riyal (QAR)"}</option>
+                <option value="KWD">{isRtl ? "دينار كويتي (KWD)" : "Kuwaiti Dinar (KWD)"}</option>
+                <option value="BHD">{isRtl ? "دينار بحريني (BHD)" : "Bahraini Dinar (BHD)"}</option>
+                <option value="OMR">{isRtl ? "ريال عماني (OMR)" : "Omani Rial (OMR)"}</option>
+              </select>
             </div>
           </div>
         </div>
