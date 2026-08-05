@@ -15,7 +15,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { getAllOfficialLetters, getOfficialLetter, OfficialLetter, getSettings, Settings } from "@/lib/db";
+import { getAllOfficialLetters, getOfficialLetter, saveOfficialLetter, OfficialLetter, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -159,7 +159,7 @@ export default function OfficialLetterEditor({ id }: OfficialLetterEditorProps) 
         createdAt: data.createdAt || now,
         updatedAt: now
       };
-      await saveLetter(updatedDoc);
+      await saveOfficialLetter(updatedDoc);
       router.refresh();
       alert(language === "ar" ? "تم حفظ الخطاب بنجاح!" : "Official letter saved successfully!");
       router.push("/");

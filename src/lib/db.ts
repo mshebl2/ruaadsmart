@@ -311,8 +311,9 @@ export interface OfficialLetter {
   letterType: string;
   customTitle?: string;
   content: string;
-  senderName: string;
-  signatureBase64?: string;
+  signatoryName?: string;
+  signatoryTitle?: string;
+  signatureImage?: string;
   stampBase64?: string;
   createdAt: string;
   updatedAt: string;
