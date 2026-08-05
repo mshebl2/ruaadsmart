@@ -1146,7 +1146,17 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
                 )}
 
                 <div>
-                 {/* VAT Breakdown Table (only for Tax Invoices) */}
+                  <span className="font-bold text-[#0F4C81] inline-block w-36">
+                    Being Payment for:
+                  </span>
+                  <span className="text-zinc-700 font-medium border-b border-zinc-300 pb-0.5 inline-block min-w-[280px] whitespace-normal">
+                    {formValues.receivedFor || "______________________________________"}
+                  </span>
+                  <span className="font-arabic font-bold text-zinc-500 float-right">وذلك عن قيمة</span>
+                </div>
+              </div>
+
+              {/* VAT Breakdown Table (only for Tax Invoices) */}
               {formValues.invoiceType === "tax" && (
                 <div className="mt-4 border border-zinc-200 rounded-lg p-3 bg-zinc-50/50 space-y-1.5 text-[10px]">
                   <div className="flex justify-between font-semibold text-zinc-700">

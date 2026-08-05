@@ -15,7 +15,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { saveLetter, getLetter, getAllLetters, OfficialLetter, getSettings, Settings } from "@/lib/db";
+import { getAllOfficialLetters, OfficialLetter, getSettings, Settings } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -109,7 +109,7 @@ export default function OfficialLetterEditor({ id }: OfficialLetterEditorProps) 
     } else {
       async function generateSequentialLetterNo() {
         try {
-          const letters = await getAllLetters();
+          const letters = await getAllOfficialLetters();
           let maxNum = 1000;
           letters.forEach(l => {
             if (l.letterNo) {

@@ -43,8 +43,8 @@ import {
   saveContract,
   saveReceipt,
   saveCertificate,
-  getAllLetters,
-  deleteLetter,
+  getAllOfficialLetters,
+  deleteOfficialLetter,
   OfficialLetter
 } from "@/lib/db";
 import { useLanguage } from "@/lib/i18n";
@@ -83,7 +83,7 @@ export default function Dashboard() {
           getAllReceipts(),
           getAllContracts(),
           getSettings(),
-          getAllLetters()
+          getAllOfficialLetters()
         ]);
         setQuotations(quotes);
         setCertificates(certs);
@@ -136,7 +136,7 @@ export default function Dashboard() {
   const handleDeleteLetter = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     if (confirm(language === "ar" ? "هل أنت متأكد من حذف هذا الخطاب الرسمي؟" : "Are you sure you want to delete this official letter?")) {
-      await deleteLetter(id);
+      await deleteOfficialLetter(id);
       setLetters(letters.filter((l) => l.id !== id));
     }
   };
@@ -1080,7 +1080,7 @@ ${itemLines}
                   </table>
                 </div>
               )
-            ) : (
+            ) : activeTab === "contracts" ? (
               // Contracts Tab
               filteredContracts.length === 0 ? (
                 <div className="text-center py-16 px-4">
