@@ -539,10 +539,21 @@ export default function ReceiptEditor({ id }: ReceiptEditorProps) {
               </div>
               
               <div className="text-right">
-                <div className="bg-[#0F4C81] text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
-                  RECEIPT VOUCHER
-                </div>
-                <p className="text-[10px] text-[#0F4C81] font-bold mt-1 m-0">سند قبض استلام مبالغ</p>
+                {formValues.invoiceType === "tax" ? (
+                  <>
+                    <div className="bg-[#0F4C81] text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
+                      TAX INVOICE
+                    </div>
+                    <p className="text-[10px] text-[#0F4C81] font-bold mt-1 m-0">فاتورة ضريبية مبسطة</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-[#0F4C81] text-white px-4 py-1.5 rounded font-bold text-sm tracking-wider inline-block">
+                      RECEIPT VOUCHER
+                    </div>
+                    <p className="text-[10px] text-[#0F4C81] font-bold mt-1 m-0">سند قبض استلام مبالغ</p>
+                  </>
+                )}
               </div>
             </div>
 
